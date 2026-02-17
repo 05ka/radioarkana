@@ -3,7 +3,8 @@ const button    = document.getElementById("playButton");
 const indicator = document.getElementById("liveIndicator");
 const liveText  = document.getElementById("liveText");
 
-const STREAM_URL = "https://006f-154-56-136-98.ngrok-free.app/stream";
+#const STREAM_URL = "https://006f-154-56-136-98.ngrok-free.app/stream";
+const STREAM_URL = "https://stream.radioarkana.com/stream";
 
 
 // Apuntar el source al stream de ngrok
