@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Radio Arkana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Radio Arkana</h1>
+
+    <div class="status">
+      <span id="liveIndicator" class="live-off"></span>
+      <span id="liveText">Desconectado</span>
+    </div>
+
+    <audio id="radioPlayer" controls preload="none">
+      <source src="https://TU_SERVIDOR_ICECAST/live" type="audio/aac">
+      Tu navegador no soporta audio HTML5.
+    </audio>
+
+    <button id="playButton">Escuchar en Directo</button>
+
+    <p class="description">
+      Emisión en directo. Conecta y escucha.
+    </p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
