@@ -4,30 +4,406 @@
   <meta charset="UTF-8">
   <title>Radio Arkana</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0a0a0a;
+      --surface:   #111111;
+      --border:    #1e1e1e;
+      --red:       #e63030;
+      --red-dim:   #7a1a1a;
+      --white:     #f0ece4;
+      --gray:      #555;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-body: 'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.4;
+    }
+
+    .wrap {
+      width: min(460px, 92vw);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Header band */
+    .header {
+      background: var(--red);
+      padding: 6px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-label {
+      font-family: var(--font-body);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.6);
+    }
+    .freq {
+      font-family: var(--font-body);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: rgba(0,0,0,0.5);
+    }
+
+    /* Main card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 36px 32px 32px;
+      position: relative;
+    }
+
+    .station-name {
+      font-family: var(--font-head);
+      font-size: clamp(64px, 16vw, 88px);
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .station-name span {
+      color: var(--red);
+    }
+
+    .tagline {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 36px;
+      padding-left: 2px;
+    }
+
+    /* Waveform visual */
+    .waveform {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 40px;
+      margin-bottom: 28px;
+    }
+    .bar {
+      width: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+    .playing .bar {
+      background: var(--red);
+      animation: wave var(--dur) ease-in-out infinite alternate;
+    }
+    @keyframes wave {
+      from { transform: scaleY(0.15); }
+      to   { transform: scaleY(1); }
+    }
+
+    /* Status */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gray);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .dot.live    { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s ease-in-out infinite; }
+    .dot.loading { background: #888; animation: blink 0.6s step-end infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+    #statusText { color: var(--gray); }
+    #statusText.live    { color: var(--white); }
+    #statusText.loading { color: #888; }
+
+    /* Big play button */
+    .play-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .play-btn:hover {
+      border-color: var(--red);
+      background: rgba(230,48,48,0.06);
+    }
+    .play-btn.active {
+      border-color: var(--red);
+      background: rgba(230,48,48,0.1);
+    }
+    .play-btn .icon {
+      width: 18px; height: 18px;
+      fill: currentColor;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .play-btn:hover .icon { transform: scale(1.1); }
+
+    /* Volume */
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .vol-label {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+      width: 24px;
+      flex-shrink: 0;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--white);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    input[type=range]:hover::-webkit-slider-thumb { background: var(--red); }
+
+    /* Footer */
+    .footer {
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 12px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-note {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #333;
+    }
+    .footer-note a {
+      color: #444;
+      text-decoration: none;
+    }
+    .footer-note a:hover { color: var(--red); }
+
+    /* ngrok warning banner */
+    #ngrokBanner {
+      display: none;
+      background: #1a1200;
+      border: 1px solid #3a2e00;
+      border-top: none;
+      padding: 10px 32px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: #a08030;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>Radio Arkana</h1>
-
-    <div class="status">
-      <span id="liveIndicator" class="live-off"></span>
-      <span id="liveText">Desconectado</span>
-    </div>
-
-    <audio id="radioPlayer" controls preload="none">
-      <source src="https://TU_SERVIDOR_ICECAST/live" type="audio/aac">
-      Tu navegador no soporta audio HTML5.
-    </audio>
-
-    <button id="playButton">Escuchar en Directo</button>
-
-    <p class="description">
-      Emisión en directo. Conecta y escucha.
-    </p>
+<div class="wrap">
+  <div class="header">
+    <span class="header-label">Transmisión en vivo</span>
+    <span class="freq">FM LOCAL · 128kbps</span>
   </div>
 
-  <script src="script.js"></script>
+  <div class="card">
+    <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
+    <p class="tagline">Emisión continua · Stream local</p>
+
+    <div class="waveform" id="waveform"></div>
+
+    <div class="status-row">
+      <span class="dot" id="dot"></span>
+      <span id="statusText">Desconectado</span>
+    </div>
+
+    <button class="play-btn" id="playBtn" onclick="togglePlay()">
+      <svg class="icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <span id="playLabel">Escuchar en directo</span>
+    </button>
+
+    <div class="volume-row">
+      <span class="vol-label">Vol</span>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)">
+    </div>
+  </div>
+
+  <div id="ngrokBanner">
+    ⚠ Si el stream no conecta, es posible que ngrok haya generado una pantalla de advertencia.
+    Abre <a id="ngrokDirectLink" href="#" target="_blank">este enlace</a> en una nueva pestaña, acepta y vuelve aquí.
+  </div>
+
+  <div class="footer">
+    <span class="footer-note">Radio Arkana © 2026</span>
+    <span class="footer-note"><a href="http://localhost:8000/admin/" target="_blank">admin</a></span>
+  </div>
+</div>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+  // ── Configuración ──────────────────────────────────────
+  const STREAM_URL = 'https://006f-154-56-136-98.ngrok-free.app/stream';
+  const NGROK_BASE = 'https://006f-154-56-136-98.ngrok-free.app';
+
+  // ── Waveform generativa ────────────────────────────────
+  const wf = document.getElementById('waveform');
+  const BARS = 48;
+  const heights = Array.from({length: BARS}, () => 8 + Math.random() * 92);
+  heights.forEach((h, i) => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.cssText = `height:${h}%;transform-origin:center;--dur:${0.4 + Math.random()*0.8}s;animation-delay:${(i/BARS*0.6).toFixed(2)}s`;
+    wf.appendChild(b);
+  });
+
+  // ── Estado ─────────────────────────────────────────────
+  const audio    = document.getElementById('audio');
+  const dot      = document.getElementById('dot');
+  const statusTx = document.getElementById('statusText');
+  const playBtn  = document.getElementById('playBtn');
+  const playIcon = document.getElementById('playIcon');
+  const playLbl  = document.getElementById('playLabel');
+  const banner   = document.getElementById('ngrokBanner');
+  const ngrokLnk = document.getElementById('ngrokDirectLink');
+  let playing = false;
+  let errorCount = 0;
+
+  ngrokLnk.href = NGROK_BASE;
+
+  const ICONS = {
+    play: '<path d="M8 5v14l11-7z"/>',
+    stop: '<path d="M6 6h12v12H6z"/>',
+    spin: '<path d="M12 2a10 10 0 0 1 10 10h-2a8 8 0 0 0-8-8V2z"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></path>'
+  };
+
+  function setStatus(state) {
+    dot.className = 'dot ' + (state === 'live' ? 'live' : state === 'loading' ? 'loading' : '');
+    statusTx.className = state === 'live' ? 'live' : state === 'loading' ? 'loading' : '';
+    const labels = { live: 'En directo', loading: 'Conectando…', off: 'Desconectado', error: 'Error de conexión' };
+    statusTx.textContent = labels[state] || state;
+    wf.className = 'waveform' + (state === 'live' ? ' playing' : '');
+  }
+
+  function togglePlay() {
+    if (playing) stopStream();
+    else startStream();
+  }
+
+  function startStream() {
+    playing = true;
+    errorCount = 0;
+    playBtn.classList.add('active');
+    playIcon.innerHTML = ICONS.spin;
+    playLbl.textContent = 'Conectando…';
+    setStatus('loading');
+
+    audio.src = STREAM_URL + '?t=' + Date.now(); // cache-bust
+    audio.volume = document.getElementById('volume').value;
+    audio.load();
+    audio.play().catch(() => {});
+  }
+
+  function stopStream() {
+    playing = false;
+    audio.pause();
+    audio.src = '';
+    playBtn.classList.remove('active');
+    playIcon.innerHTML = ICONS.play;
+    playLbl.textContent = 'Escuchar en directo';
+    setStatus('off');
+    banner.style.display = 'none';
+  }
+
+  audio.addEventListener('playing', () => {
+    playIcon.innerHTML = ICONS.stop;
+    playLbl.textContent = 'Detener';
+    setStatus('live');
+    banner.style.display = 'none';
+    errorCount = 0;
+  });
+
+  audio.addEventListener('waiting', () => {
+    if (playing) { playIcon.innerHTML = ICONS.spin; setStatus('loading'); }
+  });
+
+  audio.addEventListener('error', () => {
+    if (!playing) return;
+    errorCount++;
+    if (errorCount === 1) {
+      // Puede ser la pantalla de ngrok — mostrar banner
+      banner.style.display = 'block';
+      setStatus('error');
+      playIcon.innerHTML = ICONS.play;
+      playLbl.textContent = 'Reintentar';
+      playing = false;
+    }
+  });
+
+  audio.addEventListener('stalled', () => {
+    if (playing) setStatus('loading');
+  });
+
+  function setVolume(v) {
+    audio.volume = v;
+  }
+</script>
 </body>
 </html>
