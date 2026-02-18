@@ -3,16 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radio Arkana - En Directo desde Málaga</title>
-  <meta name="description" content="Radio Arkana - Transmisión en vivo 24/7. Música underground, cultura y experimentación sonora desde Málaga.">
+  <title>Radio Arkana - Sistema Integrado</title>
   
-  <!-- Open Graph / Social sharing -->
-  <meta property="og:title" content="Radio Arkana - En Directo">
-  <meta property="og:description" content="Escucha ahora la emisión continua de Radio Arkana. FM local · 128kbps">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://radioarkana.com">
-  <!-- <meta property="og:image" content="https://radioarkana.com/og-image.jpg"> → sube una imagen si tienes -->
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
@@ -56,7 +48,6 @@
       width: min(460px, 92vw);
       display: flex;
       flex-direction: column;
-      gap: 0;
     }
 
     .header {
@@ -66,19 +57,8 @@
       align-items: center;
       justify-content: space-between;
     }
-    .header-label {
-      font-family: var(--font-body);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.6);
-    }
-    .freq {
-      font-family: var(--font-body);
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      color: rgba(0,0,0,0.5);
-    }
+    .header-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.6); }
+    .freq { font-size: 10px; letter-spacing: 0.15em; color: rgba(0,0,0,0.5); }
 
     .card {
       background: var(--surface);
@@ -96,9 +76,7 @@
       color: var(--white);
       margin-bottom: 4px;
     }
-    .station-name span {
-      color: var(--red);
-    }
+    .station-name span { color: var(--red); }
 
     .tagline {
       font-size: 10px;
@@ -106,7 +84,6 @@
       text-transform: uppercase;
       color: var(--gray);
       margin-bottom: 36px;
-      padding-left: 2px;
     }
 
     .waveform {
@@ -116,20 +93,12 @@
       height: 40px;
       margin-bottom: 28px;
     }
-    .bar {
-      width: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      transition: background 0.3s;
-    }
+    .bar { width: 3px; background: var(--border); border-radius: 2px; }
     .playing .bar {
       background: var(--red);
       animation: wave var(--dur) ease-in-out infinite alternate;
     }
-    @keyframes wave {
-      from { transform: scaleY(0.15); }
-      to   { transform: scaleY(1); }
-    }
+    @keyframes wave { from { transform: scaleY(0.15); } to { transform: scaleY(1); } }
 
     .status-row {
       display: flex;
@@ -141,273 +110,389 @@
       text-transform: uppercase;
     }
     .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
       background: var(--gray);
-      flex-shrink: 0;
       transition: background 0.3s;
     }
-    .dot.live    { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s ease-in-out infinite; }
-    .dot.loading { background: #888; animation: blink 0.6s step-end infinite; }
+    .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
+    .dot.tts { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
 
     #statusText { color: var(--gray); }
-    #statusText.live    { color: var(--white); }
-    #statusText.loading { color: #888; }
+    #statusText.live { color: var(--white); }
 
-    .play-btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--white);
-      font-family: var(--font-body);
-      font-size: 11px;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      padding: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      transition: border-color 0.2s, background 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-    .play-btn:hover {
-      border-color: var(--red);
-      background: rgba(230,48,48,0.06);
-    }
-    .play-btn.active {
-      border-color: var(--red);
-      background: rgba(230,48,48,0.1);
-    }
-    .play-btn .icon {
-      width: 18px; height: 18px;
-      fill: currentColor;
-      flex-shrink: 0;
-      transition: transform 0.2s;
-    }
-    .play-btn:hover .icon { transform: scale(1.1); }
-
-    .volume-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-    }
-    .vol-label {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gray);
-      width: 24px;
-      flex-shrink: 0;
-    }
-    input[type=range] {
-      -webkit-appearance: none;
-      flex: 1;
-      height: 2px;
-      background: var(--border);
-      border-radius: 2px;
-      outline: none;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      background: var(--white);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    input[type=range]:hover::-webkit-slider-thumb { background: var(--red); }
-
-    .footer {
-      border: 1px solid var(--border);
-      border-top: none;
-      padding: 12px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .footer-note {
+    #repLabel {
       font-size: 9px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #333;
+      color: var(--red-dim);
+      margin-bottom: 16px;
+      min-height: 14px;
     }
-    .footer-note a {
-      color: #444;
-      text-decoration: none;
+
+    .play-btn {
+      width: 100%; background: transparent; border: 1px solid var(--border);
+      color: var(--white); font-family: var(--font-body);
+      font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+      padding: 16px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; gap: 14px;
     }
-    .footer-note a:hover { color: var(--red); }
+    .play-btn:hover { border-color: var(--red); background: rgba(230,48,48,0.06); }
+    .play-btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
+
+    .volume-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 20px;
+      opacity: 0.5; transition: opacity 0.3s;
+    }
+    .volume-row.visible { opacity: 1; }
+    .vol-label { font-size: 9px; text-transform: uppercase; color: var(--gray); width: 24px; }
+    input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer;
+    }
+
+    .footer {
+      border: 1px solid var(--border); border-top: none;
+      padding: 12px 32px; display: flex; justify-content: space-between;
+    }
+    .footer-note { font-size: 9px; text-transform: uppercase; color: #333; }
+    .footer-note a { color: #444; text-decoration: none; }
   </style>
 </head>
 <body>
 
 <div class="wrap">
   <div class="header">
-    <span class="header-label">Transmisión en vivo</span>
-    <span class="freq">FM LOCAL · 128kbps</span>
+    <span class="header-label" id="modeLabel">Señal fuera de línea</span>
+    <span class="freq" id="infoFreq">AUTO-DETECCIÓN ACTIVA</span>
   </div>
 
   <div class="card">
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
-    <p class="tagline">Emisión en pruebas · Tarot Underground</p>
+    <p class="tagline">FM & Tarot Underground</p>
 
     <div class="waveform" id="waveform"></div>
 
     <div class="status-row">
       <span class="dot" id="dot"></span>
       <span id="statusText">Desconectado</span>
+      <span id="listenersDisplay" style="margin-left:auto; display:flex; align-items:center; gap:6px; opacity:0;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--gray)"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        <span id="listenersCount" style="font-size:10px;">—</span>
+      </span>
     </div>
 
-    <button class="play-btn" id="playBtn" onclick="togglePlay()">
-      <svg class="icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <p id="repLabel"></p>
+
+    <button class="play-btn" id="playBtn" onclick="toggleMain()">
+      <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       <span id="playLabel">Escuchar en directo</span>
     </button>
 
-    <div class="volume-row">
-      <span class="vol-label">Vol</span>
-      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)">
+    <div class="volume-row" id="volRow">
+      <span class="vol-label">VOL</span>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" oninput="updateVolume(this.value)">
     </div>
   </div>
 
   <div class="footer">
     <span class="footer-note">Radio Arkana © 2026</span>
-    <span class="footer-note"><a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">wtf?</a></span>
+    <span class="footer-note"><a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">info</a></span>
   </div>
 </div>
 
-<audio id="audio" preload="none" crossorigin="anonymous"></audio>
+<!-- Audio para Streaming -->
+<audio id="streamAudio" preload="none" crossorigin="anonymous"></audio>
 
 <script>
-  // ── Configuración ──────────────────────────────────────
+  // --- CONFIGURACIÓN ---
   const STREAM_URL = 'https://stream.radioarkana.com/stream';
+  const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+  const CARDS = ["El Loco", "El Mago", "La Papisa", "La Emperatriz", "El Emperador", "El Papa", "El Enamorado", "El Carro", "La Fuerza", "El Ermitaño", "La Rueda de la Fortuna", "La Justicia", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"];
 
-  // ── Waveform generativa ────────────────────────────────
+  // --- ESTADO GLOBAL ---
+  let isPlaying = false;
+  let currentMode = 'NONE'; // 'STREAM' o 'TTS'
+  let ttsTimer = null;
+  let watchDogTimer = null;
+  let audioCtx = null;
+  let noiseNodes = []; // Para limpiar AudioContext
+
+  // Elementos DOM
+  const streamAudio = document.getElementById('streamAudio');
+  const playBtn = document.getElementById('playBtn');
+  const playLabel = document.getElementById('playLabel');
+  const playIcon = document.getElementById('playIcon');
+  const statusText = document.getElementById('statusText');
+  const modeLabel = document.getElementById('modeLabel');
+  const dot = document.getElementById('dot');
   const wf = document.getElementById('waveform');
-  const BARS = 48;
-  const heights = Array.from({length: BARS}, () => 8 + Math.random() * 92);
-  heights.forEach((h, i) => {
+  const repLabel = document.getElementById('repLabel');
+  const volRow = document.getElementById('volRow');
+
+  // Inicializar Waveform
+  for (let i = 0; i < 48; i++) {
     const b = document.createElement('div');
     b.className = 'bar';
-    b.style.cssText = `height:${h}%;transform-origin:center;--dur:${0.4 + Math.random()*0.8}s;animation-delay:${(i/BARS*0.6).toFixed(2)}s`;
+    b.style.cssText = `height:${8 + Math.random() * 92}%; --dur:${0.4 + Math.random() * 0.8}s; animation-delay:${(i/48*0.6).toFixed(2)}s`;
     wf.appendChild(b);
-  });
+  }
 
-  // ── Estado ─────────────────────────────────────────────
-  const audio    = document.getElementById('audio');
-  const dot      = document.getElementById('dot');
-  const statusTx = document.getElementById('statusText');
-  const playBtn  = document.getElementById('playBtn');
-  const playIcon = document.getElementById('playIcon');
-  const playLbl  = document.getElementById('playLabel');
-  let playing = false;
-  let errorCount = 0;
+  // --- LÓGICA PRINCIPAL ---
 
-  const ICONS = {
-    play: '<path d="M8 5v14l11-7z"/>',
-    stop: '<path d="M6 6h12v12H6z"/>',
-    spin: '<path d="M12 2a10 10 0 0 1 10 10h-2a8 8 0 0 0-8-8V2z"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></path>'
+  function toggleMain() {
+    if (!isPlaying) {
+      startEverything();
+    } else {
+      stopEverything();
+    }
+  }
+
+  function startEverything() {
+    isPlaying = true;
+    playBtn.classList.add('active');
+    wf.classList.add('playing');
+    volRow.classList.add('visible');
+    startListenersCounter();
+    tryStream(); // Intentar stream primero
+  }
+
+  function stopEverything() {
+    isPlaying = false;
+    currentMode = 'NONE';
+    
+    // Parar Stream
+    streamAudio.pause();
+    streamAudio.src = '';
+    
+    // Parar TTS
+    clearTimeout(ttsTimer);
+    clearTimeout(watchDogTimer);
+    window.speechSynthesis.cancel();
+    if (audioCtx) audioCtx.suspend();
+
+    // UI Reset
+    playBtn.classList.remove('active');
+    wf.classList.remove('playing');
+    volRow.classList.remove('visible');
+    dot.className = 'dot';
+    statusText.textContent = 'Desconectado';
+    statusText.className = '';
+    modeLabel.textContent = 'Señal fuera de línea';
+    playLabel.textContent = 'Escuchar en directo';
+    playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    repLabel.textContent = '';
+    
+    stopListenersCounter();
+  }
+
+  // --- MÓDULO STREAMING ---
+
+  function tryStream() {
+    if (!isPlaying) return;
+    
+    statusText.textContent = 'Conectando señal...';
+    modeLabel.textContent = 'Buscando FM...';
+    
+    streamAudio.src = `${STREAM_URL}?cb=${Date.now()}`;
+    streamAudio.load();
+    
+    // Si en 6 segundos no hay 'playing', saltamos a TTS
+    let streamTimeout = setTimeout(() => {
+      if (currentMode !== 'STREAM' && isPlaying) {
+        console.log("Stream timeout -> Switch to TTS");
+        startTTSMode();
+      }
+    }, 6000);
+
+    streamAudio.play().then(() => {
+        clearTimeout(streamTimeout);
+    }).catch(() => {
+        // Error inmediato (ej: 404)
+        if (currentMode !== 'TTS') startTTSMode();
+    });
+  }
+
+  streamAudio.onplaying = () => {
+    currentMode = 'STREAM';
+    stopTTSLogic(); // Por si acaso estaba sonando
+    dot.className = 'dot live';
+    statusText.textContent = 'En directo (FM)';
+    statusText.className = 'live';
+    modeLabel.textContent = 'Transmisión de Alta Fidelidad';
+    playLabel.textContent = 'Detener';
+    playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
+    repLabel.textContent = 'Señal de audio activa';
+    
+    // Cancelamos watchdog de búsqueda mientras el stream sea estable
+    clearTimeout(watchDogTimer);
   };
 
-  function setStatus(state) {
-    dot.className = 'dot ' + (state === 'live' ? 'live' : state === 'loading' ? 'loading' : '');
-    statusTx.className = state === 'live' ? 'live' : state === 'loading' ? 'loading' : '';
-    const labels = { 
-      live: 'En directo', 
-      loading: 'Conectando…', 
-      off: 'Desconectado', 
-      error: 'Error - Reintentar' 
-    };
-    statusTx.textContent = labels[state] || state;
-    wf.className = 'waveform' + (state === 'live' ? ' playing' : '');
+  streamAudio.onerror = () => {
+    if (isPlaying && currentMode !== 'TTS') {
+      startTTSMode();
+    }
+  };
+
+  // --- MÓDULO TTS & AUDIO GENERATIVO ---
+
+  function startTTSMode() {
+    if (currentMode === 'TTS') return;
+    currentMode = 'TTS';
+    
+    streamAudio.pause();
+    streamAudio.src = '';
+    
+    dot.className = 'dot tts';
+    statusText.textContent = 'Modo Arkana (Pruebas)';
+    statusText.className = '';
+    modeLabel.textContent = 'Sin señal FM · Fallback TTS';
+    playLabel.textContent = 'Detener';
+    playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
+
+    initAudioContext();
+    transmitTTS();
+
+    // Activar Watchdog: intentar volver al stream cada 30 seg
+    scheduleWatchdog();
   }
 
-  function togglePlay() {
-    if (playing) {
-      stopStream();
+  function initAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    audioCtx.resume();
+    
+    // Crear ruido si no existe
+    if (noiseNodes.length === 0) {
+      // Noise
+      const bufferSize = 2 * audioCtx.sampleRate;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; }
+      const noiseSource = audioCtx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      noiseSource.loop = true;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "bandpass"; filter.frequency.value = 1500;
+      const gain = audioCtx.createGain(); gain.gain.value = 0.02;
+      noiseSource.connect(filter).connect(gain).connect(audioCtx.destination);
+      noiseSource.start();
+      noiseNodes.push(noiseSource, gain);
+
+      // Binaural simple (200Hz - 208Hz)
+      const oscL = audioCtx.createOscillator();
+      const oscR = audioCtx.createOscillator();
+      const m = audioCtx.createChannelMerger(2);
+      const bGain = audioCtx.createGain(); bGain.gain.value = 0.04;
+      oscL.frequency.value = 200; oscR.frequency.value = 208;
+      oscL.connect(m, 0, 0); oscR.connect(m, 0, 1);
+      m.connect(bGain).connect(audioCtx.destination);
+      oscL.start(); oscR.start();
+      noiseNodes.push(oscL, oscR, bGain);
     } else {
-      startStream();
+      // Si ya existen, solo subir volumen si se bajó
+      noiseNodes.forEach(n => { if(n.gain) n.gain.value = n.gain.value || 0.02; });
     }
   }
 
-  function startStream() {
-    playing = true;
-    errorCount = 0;
-    playBtn.classList.add('active');
-    playIcon.innerHTML = ICONS.spin;
-    playLbl.textContent = 'Conectando…';
-    setStatus('loading');
-
-    // Cache-buster más efectivo
-    const cacheBuster = '?cb=' + Date.now() + Math.random().toString(36).substring(2);
-    audio.src = STREAM_URL + cacheBuster;
-    audio.volume = document.getElementById('volume').value || 0.8;
-    audio.load();
-
-    audio.play()
-      .then(() => console.log('Reproducción iniciada'))
-      .catch(err => {
-        console.error('Error al reproducir:', err.name, err.message);
-        setStatus('error');
-        playIcon.innerHTML = ICONS.play;
-        playLbl.textContent = 'Reintentar';
-        playing = false;
-      });
-  }
-
-  function stopStream() {
-    playing = false;
-    audio.pause();
-    audio.src = '';
-    playBtn.classList.remove('active');
-    playIcon.innerHTML = ICONS.play;
-    playLbl.textContent = 'Escuchar en directo';
-    setStatus('off');
-  }
-
-  audio.addEventListener('playing', () => {
-    playIcon.innerHTML = ICONS.stop;
-    playLbl.textContent = 'Detener';
-    setStatus('live');
-    errorCount = 0;
-    console.log('Stream reproduciendo correctamente');
-  });
-
-  audio.addEventListener('waiting', () => {
-    if (playing) {
-      playIcon.innerHTML = ICONS.spin;
-      setStatus('loading');
+  function stopTTSLogic() {
+    window.speechSynthesis.cancel();
+    clearTimeout(ttsTimer);
+    if (audioCtx) {
+        // Bajamos el volumen del ruido en lugar de destruir para suavizar transiciones
+        noiseNodes.forEach(n => { if(n.gain) n.gain.value = 0; });
     }
-  });
-
-  audio.addEventListener('error', (e) => {
-    if (!playing) return;
-    errorCount++;
-    console.error('Evento error en audio:', e);
-    setStatus('error');
-    playIcon.innerHTML = ICONS.play;
-    playLbl.textContent = 'Reintentar';
-    playing = false;
-
-    if (errorCount > 3) {
-      statusTx.textContent = 'No se puede conectar - ¿está BUTT enviando?';
-    }
-  });
-
-  audio.addEventListener('stalled', () => {
-    if (playing) setStatus('loading');
-  });
-
-  function setVolume(v) {
-    audio.volume = parseFloat(v);
   }
+
+  let currentRep = 0;
+  function transmitTTS() {
+    if (currentMode !== 'TTS' || !isPlaying) return;
+
+    if (currentRep === 0) {
+      const trio = [];
+      const pool = [...CARDS];
+      for(let i=0; i<3; i++) trio.push(pool.splice(Math.floor(Math.random()*pool.length), 1)[0]);
+      window.currentTrio = trio;
+    }
+
+    currentRep++;
+    repLabel.textContent = `Transmisión Tarot: Repetición ${currentRep}/7`;
+    
+    const text = `${window.currentTrio[0]}, con ${window.currentTrio[1]}, y ${window.currentTrio[2]}.`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.85;
+
+    utterance.onend = () => {
+      if (currentMode !== 'TTS') return;
+      if (currentRep >= 7) currentRep = 0;
+      repLabel.textContent = "Pausa de frecuencia (20s)...";
+      ttsTimer = setTimeout(transmitTTS, 20000);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // --- WATCHDOG (DETECCIÓN DE VUELTA DE STREAM) ---
+
+  function scheduleWatchdog() {
+    if (!isPlaying || currentMode !== 'TTS') return;
+    
+    watchDogTimer = setTimeout(async () => {
+      console.log("Watchdog: Comprobando si el stream volvió...");
+      try {
+        const response = await fetch(STREAM_URL, { method: 'HEAD', cache: 'no-store' });
+        if (response.ok) {
+          console.log("Watchdog: Stream detectado! Cambiando...");
+          currentMode = 'NONE'; // Reset para permitir tryStream
+          stopTTSLogic();
+          tryStream();
+        } else {
+          scheduleWatchdog();
+        }
+      } catch (e) {
+        scheduleWatchdog();
+      }
+    }, 30000);
+  }
+
+  // --- UTILIDADES ---
+
+  function updateVolume(v) {
+    streamAudio.volume = v;
+    // El volumen de TTS es del sistema, pero podríamos escalar el ruido blanco aquí
+  }
+
+  // Listener counter logic
+  async function pingWorker(action = null) {
+    try {
+      const url = action ? `${WORKER_URL}?action=${action}` : WORKER_URL;
+      const res = await fetch(url, { method: action ? 'POST' : 'GET', cache: 'no-store' });
+      const data = await res.json();
+      const n = data.listeners ?? 0;
+      const countEl = document.getElementById('listenersCount');
+      countEl.textContent = n;
+      countEl.style.color = n > 0 ? 'var(--red)' : 'var(--gray)';
+      document.getElementById('listenersDisplay').style.opacity = '1';
+    } catch (e) {}
+  }
+
+  let listenersInterval;
+  function startListenersCounter() {
+    pingWorker('join');
+    listenersInterval = setInterval(() => pingWorker(), 10000);
+  }
+  function stopListenersCounter() {
+    pingWorker('leave');
+    clearInterval(listenersInterval);
+  }
+
+  // Gestión de cierre
+  window.addEventListener("beforeunload", () => {
+    if (isPlaying) navigator.sendBeacon(`${WORKER_URL}?action=leave`);
+  });
+
 </script>
 </body>
 </html>
-
-
-
