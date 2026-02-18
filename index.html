@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radio Arkana - Sistema Integrado</title>
+  <title>Radio Arkana - Sistema Híbrido</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -93,7 +93,7 @@
       height: 40px;
       margin-bottom: 28px;
     }
-    .bar { width: 3px; background: var(--border); border-radius: 2px; }
+    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s;}
     .playing .bar {
       background: var(--red);
       animation: wave var(--dur) ease-in-out infinite alternate;
@@ -115,7 +115,7 @@
       transition: background 0.3s;
     }
     .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
-    .dot.tts { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; }
+    .dot.tts { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
     #statusText { color: var(--gray); }
@@ -128,6 +128,7 @@
       color: var(--red-dim);
       margin-bottom: 16px;
       min-height: 14px;
+      font-weight: bold;
     }
 
     .play-btn {
@@ -136,17 +137,18 @@
       font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
       padding: 16px; cursor: pointer; display: flex;
       align-items: center; justify-content: center; gap: 14px;
+      transition: all 0.2s;
     }
     .play-btn:hover { border-color: var(--red); background: rgba(230,48,48,0.06); }
     .play-btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
 
     .volume-row {
       display: flex; align-items: center; gap: 12px; margin-top: 20px;
-      opacity: 0.5; transition: opacity 0.3s;
+      opacity: 0.3; transition: opacity 0.3s;
     }
     .volume-row.visible { opacity: 1; }
     .vol-label { font-size: 9px; text-transform: uppercase; color: var(--gray); width: 24px; }
-    input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); }
+    input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); outline: none;}
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer;
     }
@@ -163,20 +165,20 @@
 
 <div class="wrap">
   <div class="header">
-    <span class="header-label" id="modeLabel">Señal fuera de línea</span>
-    <span class="freq" id="infoFreq">AUTO-DETECCIÓN ACTIVA</span>
+    <span class="header-label" id="modeLabel">Sistema offline</span>
+    <span class="freq">7.50 MHz · AM VINTAGE</span>
   </div>
 
   <div class="card">
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
-    <p class="tagline">FM & Tarot Underground</p>
+    <p class="tagline">Tarot Underground · Málaga</p>
 
     <div class="waveform" id="waveform"></div>
 
     <div class="status-row">
       <span class="dot" id="dot"></span>
       <span id="statusText">Desconectado</span>
-      <span id="listenersDisplay" style="margin-left:auto; display:flex; align-items:center; gap:6px; opacity:0;">
+      <span id="listenersDisplay" style="margin-left:auto; display:flex; align-items:center; gap:6px; opacity:0; transition: opacity 0.5s;">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--gray)"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
         <span id="listenersCount" style="font-size:10px;">—</span>
       </span>
@@ -201,24 +203,24 @@
   </div>
 </div>
 
-<!-- Audio para Streaming -->
 <audio id="streamAudio" preload="none" crossorigin="anonymous"></audio>
 
 <script>
-  // --- CONFIGURACIÓN ---
+  // --- CONFIG ---
   const STREAM_URL = 'https://stream.radioarkana.com/stream';
   const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
   const CARDS = ["El Loco", "El Mago", "La Papisa", "La Emperatriz", "El Emperador", "El Papa", "El Enamorado", "El Carro", "La Fuerza", "El Ermitaño", "La Rueda de la Fortuna", "La Justicia", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"];
 
-  // --- ESTADO GLOBAL ---
+  // --- STATE ---
   let isPlaying = false;
-  let currentMode = 'NONE'; // 'STREAM' o 'TTS'
-  let ttsTimer = null;
-  let watchDogTimer = null;
+  let currentMode = 'NONE'; // 'STREAM', 'TTS'
   let audioCtx = null;
-  let noiseNodes = []; // Para limpiar AudioContext
+  let noiseNodes = [];
+  let ttsTimer = null;
+  let watchdogTimer = null;
+  let lastTime = 0;
+  let healthCheckInterval = null;
 
-  // Elementos DOM
   const streamAudio = document.getElementById('streamAudio');
   const playBtn = document.getElementById('playBtn');
   const playLabel = document.getElementById('playLabel');
@@ -228,9 +230,8 @@
   const dot = document.getElementById('dot');
   const wf = document.getElementById('waveform');
   const repLabel = document.getElementById('repLabel');
-  const volRow = document.getElementById('volRow');
 
-  // Inicializar Waveform
+  // Waveform init
   for (let i = 0; i < 48; i++) {
     const b = document.createElement('div');
     b.className = 'bar';
@@ -238,132 +239,116 @@
     wf.appendChild(b);
   }
 
-  // --- LÓGICA PRINCIPAL ---
-
   function toggleMain() {
-    if (!isPlaying) {
-      startEverything();
-    } else {
-      stopEverything();
-    }
+    if (!isPlaying) start(); else stop();
   }
 
-  function startEverything() {
+  function start() {
     isPlaying = true;
     playBtn.classList.add('active');
     wf.classList.add('playing');
-    volRow.classList.add('visible');
+    document.getElementById('volRow').classList.add('visible');
     startListenersCounter();
-    tryStream(); // Intentar stream primero
+    tryStream();
   }
 
-  function stopEverything() {
+  function stop() {
     isPlaying = false;
     currentMode = 'NONE';
-    
-    // Parar Stream
     streamAudio.pause();
-    streamAudio.src = '';
-    
-    // Parar TTS
+    streamAudio.src = "";
+    clearInterval(healthCheckInterval);
+    clearTimeout(watchdogTimer);
     clearTimeout(ttsTimer);
-    clearTimeout(watchDogTimer);
     window.speechSynthesis.cancel();
     if (audioCtx) audioCtx.suspend();
 
-    // UI Reset
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
-    volRow.classList.remove('visible');
     dot.className = 'dot';
     statusText.textContent = 'Desconectado';
     statusText.className = '';
-    modeLabel.textContent = 'Señal fuera de línea';
+    modeLabel.textContent = 'Sistema offline';
     playLabel.textContent = 'Escuchar en directo';
     playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
     repLabel.textContent = '';
-    
     stopListenersCounter();
   }
 
-  // --- MÓDULO STREAMING ---
+  // --- STREAM LOGIC ---
 
   function tryStream() {
     if (!isPlaying) return;
-    
-    statusText.textContent = 'Conectando señal...';
-    modeLabel.textContent = 'Buscando FM...';
+    currentMode = 'LOADING';
+    statusText.textContent = 'Sincronizando...';
+    modeLabel.textContent = 'Buscando señal FM...';
     
     streamAudio.src = `${STREAM_URL}?cb=${Date.now()}`;
     streamAudio.load();
-    
-    // Si en 6 segundos no hay 'playing', saltamos a TTS
-    let streamTimeout = setTimeout(() => {
-      if (currentMode !== 'STREAM' && isPlaying) {
-        console.log("Stream timeout -> Switch to TTS");
-        startTTSMode();
-      }
-    }, 6000);
-
-    streamAudio.play().then(() => {
-        clearTimeout(streamTimeout);
-    }).catch(() => {
-        // Error inmediato (ej: 404)
-        if (currentMode !== 'TTS') startTTSMode();
+    streamAudio.play().catch(() => {
+        if(currentMode !== 'TTS') startTTS();
     });
+
+    // Monitor de salud: Si el tiempo no avanza, el stream ha muerto
+    lastTime = -1;
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = setInterval(() => {
+      if (currentMode === 'STREAM') {
+        if (streamAudio.currentTime === lastTime) {
+          console.warn("Stream congelado detectado.");
+          startTTS();
+        }
+        lastTime = streamAudio.currentTime;
+      }
+    }, 5000); 
   }
 
   streamAudio.onplaying = () => {
     currentMode = 'STREAM';
-    stopTTSLogic(); // Por si acaso estaba sonando
+    stopTTSAudio();
     dot.className = 'dot live';
-    statusText.textContent = 'En directo (FM)';
+    statusText.textContent = 'En directo';
     statusText.className = 'live';
-    modeLabel.textContent = 'Transmisión de Alta Fidelidad';
+    modeLabel.textContent = 'Emisión FM Activa';
     playLabel.textContent = 'Detener';
     playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
-    repLabel.textContent = 'Señal de audio activa';
-    
-    // Cancelamos watchdog de búsqueda mientras el stream sea estable
-    clearTimeout(watchDogTimer);
+    repLabel.textContent = 'Señal estable';
+    clearTimeout(watchdogTimer);
   };
 
-  streamAudio.onerror = () => {
-    if (isPlaying && currentMode !== 'TTS') {
-      startTTSMode();
-    }
+  streamAudio.onstalled = streamAudio.onerror = streamAudio.onwaiting = () => {
+    // Si el stream se pausa por falta de datos, esperamos 3 segundos y saltamos a TTS
+    setTimeout(() => {
+        if ((streamAudio.paused || streamAudio.readyState < 3) && isPlaying && currentMode !== 'TTS') {
+            startTTS();
+        }
+    }, 3000);
   };
 
-  // --- MÓDULO TTS & AUDIO GENERATIVO ---
+  // --- FALLBACK TTS / GENERATIVE ---
 
-  function startTTSMode() {
-    if (currentMode === 'TTS') return;
+  function startTTS() {
+    if (currentMode === 'TTS' || !isPlaying) return;
     currentMode = 'TTS';
-    
+    console.log("Activando Fallback TTS...");
+
     streamAudio.pause();
-    streamAudio.src = '';
-    
+    streamAudio.src = "";
+
     dot.className = 'dot tts';
-    statusText.textContent = 'Modo Arkana (Pruebas)';
+    statusText.textContent = 'Modo Emergencia';
     statusText.className = '';
-    modeLabel.textContent = 'Sin señal FM · Fallback TTS';
-    playLabel.textContent = 'Detener';
-    playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
-
-    initAudioContext();
-    transmitTTS();
-
-    // Activar Watchdog: intentar volver al stream cada 30 seg
-    scheduleWatchdog();
+    modeLabel.textContent = 'Señal perdida · Generando interferencia';
+    
+    initGenerativeAudio();
+    runTTSLoop();
+    startWatchdog(); 
   }
 
-  function initAudioContext() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+  function initGenerativeAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.resume();
     
-    // Crear ruido si no existe
     if (noiseNodes.length === 0) {
       // Noise
       const bufferSize = 2 * audioCtx.sampleRate;
@@ -373,127 +358,106 @@
       const noiseSource = audioCtx.createBufferSource();
       noiseSource.buffer = noiseBuffer;
       noiseSource.loop = true;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = "bandpass"; filter.frequency.value = 1500;
-      const gain = audioCtx.createGain(); gain.gain.value = 0.02;
-      noiseSource.connect(filter).connect(gain).connect(audioCtx.destination);
+      const gain = audioCtx.createGain(); 
+      gain.gain.value = 0.02;
+      noiseSource.connect(gain).connect(audioCtx.destination);
       noiseSource.start();
       noiseNodes.push(noiseSource, gain);
 
-      // Binaural simple (200Hz - 208Hz)
+      // Binaural
       const oscL = audioCtx.createOscillator();
       const oscR = audioCtx.createOscillator();
       const m = audioCtx.createChannelMerger(2);
-      const bGain = audioCtx.createGain(); bGain.gain.value = 0.04;
+      const bGain = audioCtx.createGain(); bGain.gain.value = 0.03;
       oscL.frequency.value = 200; oscR.frequency.value = 208;
       oscL.connect(m, 0, 0); oscR.connect(m, 0, 1);
       m.connect(bGain).connect(audioCtx.destination);
       oscL.start(); oscR.start();
       noiseNodes.push(oscL, oscR, bGain);
     } else {
-      // Si ya existen, solo subir volumen si se bajó
-      noiseNodes.forEach(n => { if(n.gain) n.gain.value = n.gain.value || 0.02; });
+      noiseNodes.forEach(n => { if(n.gain) n.gain.value = 0.02; });
     }
   }
 
-  function stopTTSLogic() {
+  function stopTTSAudio() {
     window.speechSynthesis.cancel();
     clearTimeout(ttsTimer);
     if (audioCtx) {
-        // Bajamos el volumen del ruido en lugar de destruir para suavizar transiciones
-        noiseNodes.forEach(n => { if(n.gain) n.gain.value = 0; });
+      noiseNodes.forEach(n => { if(n.gain) n.gain.value = 0; });
     }
   }
 
-  let currentRep = 0;
-  function transmitTTS() {
+  let repCount = 0;
+  let currentTrio = [];
+
+  function runTTSLoop() {
     if (currentMode !== 'TTS' || !isPlaying) return;
 
-    if (currentRep === 0) {
-      const trio = [];
-      const pool = [...CARDS];
-      for(let i=0; i<3; i++) trio.push(pool.splice(Math.floor(Math.random()*pool.length), 1)[0]);
-      window.currentTrio = trio;
+    if (repCount === 0) {
+      currentTrio = [];
+      let pool = [...CARDS];
+      for(let i=0; i<3; i++) currentTrio.push(pool.splice(Math.floor(Math.random()*pool.length), 1)[0]);
     }
 
-    currentRep++;
-    repLabel.textContent = `Transmisión Tarot: Repetición ${currentRep}/7`;
+    repCount++;
+    repLabel.textContent = `Interferencia Tarot: Rep ${repCount}/7`;
     
-    const text = `${window.currentTrio[0]}, con ${window.currentTrio[1]}, y ${window.currentTrio[2]}.`;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-ES';
-    utterance.rate = 0.85;
-
-    utterance.onend = () => {
+    const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, con ${currentTrio[1]}, y ${currentTrio[2]}.`);
+    msg.lang = 'es-ES';
+    msg.rate = 0.8;
+    msg.onend = () => {
       if (currentMode !== 'TTS') return;
-      if (currentRep >= 7) currentRep = 0;
-      repLabel.textContent = "Pausa de frecuencia (20s)...";
-      ttsTimer = setTimeout(transmitTTS, 20000);
+      if (repCount >= 7) repCount = 0;
+      repLabel.textContent = "Buscando frecuencia FM (20s)...";
+      ttsTimer = setTimeout(runTTSLoop, 20000);
     };
-
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(msg);
   }
 
-  // --- WATCHDOG (DETECCIÓN DE VUELTA DE STREAM) ---
+  // --- WATCHDOG: VUELTA AL STREAM ---
 
-  function scheduleWatchdog() {
+  function startWatchdog() {
     if (!isPlaying || currentMode !== 'TTS') return;
     
-    watchDogTimer = setTimeout(async () => {
-      console.log("Watchdog: Comprobando si el stream volvió...");
+    watchdogTimer = setTimeout(async () => {
+      console.log("Watchdog: Intentando recuperar FM...");
       try {
-        const response = await fetch(STREAM_URL, { method: 'HEAD', cache: 'no-store' });
-        if (response.ok) {
-          console.log("Watchdog: Stream detectado! Cambiando...");
-          currentMode = 'NONE'; // Reset para permitir tryStream
-          stopTTSLogic();
+        const check = await fetch(STREAM_URL, { method: 'HEAD', cache: 'no-store' });
+        if (check.ok) {
+          console.log("¡Señal FM detectada! Re-conectando...");
+          currentMode = 'NONE';
+          stopTTSAudio();
           tryStream();
         } else {
-          scheduleWatchdog();
+          startWatchdog();
         }
       } catch (e) {
-        scheduleWatchdog();
+        startWatchdog();
       }
-    }, 30000);
+    }, 15000); // Comprueba cada 15 segundos si el stream ha vuelto
   }
 
-  // --- UTILIDADES ---
+  // --- UTILS ---
 
-  function updateVolume(v) {
-    streamAudio.volume = v;
-    // El volumen de TTS es del sistema, pero podríamos escalar el ruido blanco aquí
-  }
+  function updateVolume(v) { streamAudio.volume = v; }
 
-  // Listener counter logic
   async function pingWorker(action = null) {
     try {
       const url = action ? `${WORKER_URL}?action=${action}` : WORKER_URL;
       const res = await fetch(url, { method: action ? 'POST' : 'GET', cache: 'no-store' });
       const data = await res.json();
-      const n = data.listeners ?? 0;
-      const countEl = document.getElementById('listenersCount');
-      countEl.textContent = n;
-      countEl.style.color = n > 0 ? 'var(--red)' : 'var(--gray)';
+      document.getElementById('listenersCount').textContent = data.listeners ?? 0;
       document.getElementById('listenersDisplay').style.opacity = '1';
     } catch (e) {}
   }
 
-  let listenersInterval;
-  function startListenersCounter() {
-    pingWorker('join');
-    listenersInterval = setInterval(() => pingWorker(), 10000);
-  }
-  function stopListenersCounter() {
-    pingWorker('leave');
-    clearInterval(listenersInterval);
-  }
+  let lint;
+  function startListenersCounter() { pingWorker('join'); lint = setInterval(pingWorker, 10000); }
+  function stopListenersCounter() { pingWorker('leave'); clearInterval(lint); }
 
-  // Gestión de cierre
   window.addEventListener("beforeunload", () => {
     if (isPlaying) navigator.sendBeacon(`${WORKER_URL}?action=leave`);
   });
-
 </script>
 </body>
 </html>
-
