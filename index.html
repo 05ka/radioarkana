@@ -213,8 +213,11 @@
 
   const INITIAL_CONNECT_TIMEOUT_MS = 10000;
   const WATCHDOG_INTERVAL_MS = 20000;
-  const STALL_TIMEOUT_MS = 8000;
-  const HEALTH_CHECK_INTERVAL_MS = 6000;
+  // FIX: reducido para detectar caída de stream más rápido
+  const STALL_TIMEOUT_MS = 4000;
+  const HEALTH_CHECK_INTERVAL_MS = 3000;
+  // FIX: solo necesitamos 2 checks malos para detectar caída (antes 3 × 6s = 18s, ahora 2 × 3s = 6s)
+  const BAD_CHECKS_THRESHOLD = 2;
 
   // --- STATE ---
   let isPlaying = false;
@@ -228,15 +231,12 @@
   let lastTime = 0;
   let healthCheckInterval = null;
   let initialConnectTimer = null;
-
-  // FIX EXTRA: identificador de intento de stream para ignorar eventos viejos
   let streamAttemptId = 0;
-
-  // FIX EXTRA: contador de health-check “malos”
   let badChecks = 0;
-
-  // FIX EXTRA: saber si el TTS está hablando ahora mismo
   let ttsSpeaking = false;
+
+  // FIX: flag para evitar que onerror/onstalled disparen startTTS múltiples veces en cascada
+  let transitioningToTTS = false;
 
   const streamAudio = document.getElementById('streamAudio');
   const playBtn = document.getElementById('playBtn');
@@ -262,18 +262,25 @@
 
   function start() {
     isPlaying = true;
+    transitioningToTTS = false;
     playBtn.classList.add('active');
     wf.classList.add('playing');
     document.getElementById('volRow').classList.add('visible');
     startListenersCounter();
-    tryStream();
+    // FIX: arrancamos directamente en modo TTS, el watchdog se encargará
+    // de intentar el stream. Así evitamos el "buffer loop" inicial y 
+    // el usuario siempre escucha algo inmediatamente.
+    startTTS();
+    // Lanzamos también un intento de stream en paralelo
+    tryStreamProbe();
   }
 
   function stop() {
     isPlaying = false;
     currentMode = 'NONE';
     streamConnectedOnce = false;
-    streamAttemptId++; // invalida callbacks pendientes
+    streamAttemptId++;
+    transitioningToTTS = false;
 
     streamAudio.pause();
     streamAudio.src = "";
@@ -307,18 +314,51 @@
     initialConnectTimer = null;
   }
 
+  // --- STREAM PROBE: comprueba si hay señal antes de conectar el <audio> ---
+
+  async function tryStreamProbe() {
+    if (!isPlaying) return;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const check = await fetch(STREAM_URL, {
+        method: 'GET',
+        headers: { 'Range': 'bytes=0-0' },
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if ((check.ok || check.status === 206) && isPlaying && currentMode === 'TTS') {
+        console.log('Probe: señal FM detectada. Conectando stream...');
+        transitionToStream();
+      }
+      // Si no hay señal, el watchdog regular se encarga de reintentar
+    } catch (e) {
+      console.log('Probe inicial sin señal FM:', e.message);
+      // No pasa nada, TTS sigue activo, watchdog reintentará
+    }
+  }
+
   // --- STREAM LOGIC ---
 
-  function tryStream() {
-    if (!isPlaying) return;
+  function transitionToStream() {
+    // Llamado solo cuando sabemos que hay señal FM disponible
+    if (!isPlaying || currentMode === 'STREAM') return;
 
-    clearAllTimers();
-    const myAttempt = ++streamAttemptId; // FIX EXTRA
-
+    const myAttempt = ++streamAttemptId;
     currentMode = 'LOADING';
+    badChecks = 0;
+    transitioningToTTS = false;
+
     statusText.textContent = 'Sincronizando...';
     modeLabel.textContent = 'Buscando señal FM...';
     dot.className = 'dot';
+
+    // Detenemos TTS de voz pero mantenemos el ruido generativo de fondo
+    // como puente sonoro hasta que el stream arranque
+    window.speechSynthesis.cancel();
+    clearTimeout(ttsTimer);
+    ttsSpeaking = false;
 
     streamAudio.src = `${STREAM_URL}?cb=${Date.now()}`;
     streamAudio.load();
@@ -326,8 +366,8 @@
     initialConnectTimer = setTimeout(() => {
       if (!isPlaying || myAttempt !== streamAttemptId) return;
       if (currentMode === 'LOADING') {
-        console.warn('Timeout inicial sin señal FM. Activando TTS.');
-        startTTS();
+        console.warn('Timeout: stream no arrancó. Volviendo a TTS.');
+        fallbackToTTS();
       }
     }, INITIAL_CONNECT_TIMEOUT_MS);
 
@@ -335,48 +375,76 @@
       console.warn('play() rechazado:', err);
       if (!isPlaying || myAttempt !== streamAttemptId) return;
       if (currentMode === 'LOADING') {
-        startTTS();
+        fallbackToTTS();
       }
     });
 
-    lastTime = -1;
-    badChecks = 0;
-
+    // Health check para detectar caída del stream una vez activo
     healthCheckInterval = setInterval(() => {
       if (!isPlaying || myAttempt !== streamAttemptId) return;
       if (currentMode !== 'STREAM') return;
 
-      const frozen = streamAudio.currentTime === lastTime && !streamAudio.paused;
+      const ct = streamAudio.currentTime;
+      const frozen = ct === lastTime && !streamAudio.paused;
       const reallyEmpty = streamAudio.networkState === HTMLMediaElement.NETWORK_EMPTY;
+      // FIX: también detectamos NETWORK_IDLE después de haber conectado (stream cerrado por servidor)
+      const networkIdle = streamAudio.networkState === HTMLMediaElement.NETWORK_IDLE && streamConnectedOnce;
       const lowReady = streamAudio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
 
-      if (frozen || reallyEmpty || lowReady) {
+      if (frozen || reallyEmpty || networkIdle || lowReady) {
         badChecks++;
-        if (badChecks >= 3) {
-          console.warn('Stream caído tras varios health checks. Activando TTS.');
+        console.log(`Health check malo #${badChecks} — frozen:${frozen} empty:${reallyEmpty} idle:${networkIdle} lowReady:${lowReady} ct:${ct}`);
+        if (badChecks >= BAD_CHECKS_THRESHOLD) {
+          console.warn('Stream caído confirmado por health check. Volviendo a TTS.');
           clearAllTimers();
-          startTTS();
+          fallbackToTTS();
           return;
         }
       } else {
         badChecks = 0;
       }
 
-      lastTime = streamAudio.currentTime;
+      lastTime = ct;
     }, HEALTH_CHECK_INTERVAL_MS);
+  }
+
+  // FIX: función centralizada para volver a TTS, evita llamadas duplicadas
+  function fallbackToTTS() {
+    if (!isPlaying) return;
+    if (transitioningToTTS) return; // ya estamos en transición, ignorar
+    transitioningToTTS = true;
+
+    console.log('fallbackToTTS() — limpiando stream y activando TTS...');
+
+    // Limpiamos el elemento audio completamente para evitar el buffer loop
+    streamAudio.pause();
+    streamAudio.src = '';
+    streamAudio.load(); // fuerza liberación del buffer
+
+    clearAllTimers();
+    streamConnectedOnce = false;
+    currentMode = 'NONE'; // reset antes de llamar startTTS
+
+    // Pequeño delay para que el navegador libere el buffer antes de activar TTS
+    setTimeout(() => {
+      if (!isPlaying) return;
+      transitioningToTTS = false;
+      startTTS();
+    }, 300);
   }
 
   streamAudio.onplaying = () => {
     if (!isPlaying) return;
     if (currentMode === 'TTS') return;
-    // no intentId aquí porque no tenemos myAttempt, usamos estado actual
+    if (transitioningToTTS) return;
 
     streamConnectedOnce = true;
     currentMode = 'STREAM';
+    badChecks = 0;
 
     clearTimeout(initialConnectTimer);
     clearTimeout(stallTimer);
-    stopTTSAudio();
+    stopTTSAudio(); // ahora sí apagamos también el ruido generativo
 
     dot.className = 'dot live';
     statusText.textContent = 'En directo';
@@ -386,51 +454,75 @@
     playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
     repLabel.textContent = 'Señal estable';
 
+    lastTime = streamAudio.currentTime;
     console.log('Stream FM activo y reproduciéndose.');
+  };
+
+  // FIX: onended es el evento más limpio cuando el servidor Icecast cierra la conexión
+  streamAudio.onended = () => {
+    if (!isPlaying) return;
+    if (currentMode !== 'STREAM') return;
+    console.warn('Stream terminó (onended). Volviendo a TTS.');
+    clearAllTimers();
+    fallbackToTTS();
   };
 
   streamAudio.onpause = () => {
     if (!isPlaying) return;
     if (currentMode !== 'STREAM') return;
+    if (transitioningToTTS) return;
 
-    console.warn('Stream pausado inesperadamente. Intentando reanudar...');
+    console.warn('Stream pausado inesperadamente. Esperando...');
     clearTimeout(stallTimer);
     stallTimer = setTimeout(() => {
-      if (!isPlaying) return;
-      if (currentMode === 'STREAM' && streamAudio.paused) {
-        streamAudio.play().catch(() => startTTS());
+      if (!isPlaying || currentMode !== 'STREAM') return;
+      if (streamAudio.paused) {
+        // FIX: en vez de intentar reanudar indefinidamente, comprobamos networkState
+        if (streamAudio.networkState === HTMLMediaElement.NETWORK_EMPTY ||
+            streamAudio.networkState === HTMLMediaElement.NETWORK_IDLE) {
+          console.warn('Stream caído (networkState tras pause). Volviendo a TTS.');
+          clearAllTimers();
+          fallbackToTTS();
+        } else {
+          streamAudio.play().catch(() => {
+            clearAllTimers();
+            fallbackToTTS();
+          });
+        }
       }
     }, 3000);
   };
 
   streamAudio.onstalled = () => {
     if (!isPlaying) return;
+    if (currentMode === 'LOADING') return; // normal durante la carga
+    if (transitioningToTTS) return;
     console.log('onstalled — modo:', currentMode);
 
     clearTimeout(stallTimer);
     stallTimer = setTimeout(() => {
-      if (!isPlaying) return;
-      if (currentMode === 'LOADING') return;
-      if (currentMode === 'STREAM' && (streamAudio.paused || streamAudio.readyState < 3)) {
-        console.warn('Stream caído tras onstalled. Activando TTS.');
+      if (!isPlaying || currentMode !== 'STREAM' || transitioningToTTS) return;
+      if (streamAudio.paused || streamAudio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
+        console.warn('Stream caído tras onstalled. Volviendo a TTS.');
         clearAllTimers();
-        startTTS();
+        fallbackToTTS();
       }
     }, STALL_TIMEOUT_MS);
   };
 
   streamAudio.onwaiting = () => {
     if (!isPlaying) return;
-    console.log('onwaiting — modo:', currentMode);
     if (currentMode === 'LOADING') return;
+    if (transitioningToTTS) return;
+    console.log('onwaiting — modo:', currentMode);
 
     clearTimeout(stallTimer);
     stallTimer = setTimeout(() => {
-      if (!isPlaying) return;
-      if (currentMode === 'STREAM' && streamAudio.readyState < 3) {
-        console.warn('Stream esperando demasiado. Activando TTS.');
+      if (!isPlaying || currentMode !== 'STREAM' || transitioningToTTS) return;
+      if (streamAudio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
+        console.warn('Stream esperando demasiado. Volviendo a TTS.');
         clearAllTimers();
-        startTTS();
+        fallbackToTTS();
       }
     }, STALL_TIMEOUT_MS);
   };
@@ -439,32 +531,39 @@
     const error = streamAudio.error;
     console.error('streamAudio.onerror — modo:', currentMode, '— error:', error);
     if (!isPlaying) return;
-    if (currentMode !== 'STREAM') return;
+    if (transitioningToTTS) return;
+    // FIX: reaccionamos a errores en cualquier modo activo, no solo STREAM
+    if (currentMode === 'NONE') return;
 
     if (!error || error.code === MediaError.MEDIA_ERR_NETWORK || error.code === MediaError.MEDIA_ERR_DECODE) {
       clearAllTimers();
-      startTTS();
+      fallbackToTTS();
     }
   };
 
-  // --- FALLBACK TTS / GENERATIVE ---
+  // --- FALLBACK TTS / GENERATIVO ---
 
   function startTTS() {
     if (currentMode === 'TTS' || !isPlaying) return;
 
     currentMode = 'TTS';
-    streamAttemptId++; // invalida eventos de stream antiguos
+    streamAttemptId++; // invalida callbacks de stream pendientes
     console.log('Activando Fallback TTS...');
 
     clearTimeout(initialConnectTimer);
+    clearInterval(healthCheckInterval);
+
+    // Aseguramos que el audio element está limpio
     streamAudio.pause();
-    streamAudio.src = "";
+    streamAudio.src = '';
     streamAudio.load();
 
     dot.className = 'dot tts';
     statusText.textContent = 'Modo Emergencia';
     statusText.className = '';
     modeLabel.textContent = 'Señal perdida · Generando interferencia';
+    playLabel.textContent = 'Detener';
+    playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
 
     initGenerativeAudio();
     runTTSLoop();
@@ -499,7 +598,8 @@
       oscL.start(); oscR.start();
       noiseNodes.push(oscL, oscR, bGain);
     } else {
-      noiseNodes.forEach(n => { if (n.gain) n.gain.value = 0.02; });
+      // Reactiva el ruido generativo si estaba silenciado
+      noiseNodes.forEach(n => { if (n.gain) n.gain.value = n === noiseNodes[1] ? 0.02 : 0.03; });
     }
   }
 
@@ -531,7 +631,7 @@
     msg.lang = 'es-ES';
     msg.rate = 0.8;
 
-    msg.onstart = () => { ttsSpeaking = true; }; // FIX EXTRA
+    msg.onstart = () => { ttsSpeaking = true; };
 
     msg.onend = () => {
       ttsSpeaking = false;
@@ -573,15 +673,15 @@
         clearTimeout(timeoutId);
 
         if (check.ok || check.status === 206) {
-          console.log('Señal FM detectada por watchdog.');
+          console.log('Watchdog: Señal FM detectada.');
           if (ttsSpeaking) {
-            console.log('TTS hablando, reintento de reconexión pospuesto.');
-            startWatchdog();
+            console.log('TTS hablando, posponiendo reconexión al stream.');
+            startWatchdog(); // reintenta cuando acabe
             return;
           }
-          stopTTSAudio();
-          currentMode = 'NONE';
-          tryStream();
+          // FIX: usamos transitionToStream() en vez de tryStream()
+          // para no romper el flujo TTS → STREAM
+          transitionToStream();
         } else {
           startWatchdog();
         }
@@ -618,13 +718,13 @@
     if (!document.hidden && isPlaying && currentMode === 'STREAM') {
       if (streamAudio.paused) {
         console.log('Página visible de nuevo. Reanudando stream...');
-        streamAudio.play().catch(() => startTTS());
+        streamAudio.play().catch(() => {
+          clearAllTimers();
+          fallbackToTTS();
+        });
       }
     }
   });
 </script>
 </body>
 </html>
-
-
-
