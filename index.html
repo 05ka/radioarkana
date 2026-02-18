@@ -4,219 +4,99 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Radio Arkana - Sistema Híbrido</title>
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-
   <style>
     :root {
-      --bg:        #0a0a0a;
-      --surface:   #111111;
-      --border:    #1e1e1e;
-      --red:       #e63030;
-      --red-dim:   #7a1a1a;
-      --white:     #f0ece4;
-      --gray:      #555;
-      --font-head: 'Bebas Neue', sans-serif;
-      --font-body: 'Space Mono', monospace;
+      --bg: #0a0a0a; --surface: #111111; --border: #1e1e1e;
+      --red: #e63030; --red-dim: #7a1a1a; --white: #f0ece4; --gray: #555;
+      --font-head: 'Bebas Neue', sans-serif; --font-body: 'Space Mono', monospace;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--white);
-      font-family: var(--font-body);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 100;
-      opacity: 0.4;
-    }
-
+    body { background: var(--bg); color: var(--white); font-family: var(--font-body); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 100; opacity: 0.4; }
     .wrap { width: min(460px, 92vw); display: flex; flex-direction: column; }
-
-    .header {
-      background: var(--red);
-      padding: 6px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+    .header { background: var(--red); padding: 6px 20px; display: flex; align-items: center; justify-content: space-between; }
     .header-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.6); }
     .freq { font-size: 10px; letter-spacing: 0.15em; color: rgba(0,0,0,0.5); }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top: none;
-      padding: 36px 32px 32px;
-      position: relative;
-    }
-
-    .station-name {
-      font-family: var(--font-head);
-      font-size: clamp(64px, 16vw, 88px);
-      line-height: 0.88;
-      letter-spacing: 0.02em;
-      color: var(--white);
-      margin-bottom: 4px;
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-top: none; padding: 36px 32px 32px; position: relative; }
+    .station-name { font-family: var(--font-head); font-size: clamp(64px, 16vw, 88px); line-height: 0.88; letter-spacing: 0.02em; color: var(--white); margin-bottom: 4px; }
     .station-name span { color: var(--red); }
-
-    .tagline {
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--gray);
-      margin-bottom: 36px;
-    }
-
-    .waveform {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      height: 40px;
-      margin-bottom: 28px;
-    }
+    .tagline { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gray); margin-bottom: 36px; }
+    .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; }
     .bar { width: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
-    .playing .bar {
-      background: var(--red);
-      animation: wave var(--dur) ease-in-out infinite alternate;
-    }
+    .playing .bar { background: var(--red); animation: wave var(--dur) ease-in-out infinite alternate; }
     @keyframes wave { from { transform: scaleY(0.15); } to { transform: scaleY(1); } }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 24px;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
+    .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); transition: background 0.3s; }
     .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
     .dot.tts  { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-
     #statusText { color: var(--gray); }
     #statusText.live { color: var(--white); }
-
-    #repLabel {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--red-dim);
-      margin-bottom: 16px;
-      min-height: 14px;
-      font-weight: bold;
-    }
-
-    .play-btn {
-      width: 100%; background: transparent; border: 1px solid var(--border);
-      color: var(--white); font-family: var(--font-body);
-      font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
-      padding: 16px; cursor: pointer; display: flex;
-      align-items: center; justify-content: center; gap: 14px;
-      transition: all 0.2s;
-    }
+    #repLabel { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red-dim); margin-bottom: 16px; min-height: 14px; font-weight: bold; }
+    .play-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--white); font-family: var(--font-body); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; padding: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 14px; transition: all 0.2s; }
     .play-btn:hover  { border-color: var(--red); background: rgba(230,48,48,0.06); }
     .play-btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
-
-    .volume-row {
-      display: flex; align-items: center; gap: 12px; margin-top: 20px;
-      opacity: 0; transition: opacity 0.3s;
-    }
+    .volume-row { display: flex; align-items: center; gap: 12px; margin-top: 20px; opacity: 0; transition: opacity 0.3s; }
     .volume-row.visible { opacity: 1; }
     .vol-label { font-size: 9px; text-transform: uppercase; color: var(--gray); width: 24px; }
     input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); outline: none; }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 10px; height: 10px;
-      background: var(--white); border-radius: 50%; cursor: pointer;
-    }
-
-    .footer {
-      border: 1px solid var(--border); border-top: none;
-      padding: 12px 32px; display: flex; justify-content: space-between;
-    }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer; }
+    .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; display: flex; justify-content: space-between; }
     .footer-note { font-size: 9px; text-transform: uppercase; color: #333; }
     .footer-note a { color: #444; text-decoration: none; }
   </style>
 </head>
 <body>
-
 <div class="wrap">
   <div class="header">
     <span class="header-label" id="modeLabel">Sistema offline</span>
     <span class="freq">7.50 MHz · AM VINTAGE</span>
   </div>
-
   <div class="card">
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
     <p class="tagline">Tarot Underground · Málaga</p>
-
     <div class="waveform" id="waveform"></div>
-
     <div class="status-row">
       <span class="dot" id="dot"></span>
       <span id="statusText">Desconectado</span>
       <span id="listenersDisplay" style="margin-left:auto; display:flex; align-items:center; gap:6px; opacity:0; transition: opacity 0.5s;">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--gray)">
-          <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-        </svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--gray)"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
         <span id="listenersCount" style="font-size:10px;">—</span>
       </span>
     </div>
-
     <p id="repLabel"></p>
-
     <button class="play-btn" id="playBtn" onclick="toggleMain()">
       <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       <span id="playLabel">Escuchar en directo</span>
     </button>
-
     <div class="volume-row" id="volRow">
       <span class="vol-label">VOL</span>
       <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" oninput="updateVolume(this.value)">
     </div>
   </div>
-
   <div class="footer">
     <span class="footer-note">Radio Arkana © 2026</span>
-    <span class="footer-note">
-      <a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">wtf?</a>
-    </span>
+    <span class="footer-note"><a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">wtf?</a></span>
   </div>
 </div>
 
-<!-- El contenedor del audio: el elemento se recrea dinámicamente -->
 <div id="audioContainer"></div>
 
 <script>
-  // ─── CONFIG ───────────────────────────────────────────────────────────────
-  const STREAM_URL    = 'https://stream.radioarkana.com/stream';
-  const WORKER_URL    = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+  const STREAM_URL     = 'https://stream.radioarkana.com/stream';
+  const WORKER_URL     = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
   const CARDS = ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"];
 
   const INITIAL_CONNECT_MS = 10000;
   const WATCHDOG_MS        = 20000;
-  const STALL_TIMEOUT_MS   = 8000;
+  const STALL_MS           = 8000;
 
-  // ─── STATE ────────────────────────────────────────────────────────────────
-  let isPlaying       = false;
-  let currentMode     = 'NONE';
-  let streamAttemptId = 0;
+  let isPlaying    = false;
+  let currentMode  = 'NONE'; // 'LOADING' | 'STREAM' | 'TTS'
+  let attemptId    = 0;       // incrementa en cada tryStream(); invalida handlers viejos
+  let watchdogId   = 0;       // ← CLAVE: identificador único de cada ciclo watchdog
 
   let audioCtx   = null;
   let noiseNodes = [];
@@ -225,10 +105,7 @@
   let initialConnectTimer = null;
   let stallTimer          = null;
   let ttsSpeaking         = false;
-
-  // El elemento <audio> se recrea cada vez que se necesita para garantizar
-  // que el navegador descarta completamente el buffer anterior.
-  let streamAudio = null;
+  let streamAudio         = null;
 
   const playBtn    = document.getElementById('playBtn');
   const playLabel  = document.getElementById('playLabel');
@@ -239,56 +116,47 @@
   const wf         = document.getElementById('waveform');
   const repLabel   = document.getElementById('repLabel');
 
-  // Waveform bars
   for (let i = 0; i < 48; i++) {
     const b = document.createElement('div');
     b.className = 'bar';
-    b.style.cssText = `height:${8 + Math.random()*92}%; --dur:${0.4 + Math.random()*0.8}s; animation-delay:${(i/48*0.6).toFixed(2)}s`;
+    b.style.cssText = `height:${8+Math.random()*92}%; --dur:${0.4+Math.random()*0.8}s; animation-delay:${(i/48*0.6).toFixed(2)}s`;
     wf.appendChild(b);
   }
 
-  // ─── AUDIO ELEMENT FACTORY ────────────────────────────────────────────────
-  // Destruye el elemento existente y crea uno nuevo limpio.
-  // Es la única forma 100% garantizada de que el navegador libere el buffer
-  // de red y deje de reproducir datos cacheados del stream anterior.
+  // ── AUDIO ELEMENT ──────────────────────────────────────────────────────────
+  // Destruye y recrea el <audio> para liberar completamente el buffer de red.
 
-  function createFreshAudioElement() {
+  function freshAudio() {
     const container = document.getElementById('audioContainer');
-
-    // Destruir el elemento anterior completamente
     if (streamAudio) {
-      streamAudio.onplaying = null;
-      streamAudio.onpause   = null;
-      streamAudio.onended   = null;
-      streamAudio.onwaiting = null;
-      streamAudio.onstalled = null;
-      streamAudio.onerror   = null;
+      streamAudio.onplaying = streamAudio.onpause = streamAudio.onended =
+      streamAudio.onwaiting = streamAudio.onstalled = streamAudio.onerror = null;
       streamAudio.pause();
       streamAudio.removeAttribute('src');
       streamAudio.load();
       container.removeChild(streamAudio);
-      streamAudio = null;
     }
-
-    // Crear elemento nuevo
-    const el = document.createElement('audio');
-    el.preload = 'none';
-    el.crossOrigin = 'anonymous';
-    container.appendChild(el);
-    streamAudio = el;
-
-    // Aplicar volumen actual
-    const volInput = document.getElementById('volume');
-    if (volInput) streamAudio.volume = parseFloat(volInput.value);
-
-    return el;
+    streamAudio = document.createElement('audio');
+    streamAudio.preload    = 'none';
+    streamAudio.crossOrigin = 'anonymous';
+    streamAudio.volume     = parseFloat(document.getElementById('volume').value ?? 0.8);
+    container.appendChild(streamAudio);
+    return streamAudio;
   }
 
-  // ─── MAIN CONTROL ─────────────────────────────────────────────────────────
+  // ── TIMERS ─────────────────────────────────────────────────────────────────
 
-  function toggleMain() {
-    if (!isPlaying) start(); else stop();
+  function clearAllTimers() {
+    clearTimeout(watchdogTimer);
+    clearTimeout(ttsTimer);
+    clearTimeout(initialConnectTimer);
+    clearTimeout(stallTimer);
+    watchdogTimer = ttsTimer = initialConnectTimer = stallTimer = null;
   }
+
+  // ── MAIN ───────────────────────────────────────────────────────────────────
+
+  function toggleMain() { if (!isPlaying) start(); else stop(); }
 
   function start() {
     isPlaying = true;
@@ -304,14 +172,12 @@
   function stop() {
     isPlaying = false;
     currentMode = 'NONE';
-    streamAttemptId++;
-
-    // Destruir el elemento audio por completo
-    createFreshAudioElement();
+    attemptId++;
+    watchdogId++;   // invalida cualquier watchdog pendiente
+    freshAudio();
     clearAllTimers();
     window.speechSynthesis.cancel();
     if (audioCtx) audioCtx.suspend();
-
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
     dot.className          = 'dot';
@@ -324,59 +190,27 @@
     stopListenersCounter();
   }
 
-  function clearAllTimers() {
-    clearTimeout(watchdogTimer);
-    clearTimeout(ttsTimer);
-    clearTimeout(initialConnectTimer);
-    clearTimeout(stallTimer);
-    watchdogTimer = ttsTimer = initialConnectTimer = stallTimer = null;
-  }
-
-  // ─── STREAM ───────────────────────────────────────────────────────────────
+  // ── STREAM ─────────────────────────────────────────────────────────────────
 
   function tryStream() {
     if (!isPlaying) return;
 
     clearAllTimers();
-    const myAttempt = ++streamAttemptId;
-
+    const myAttempt = ++attemptId;
     currentMode = 'LOADING';
+
     statusText.textContent = 'Sincronizando...';
     modeLabel.textContent  = 'Buscando señal FM...';
     dot.className          = 'dot';
 
-    // Elemento audio fresco para esta conexión
-    const audio = createFreshAudioElement();
-    attachStreamHandlers(audio, myAttempt);
-
-    audio.src = `${STREAM_URL}?cb=${Date.now()}`;
-    audio.load();
-
-    initialConnectTimer = setTimeout(() => {
-      if (!isPlaying || myAttempt !== streamAttemptId) return;
-      if (currentMode === 'LOADING') {
-        console.warn('Timeout inicial. Activando TTS.');
-        startTTS();
-      }
-    }, INITIAL_CONNECT_MS);
-
-    audio.play().catch(err => {
-      console.warn('play() rechazado:', err);
-      if (!isPlaying || myAttempt !== streamAttemptId) return;
-      if (currentMode === 'LOADING') startTTS();
-    });
-  }
-
-  function attachStreamHandlers(audio, myAttempt) {
-    // Guard: ignora eventos si este intento ya fue superado
-    const guard = () => isPlaying && myAttempt === streamAttemptId && currentMode !== 'TTS';
+    const audio = freshAudio();
 
     audio.onplaying = () => {
-      if (!guard()) return;
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode === 'TTS') return;
       currentMode = 'STREAM';
       clearTimeout(initialConnectTimer);
       clearTimeout(stallTimer);
-
       dot.className          = 'dot live';
       statusText.textContent = 'En directo';
       statusText.className   = 'live';
@@ -386,75 +220,93 @@
     };
 
     audio.onended = () => {
-      if (!guard() || currentMode !== 'STREAM') return;
-      console.warn('onended. Activando TTS.');
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode !== 'STREAM') return;
+      console.warn('onended → TTS');
       clearAllTimers();
       startTTS();
     };
 
     audio.onpause = () => {
-      if (!guard() || currentMode !== 'STREAM') return;
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode !== 'STREAM') return;
       console.log('onpause.');
-      // No intentamos reanudar — dejamos que el stall timer decida
       clearTimeout(stallTimer);
       stallTimer = setTimeout(() => {
-        if (!guard() || currentMode !== 'STREAM') return;
-        console.warn('Stream sigue pausado tras gracia. Activando TTS.');
+        if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
+        console.warn('pause sin reanudar → TTS');
         clearAllTimers();
         startTTS();
-      }, STALL_TIMEOUT_MS);
+      }, STALL_MS);
     };
 
     audio.onwaiting = () => {
-      if (!guard()) return;
+      if (!isPlaying || myAttempt !== attemptId) return;
       console.log('onwaiting — modo:', currentMode);
+      if (currentMode === 'LOADING') return;
       clearTimeout(stallTimer);
       stallTimer = setTimeout(() => {
-        if (!guard() || currentMode !== 'STREAM') return;
-        console.warn('Waiting prolongado. Activando TTS.');
+        if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
+        console.warn('waiting prolongado → TTS');
         clearAllTimers();
         startTTS();
-      }, STALL_TIMEOUT_MS);
+      }, STALL_MS);
     };
 
     audio.onstalled = () => {
-      if (!guard() || currentMode === 'LOADING') return;
-      console.log('onstalled.');
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode === 'LOADING') return;
       clearTimeout(stallTimer);
       stallTimer = setTimeout(() => {
-        if (!guard() || currentMode !== 'STREAM') return;
-        console.warn('Stall prolongado. Activando TTS.');
+        if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
+        console.warn('stall prolongado → TTS');
         clearAllTimers();
         startTTS();
-      }, STALL_TIMEOUT_MS);
+      }, STALL_MS);
     };
 
     audio.onerror = () => {
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode === 'TTS') return;
       const err = audio.error;
-      console.error('onerror — modo:', currentMode, err);
-      if (!guard()) return;
+      console.error('onerror:', err);
       if (!err || err.code === MediaError.MEDIA_ERR_NETWORK || err.code === MediaError.MEDIA_ERR_DECODE) {
         clearAllTimers();
         startTTS();
       }
     };
+
+    audio.src = `${STREAM_URL}?cb=${Date.now()}`;
+    audio.load();
+
+    initialConnectTimer = setTimeout(() => {
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode === 'LOADING') {
+        console.warn('timeout inicial → TTS');
+        startTTS();
+      }
+    }, INITIAL_CONNECT_MS);
+
+    audio.play().catch(err => {
+      console.warn('play() rechazado:', err);
+      if (!isPlaying || myAttempt !== attemptId) return;
+      if (currentMode === 'LOADING') startTTS();
+    });
   }
 
-  // ─── TTS / GENERATIVO ─────────────────────────────────────────────────────
+  // ── TTS ────────────────────────────────────────────────────────────────────
 
   function startTTS() {
     if (!isPlaying) return;
     if (currentMode === 'TTS') return;
 
     currentMode = 'TTS';
-    streamAttemptId++;
+    attemptId++;      // bloquea handlers del stream anterior
+    watchdogId++;     // cancela watchdogs acumulados del ciclo anterior
 
     console.log('Activando TTS...');
-    clearTimeout(initialConnectTimer);
-    clearTimeout(stallTimer);
-
-    // DESTRUIR el elemento audio → única forma segura de matar el buffer
-    createFreshAudioElement();
+    clearAllTimers();
+    freshAudio();     // libera el buffer
 
     dot.className          = 'dot tts';
     statusText.textContent = 'Modo Emergencia';
@@ -463,34 +315,81 @@
 
     initGenerativeAudio();
     runTTSLoop();
-    startWatchdog();
+    scheduleWatchdog(); // lanza UNA sola instancia de watchdog
   }
+
+  // ── WATCHDOG ───────────────────────────────────────────────────────────────
+  // Usamos watchdogId para garantizar que solo existe UNA cadena activa.
+  // Cada llamada a scheduleWatchdog() incrementa watchdogId, lo que hace que
+  // el callback de cualquier watchdog previo sea ignorado cuando se ejecute.
+
+  function scheduleWatchdog() {
+    if (!isPlaying || currentMode !== 'TTS') return;
+    clearTimeout(watchdogTimer);
+    const myWatchdog = ++watchdogId;
+
+    watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
+  }
+
+  async function runWatchdog(myWatchdog) {
+    // Si este watchdog ya fue superado por uno más nuevo, salir
+    if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
+
+    console.log('Watchdog: probando señal FM...');
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 5000);
+      const res  = await fetch(STREAM_URL, {
+        method: 'GET', headers: { 'Range': 'bytes=0-0' },
+        cache: 'no-store', signal: ctrl.signal
+      });
+      clearTimeout(tid);
+
+      // Revalidar tras el await: puede haber pasado tiempo
+      if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
+
+      if (res.ok || res.status === 206) {
+        if (ttsSpeaking) {
+          // Esperar a que acabe la frase antes de conectar el stream
+          console.log('FM detectada, esperando fin de frase TTS...');
+          // Replanificar con el MISMO id para no crear una nueva cadena
+          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
+          return;
+        }
+        console.log('Watchdog: FM disponible. Reconectando...');
+        stopTTSAudio();
+        currentMode = 'NONE';
+        tryStream();
+      } else {
+        // Sin señal: siguiente intento
+        watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
+      }
+    } catch (e) {
+      if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
+      console.log('Watchdog: sin señal.', e.message);
+      watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
+    }
+  }
+
+  // ── GENERATIVO ─────────────────────────────────────────────────────────────
 
   function initGenerativeAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.resume();
-
     if (noiseNodes.length === 0) {
-      const bufSize  = 2 * audioCtx.sampleRate;
-      const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-      const out = noiseBuf.getChannelData(0);
-      for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1;
-
-      const src = audioCtx.createBufferSource();
-      src.buffer = noiseBuf; src.loop = true;
+      const buf  = audioCtx.createBuffer(1, 2 * audioCtx.sampleRate, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource(); src.buffer = buf; src.loop = true;
       const nGain = audioCtx.createGain(); nGain.gain.value = 0.02;
-      src.connect(nGain).connect(audioCtx.destination);
-      src.start();
-
-      const oscL  = audioCtx.createOscillator();
-      const oscR  = audioCtx.createOscillator();
-      const m     = audioCtx.createChannelMerger(2);
+      src.connect(nGain).connect(audioCtx.destination); src.start();
+      const oscL = audioCtx.createOscillator(), oscR = audioCtx.createOscillator();
+      const m = audioCtx.createChannelMerger(2);
       const bGain = audioCtx.createGain(); bGain.gain.value = 0.03;
       oscL.frequency.value = 200; oscR.frequency.value = 208;
       oscL.connect(m, 0, 0); oscR.connect(m, 0, 1);
       m.connect(bGain).connect(audioCtx.destination);
       oscL.start(); oscR.start();
-
       noiseNodes = [src, nGain, oscL, oscR, bGain];
     } else {
       noiseNodes[1].gain.value = 0.02;
@@ -508,24 +407,19 @@
     }
   }
 
-  let repCount    = 0;
-  let currentTrio = [];
+  let repCount = 0, currentTrio = [];
 
   function runTTSLoop() {
     if (currentMode !== 'TTS' || !isPlaying) return;
-
     if (repCount === 0) {
       currentTrio = [];
       const pool = [...CARDS];
       for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     }
-
     repCount++;
     repLabel.textContent = `Interferencia Tarot: Rep ${repCount}/7`;
-
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, con ${currentTrio[1]}, y ${currentTrio[2]}.`);
     msg.lang = 'es-ES'; msg.rate = 0.8;
-
     msg.onstart = () => { ttsSpeaking = true; };
     msg.onend = () => {
       ttsSpeaking = false;
@@ -540,53 +434,19 @@
       if (currentMode !== 'TTS') return;
       ttsTimer = setTimeout(runTTSLoop, 5000);
     };
-
     window.speechSynthesis.speak(msg);
   }
 
-  // ─── WATCHDOG ─────────────────────────────────────────────────────────────
-
-  function startWatchdog() {
-    if (!isPlaying || currentMode !== 'TTS') return;
-    clearTimeout(watchdogTimer);
-
-    watchdogTimer = setTimeout(async () => {
-      if (!isPlaying || currentMode !== 'TTS') return;
-      console.log('Watchdog: probando señal FM...');
-
-      try {
-        const ctrl = new AbortController();
-        const tid  = setTimeout(() => ctrl.abort(), 5000);
-        const res  = await fetch(STREAM_URL, {
-          method: 'GET', headers: { 'Range': 'bytes=0-0' },
-          cache: 'no-store', signal: ctrl.signal
-        });
-        clearTimeout(tid);
-
-        if (res.ok || res.status === 206) {
-          if (ttsSpeaking) {
-            console.log('FM detectada, esperando fin de frase TTS...');
-            startWatchdog();
-            return;
-          }
-          console.log('Watchdog: FM disponible. Reconectando...');
-          stopTTSAudio();
-          currentMode = 'NONE';
-          tryStream();
-        } else {
-          startWatchdog();
-        }
-      } catch (e) {
-        console.log('Watchdog: sin señal.', e.message);
-        startWatchdog();
-      }
-    }, WATCHDOG_MS);
-  }
-
-  // ─── UTILS ────────────────────────────────────────────────────────────────
+  // ── UTILS ──────────────────────────────────────────────────────────────────
 
   function updateVolume(v) {
-    if (streamAudio) streamAudio.volume = parseFloat(v);
+    const vol = parseFloat(v);
+    if (streamAudio) streamAudio.volume = vol;
+    // También ajusta el ruido generativo (modo TTS)
+    if (audioCtx && noiseNodes.length) {
+      noiseNodes[1].gain.value = vol * 0.02;
+      noiseNodes[4].gain.value = vol * 0.03;
+    }
   }
 
   async function pingWorker(action = null) {
@@ -613,8 +473,7 @@
     }
   });
 
-  // Crear el elemento audio inicial
-  createFreshAudioElement();
+  freshAudio(); // elemento inicial vacío
 </script>
 </body>
 </html>
