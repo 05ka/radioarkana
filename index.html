@@ -334,15 +334,23 @@
       }
     });
 
-    // FIX 4: Health check más conservador — solo activo en modo STREAM
+    // FIX 4: Health check detecta tanto freeze como desconexión del servidor
     lastTime = -1;
     healthCheckInterval = setInterval(() => {
       if (currentMode !== 'STREAM') return;
-      if (streamAudio.currentTime === lastTime && !streamAudio.paused) {
-        console.warn('Stream congelado detectado.');
+
+      const frozen = streamAudio.currentTime === lastTime && !streamAudio.paused;
+      // networkState NETWORK_IDLE (1) o NETWORK_EMPTY (0) = servidor cerró la conexión
+      const serverDisconnected = streamAudio.networkState === HTMLMediaElement.NETWORK_IDLE
+                               || streamAudio.networkState === HTMLMediaElement.NETWORK_EMPTY;
+
+      if (frozen || serverDisconnected) {
+        console.warn('Stream caído. networkState:', streamAudio.networkState, '| frozen:', frozen);
         clearAllTimers();
         startTTS();
+        return;
       }
+
       lastTime = streamAudio.currentTime;
     }, HEALTH_CHECK_INTERVAL_MS);
   }
@@ -440,6 +448,7 @@
     clearTimeout(initialConnectTimer); // Por si acaso
     streamAudio.pause();
     streamAudio.src = "";
+    streamAudio.load(); // Vacía el buffer PCM — evita que siga sonando el último fragmento
 
     dot.className = 'dot tts';
     statusText.textContent = 'Modo Emergencia';
