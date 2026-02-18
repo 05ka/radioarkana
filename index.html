@@ -419,7 +419,9 @@
     repCount++;
     repLabel.textContent = `Interferencia Tarot: Rep ${repCount}/7`;
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, con ${currentTrio[1]}, y ${currentTrio[2]}.`);
-    msg.lang = 'es-ES'; msg.rate = 0.8;
+    msg.lang   = 'es-ES';
+    msg.rate   = 0.8;
+    msg.volume = parseFloat(document.getElementById('volume').value ?? 1);
     msg.onstart = () => { ttsSpeaking = true; };
     msg.onend = () => {
       ttsSpeaking = false;
