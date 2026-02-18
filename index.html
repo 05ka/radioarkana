@@ -276,7 +276,8 @@
     streamAttemptId++; // invalida callbacks pendientes
 
     streamAudio.pause();
-    streamAudio.src = "";
+    streamAudio.removeAttribute('src');
+    streamAudio.load();
 
     clearAllTimers();
     window.speechSynthesis.cancel();
@@ -625,5 +626,6 @@
 </script>
 </body>
 </html>
+
 
 
