@@ -44,11 +44,7 @@
       opacity: 0.4;
     }
 
-    .wrap {
-      width: min(460px, 92vw);
-      display: flex;
-      flex-direction: column;
-    }
+    .wrap { width: min(460px, 92vw); display: flex; flex-direction: column; }
 
     .header {
       background: var(--red);
@@ -93,7 +89,7 @@
       height: 40px;
       margin-bottom: 28px;
     }
-    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s;}
+    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
     .playing .bar {
       background: var(--red);
       animation: wave var(--dur) ease-in-out infinite alternate;
@@ -109,13 +105,9 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
     }
-    .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--gray);
-      transition: background 0.3s;
-    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); transition: background 0.3s; }
     .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
-    .dot.tts { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 2s infinite; }
+    .dot.tts  { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
     #statusText { color: var(--gray); }
@@ -139,7 +131,7 @@
       align-items: center; justify-content: center; gap: 14px;
       transition: all 0.2s;
     }
-    .play-btn:hover { border-color: var(--red); background: rgba(230,48,48,0.06); }
+    .play-btn:hover  { border-color: var(--red); background: rgba(230,48,48,0.06); }
     .play-btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
 
     .volume-row {
@@ -148,9 +140,10 @@
     }
     .volume-row.visible { opacity: 1; }
     .vol-label { font-size: 9px; text-transform: uppercase; color: var(--gray); width: 24px; }
-    input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); outline: none;}
+    input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); outline: none; }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer;
+      -webkit-appearance: none; width: 10px; height: 10px;
+      background: var(--white); border-radius: 50%; cursor: pointer;
     }
 
     .footer {
@@ -179,7 +172,9 @@
       <span class="dot" id="dot"></span>
       <span id="statusText">Desconectado</span>
       <span id="listenersDisplay" style="margin-left:auto; display:flex; align-items:center; gap:6px; opacity:0; transition: opacity 0.5s;">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--gray)"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--gray)">
+          <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+        </svg>
         <span id="listenersCount" style="font-size:10px;">—</span>
       </span>
     </div>
@@ -199,62 +194,97 @@
 
   <div class="footer">
     <span class="footer-note">Radio Arkana © 2026</span>
-    <span class="footer-note"><a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">wtf?</a></span>
+    <span class="footer-note">
+      <a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">wtf?</a>
+    </span>
   </div>
 </div>
 
-<audio id="streamAudio" preload="none" crossorigin="anonymous"></audio>
+<!-- El contenedor del audio: el elemento se recrea dinámicamente -->
+<div id="audioContainer"></div>
 
 <script>
-  // --- CONFIG ---
-  const STREAM_URL = 'https://stream.radioarkana.com/stream';
-  const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
-  const CARDS = ["El Loco", "El Mago", "La Papisa", "La Emperatriz", "El Emperador", "El Papa", "El Enamorado", "El Carro", "La Fuerza", "El Ermitaño", "La Rueda de la Fortuna", "La Justicia", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"];
+  // ─── CONFIG ───────────────────────────────────────────────────────────────
+  const STREAM_URL    = 'https://stream.radioarkana.com/stream';
+  const WORKER_URL    = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+  const CARDS = ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"];
 
-  const INITIAL_CONNECT_TIMEOUT_MS = 10000;
-  const WATCHDOG_INTERVAL_MS = 20000;
-  const STALL_TIMEOUT_MS = 8000;
-  const HEALTH_CHECK_INTERVAL_MS = 6000;
+  const INITIAL_CONNECT_MS = 10000;
+  const WATCHDOG_MS        = 20000;
+  const STALL_TIMEOUT_MS   = 8000;
 
-  // --- STATE ---
-  let isPlaying = false;
-  let currentMode = 'NONE'; // 'LOADING', 'STREAM', 'TTS'
-  let streamConnectedOnce = false;
-  let audioCtx = null;
-  let noiseNodes = [];
-  let ttsTimer = null;
-  let watchdogTimer = null;
-  let stallTimer = null;
-  let lastTime = 0;
-  let healthCheckInterval = null;
-  let initialConnectTimer = null;
-
-  // FIX EXTRA: identificador de intento de stream para ignorar eventos viejos
+  // ─── STATE ────────────────────────────────────────────────────────────────
+  let isPlaying       = false;
+  let currentMode     = 'NONE';
   let streamAttemptId = 0;
 
-  // FIX EXTRA: contador de health-check “malos”
-  let badChecks = 0;
+  let audioCtx   = null;
+  let noiseNodes = [];
+  let ttsTimer            = null;
+  let watchdogTimer       = null;
+  let initialConnectTimer = null;
+  let stallTimer          = null;
+  let ttsSpeaking         = false;
 
-  // FIX EXTRA: saber si el TTS está hablando ahora mismo
-  let ttsSpeaking = false;
+  // El elemento <audio> se recrea cada vez que se necesita para garantizar
+  // que el navegador descarta completamente el buffer anterior.
+  let streamAudio = null;
 
-  const streamAudio = document.getElementById('streamAudio');
-  const playBtn = document.getElementById('playBtn');
-  const playLabel = document.getElementById('playLabel');
-  const playIcon = document.getElementById('playIcon');
+  const playBtn    = document.getElementById('playBtn');
+  const playLabel  = document.getElementById('playLabel');
+  const playIcon   = document.getElementById('playIcon');
   const statusText = document.getElementById('statusText');
-  const modeLabel = document.getElementById('modeLabel');
-  const dot = document.getElementById('dot');
-  const wf = document.getElementById('waveform');
-  const repLabel = document.getElementById('repLabel');
+  const modeLabel  = document.getElementById('modeLabel');
+  const dot        = document.getElementById('dot');
+  const wf         = document.getElementById('waveform');
+  const repLabel   = document.getElementById('repLabel');
 
-  // Waveform init
+  // Waveform bars
   for (let i = 0; i < 48; i++) {
     const b = document.createElement('div');
     b.className = 'bar';
-    b.style.cssText = `height:${8 + Math.random() * 92}%; --dur:${0.4 + Math.random() * 0.8}s; animation-delay:${(i/48*0.6).toFixed(2)}s`;
+    b.style.cssText = `height:${8 + Math.random()*92}%; --dur:${0.4 + Math.random()*0.8}s; animation-delay:${(i/48*0.6).toFixed(2)}s`;
     wf.appendChild(b);
   }
+
+  // ─── AUDIO ELEMENT FACTORY ────────────────────────────────────────────────
+  // Destruye el elemento existente y crea uno nuevo limpio.
+  // Es la única forma 100% garantizada de que el navegador libere el buffer
+  // de red y deje de reproducir datos cacheados del stream anterior.
+
+  function createFreshAudioElement() {
+    const container = document.getElementById('audioContainer');
+
+    // Destruir el elemento anterior completamente
+    if (streamAudio) {
+      streamAudio.onplaying = null;
+      streamAudio.onpause   = null;
+      streamAudio.onended   = null;
+      streamAudio.onwaiting = null;
+      streamAudio.onstalled = null;
+      streamAudio.onerror   = null;
+      streamAudio.pause();
+      streamAudio.removeAttribute('src');
+      streamAudio.load();
+      container.removeChild(streamAudio);
+      streamAudio = null;
+    }
+
+    // Crear elemento nuevo
+    const el = document.createElement('audio');
+    el.preload = 'none';
+    el.crossOrigin = 'anonymous';
+    container.appendChild(el);
+    streamAudio = el;
+
+    // Aplicar volumen actual
+    const volInput = document.getElementById('volume');
+    if (volInput) streamAudio.volume = parseFloat(volInput.value);
+
+    return el;
+  }
+
+  // ─── MAIN CONTROL ─────────────────────────────────────────────────────────
 
   function toggleMain() {
     if (!isPlaying) start(); else stop();
@@ -265,6 +295,8 @@
     playBtn.classList.add('active');
     wf.classList.add('playing');
     document.getElementById('volRow').classList.add('visible');
+    playLabel.textContent = 'Detener';
+    playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
     startListenersCounter();
     tryStream();
   }
@@ -272,200 +304,162 @@
   function stop() {
     isPlaying = false;
     currentMode = 'NONE';
-    streamConnectedOnce = false;
-    streamAttemptId++; // invalida callbacks pendientes
+    streamAttemptId++;
 
-    streamAudio.pause();
-    streamAudio.removeAttribute('src');
-    streamAudio.load();
-
+    // Destruir el elemento audio por completo
+    createFreshAudioElement();
     clearAllTimers();
     window.speechSynthesis.cancel();
     if (audioCtx) audioCtx.suspend();
 
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
-    dot.className = 'dot';
+    dot.className          = 'dot';
     statusText.textContent = 'Desconectado';
-    statusText.className = '';
-    modeLabel.textContent = 'Sistema offline';
-    playLabel.textContent = 'Escuchar en directo';
-    playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-    repLabel.textContent = '';
+    statusText.className   = '';
+    modeLabel.textContent  = 'Sistema offline';
+    playLabel.textContent  = 'Escuchar en directo';
+    playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
+    repLabel.textContent   = '';
     stopListenersCounter();
   }
 
   function clearAllTimers() {
-    clearInterval(healthCheckInterval);
     clearTimeout(watchdogTimer);
     clearTimeout(ttsTimer);
-    clearTimeout(stallTimer);
     clearTimeout(initialConnectTimer);
-    healthCheckInterval = null;
-    watchdogTimer = null;
-    ttsTimer = null;
-    stallTimer = null;
-    initialConnectTimer = null;
+    clearTimeout(stallTimer);
+    watchdogTimer = ttsTimer = initialConnectTimer = stallTimer = null;
   }
 
-  // --- STREAM LOGIC ---
+  // ─── STREAM ───────────────────────────────────────────────────────────────
 
   function tryStream() {
     if (!isPlaying) return;
 
     clearAllTimers();
-    const myAttempt = ++streamAttemptId; // FIX EXTRA
+    const myAttempt = ++streamAttemptId;
 
     currentMode = 'LOADING';
     statusText.textContent = 'Sincronizando...';
-    modeLabel.textContent = 'Buscando señal FM...';
-    dot.className = 'dot';
+    modeLabel.textContent  = 'Buscando señal FM...';
+    dot.className          = 'dot';
 
-    streamAudio.src = `${STREAM_URL}?cb=${Date.now()}`;
-    streamAudio.load();
+    // Elemento audio fresco para esta conexión
+    const audio = createFreshAudioElement();
+    attachStreamHandlers(audio, myAttempt);
+
+    audio.src = `${STREAM_URL}?cb=${Date.now()}`;
+    audio.load();
 
     initialConnectTimer = setTimeout(() => {
       if (!isPlaying || myAttempt !== streamAttemptId) return;
       if (currentMode === 'LOADING') {
-        console.warn('Timeout inicial sin señal FM. Activando TTS.');
+        console.warn('Timeout inicial. Activando TTS.');
         startTTS();
       }
-    }, INITIAL_CONNECT_TIMEOUT_MS);
+    }, INITIAL_CONNECT_MS);
 
-    streamAudio.play().catch(err => {
+    audio.play().catch(err => {
       console.warn('play() rechazado:', err);
       if (!isPlaying || myAttempt !== streamAttemptId) return;
-      if (currentMode === 'LOADING') {
-        startTTS();
-      }
+      if (currentMode === 'LOADING') startTTS();
     });
-
-    lastTime = -1;
-    badChecks = 0;
-
-    healthCheckInterval = setInterval(() => {
-      if (!isPlaying || myAttempt !== streamAttemptId) return;
-      if (currentMode !== 'STREAM') return;
-
-      const frozen = streamAudio.currentTime === lastTime && !streamAudio.paused;
-      const reallyEmpty = streamAudio.networkState === HTMLMediaElement.NETWORK_EMPTY;
-      const lowReady = streamAudio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
-
-      if (frozen || reallyEmpty || lowReady) {
-        badChecks++;
-        if (badChecks >= 3) {
-          console.warn('Stream caído tras varios health checks. Activando TTS.');
-          clearAllTimers();
-          startTTS();
-          return;
-        }
-      } else {
-        badChecks = 0;
-      }
-
-      lastTime = streamAudio.currentTime;
-    }, HEALTH_CHECK_INTERVAL_MS);
   }
 
-  streamAudio.onplaying = () => {
-    if (!isPlaying) return;
-    if (currentMode === 'TTS') return;
-    // no intentId aquí porque no tenemos myAttempt, usamos estado actual
+  function attachStreamHandlers(audio, myAttempt) {
+    // Guard: ignora eventos si este intento ya fue superado
+    const guard = () => isPlaying && myAttempt === streamAttemptId && currentMode !== 'TTS';
 
-    streamConnectedOnce = true;
-    currentMode = 'STREAM';
+    audio.onplaying = () => {
+      if (!guard()) return;
+      currentMode = 'STREAM';
+      clearTimeout(initialConnectTimer);
+      clearTimeout(stallTimer);
 
-    clearTimeout(initialConnectTimer);
-    clearTimeout(stallTimer);
-    stopTTSAudio();
+      dot.className          = 'dot live';
+      statusText.textContent = 'En directo';
+      statusText.className   = 'live';
+      modeLabel.textContent  = 'Emisión FM Activa';
+      repLabel.textContent   = 'Señal estable';
+      console.log('onplaying — stream activo.');
+    };
 
-    dot.className = 'dot live';
-    statusText.textContent = 'En directo';
-    statusText.className = 'live';
-    modeLabel.textContent = 'Emisión FM Activa';
-    playLabel.textContent = 'Detener';
-    playIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
-    repLabel.textContent = 'Señal estable';
-
-    console.log('Stream FM activo y reproduciéndose.');
-  };
-
-  streamAudio.onpause = () => {
-    if (!isPlaying) return;
-    if (currentMode !== 'STREAM') return;
-
-    console.warn('Stream pausado inesperadamente. Intentando reanudar...');
-    clearTimeout(stallTimer);
-    stallTimer = setTimeout(() => {
-      if (!isPlaying) return;
-      if (currentMode === 'STREAM' && streamAudio.paused) {
-        streamAudio.play().catch(() => startTTS());
-      }
-    }, 3000);
-  };
-
-  streamAudio.onstalled = () => {
-    if (!isPlaying) return;
-    console.log('onstalled — modo:', currentMode);
-
-    clearTimeout(stallTimer);
-    stallTimer = setTimeout(() => {
-      if (!isPlaying) return;
-      if (currentMode === 'LOADING') return;
-      if (currentMode === 'STREAM' && (streamAudio.paused || streamAudio.readyState < 3)) {
-        console.warn('Stream caído tras onstalled. Activando TTS.');
-        clearAllTimers();
-        startTTS();
-      }
-    }, STALL_TIMEOUT_MS);
-  };
-
-  streamAudio.onwaiting = () => {
-    if (!isPlaying) return;
-    console.log('onwaiting — modo:', currentMode);
-    if (currentMode === 'LOADING') return;
-
-    clearTimeout(stallTimer);
-    stallTimer = setTimeout(() => {
-      if (!isPlaying) return;
-      if (currentMode === 'STREAM' && streamAudio.readyState < 3) {
-        console.warn('Stream esperando demasiado. Activando TTS.');
-        clearAllTimers();
-        startTTS();
-      }
-    }, STALL_TIMEOUT_MS);
-  };
-
-  streamAudio.onerror = () => {
-    const error = streamAudio.error;
-    console.error('streamAudio.onerror — modo:', currentMode, '— error:', error);
-    if (!isPlaying) return;
-    if (currentMode !== 'STREAM') return;
-
-    if (!error || error.code === MediaError.MEDIA_ERR_NETWORK || error.code === MediaError.MEDIA_ERR_DECODE) {
+    audio.onended = () => {
+      if (!guard() || currentMode !== 'STREAM') return;
+      console.warn('onended. Activando TTS.');
       clearAllTimers();
       startTTS();
-    }
-  };
+    };
 
-  // --- FALLBACK TTS / GENERATIVE ---
+    audio.onpause = () => {
+      if (!guard() || currentMode !== 'STREAM') return;
+      console.log('onpause.');
+      // No intentamos reanudar — dejamos que el stall timer decida
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => {
+        if (!guard() || currentMode !== 'STREAM') return;
+        console.warn('Stream sigue pausado tras gracia. Activando TTS.');
+        clearAllTimers();
+        startTTS();
+      }, STALL_TIMEOUT_MS);
+    };
+
+    audio.onwaiting = () => {
+      if (!guard()) return;
+      console.log('onwaiting — modo:', currentMode);
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => {
+        if (!guard() || currentMode !== 'STREAM') return;
+        console.warn('Waiting prolongado. Activando TTS.');
+        clearAllTimers();
+        startTTS();
+      }, STALL_TIMEOUT_MS);
+    };
+
+    audio.onstalled = () => {
+      if (!guard() || currentMode === 'LOADING') return;
+      console.log('onstalled.');
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => {
+        if (!guard() || currentMode !== 'STREAM') return;
+        console.warn('Stall prolongado. Activando TTS.');
+        clearAllTimers();
+        startTTS();
+      }, STALL_TIMEOUT_MS);
+    };
+
+    audio.onerror = () => {
+      const err = audio.error;
+      console.error('onerror — modo:', currentMode, err);
+      if (!guard()) return;
+      if (!err || err.code === MediaError.MEDIA_ERR_NETWORK || err.code === MediaError.MEDIA_ERR_DECODE) {
+        clearAllTimers();
+        startTTS();
+      }
+    };
+  }
+
+  // ─── TTS / GENERATIVO ─────────────────────────────────────────────────────
 
   function startTTS() {
-    if (currentMode === 'TTS' || !isPlaying) return;
+    if (!isPlaying) return;
+    if (currentMode === 'TTS') return;
 
     currentMode = 'TTS';
-    streamAttemptId++; // invalida eventos de stream antiguos
-    console.log('Activando Fallback TTS...');
+    streamAttemptId++;
 
+    console.log('Activando TTS...');
     clearTimeout(initialConnectTimer);
-    streamAudio.pause();
-    streamAudio.src = "";
-    streamAudio.load();
+    clearTimeout(stallTimer);
 
-    dot.className = 'dot tts';
+    // DESTRUIR el elemento audio → única forma segura de matar el buffer
+    createFreshAudioElement();
+
+    dot.className          = 'dot tts';
     statusText.textContent = 'Modo Emergencia';
-    statusText.className = '';
-    modeLabel.textContent = 'Señal perdida · Generando interferencia';
+    statusText.className   = '';
+    modeLabel.textContent  = 'Señal perdida · Generando interferencia';
 
     initGenerativeAudio();
     runTTSLoop();
@@ -477,30 +471,30 @@
     audioCtx.resume();
 
     if (noiseNodes.length === 0) {
-      const bufferSize = 2 * audioCtx.sampleRate;
-      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; }
-      const noiseSource = audioCtx.createBufferSource();
-      noiseSource.buffer = noiseBuffer;
-      noiseSource.loop = true;
-      const gain = audioCtx.createGain();
-      gain.gain.value = 0.02;
-      noiseSource.connect(gain).connect(audioCtx.destination);
-      noiseSource.start();
-      noiseNodes.push(noiseSource, gain);
+      const bufSize  = 2 * audioCtx.sampleRate;
+      const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      const out = noiseBuf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1;
 
-      const oscL = audioCtx.createOscillator();
-      const oscR = audioCtx.createOscillator();
-      const m = audioCtx.createChannelMerger(2);
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuf; src.loop = true;
+      const nGain = audioCtx.createGain(); nGain.gain.value = 0.02;
+      src.connect(nGain).connect(audioCtx.destination);
+      src.start();
+
+      const oscL  = audioCtx.createOscillator();
+      const oscR  = audioCtx.createOscillator();
+      const m     = audioCtx.createChannelMerger(2);
       const bGain = audioCtx.createGain(); bGain.gain.value = 0.03;
       oscL.frequency.value = 200; oscR.frequency.value = 208;
       oscL.connect(m, 0, 0); oscR.connect(m, 0, 1);
       m.connect(bGain).connect(audioCtx.destination);
       oscL.start(); oscR.start();
-      noiseNodes.push(oscL, oscR, bGain);
+
+      noiseNodes = [src, nGain, oscL, oscR, bGain];
     } else {
-      noiseNodes.forEach(n => { if (n.gain) n.gain.value = 0.02; });
+      noiseNodes[1].gain.value = 0.02;
+      noiseNodes[4].gain.value = 0.03;
     }
   }
 
@@ -508,12 +502,13 @@
     window.speechSynthesis.cancel();
     clearTimeout(ttsTimer);
     ttsSpeaking = false;
-    if (audioCtx) {
-      noiseNodes.forEach(n => { if (n.gain) n.gain.value = 0; });
+    if (audioCtx && noiseNodes.length) {
+      noiseNodes[1].gain.value = 0;
+      noiseNodes[4].gain.value = 0;
     }
   }
 
-  let repCount = 0;
+  let repCount    = 0;
   let currentTrio = [];
 
   function runTTSLoop() {
@@ -521,7 +516,7 @@
 
     if (repCount === 0) {
       currentTrio = [];
-      let pool = [...CARDS];
+      const pool = [...CARDS];
       for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     }
 
@@ -529,11 +524,9 @@
     repLabel.textContent = `Interferencia Tarot: Rep ${repCount}/7`;
 
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, con ${currentTrio[1]}, y ${currentTrio[2]}.`);
-    msg.lang = 'es-ES';
-    msg.rate = 0.8;
+    msg.lang = 'es-ES'; msg.rate = 0.8;
 
-    msg.onstart = () => { ttsSpeaking = true; }; // FIX EXTRA
-
+    msg.onstart = () => { ttsSpeaking = true; };
     msg.onend = () => {
       ttsSpeaking = false;
       if (currentMode !== 'TTS') return;
@@ -541,7 +534,6 @@
       repLabel.textContent = 'Buscando frecuencia FM (20s)...';
       ttsTimer = setTimeout(runTTSLoop, 20000);
     };
-
     msg.onerror = (e) => {
       console.warn('SpeechSynthesis error:', e.error);
       ttsSpeaking = false;
@@ -552,7 +544,7 @@
     window.speechSynthesis.speak(msg);
   }
 
-  // --- WATCHDOG: VUELTA AL STREAM ---
+  // ─── WATCHDOG ─────────────────────────────────────────────────────────────
 
   function startWatchdog() {
     if (!isPlaying || currentMode !== 'TTS') return;
@@ -560,26 +552,24 @@
 
     watchdogTimer = setTimeout(async () => {
       if (!isPlaying || currentMode !== 'TTS') return;
-      console.log('Watchdog: Intentando recuperar FM...');
+      console.log('Watchdog: probando señal FM...');
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const check = await fetch(STREAM_URL, {
-          method: 'GET',
-          headers: { 'Range': 'bytes=0-0' },
-          cache: 'no-store',
-          signal: controller.signal
+        const ctrl = new AbortController();
+        const tid  = setTimeout(() => ctrl.abort(), 5000);
+        const res  = await fetch(STREAM_URL, {
+          method: 'GET', headers: { 'Range': 'bytes=0-0' },
+          cache: 'no-store', signal: ctrl.signal
         });
-        clearTimeout(timeoutId);
+        clearTimeout(tid);
 
-        if (check.ok || check.status === 206) {
-          console.log('Señal FM detectada por watchdog.');
+        if (res.ok || res.status === 206) {
           if (ttsSpeaking) {
-            console.log('TTS hablando, reintento de reconexión pospuesto.');
+            console.log('FM detectada, esperando fin de frase TTS...');
             startWatchdog();
             return;
           }
+          console.log('Watchdog: FM disponible. Reconectando...');
           stopTTSAudio();
           currentMode = 'NONE';
           tryStream();
@@ -587,20 +577,22 @@
           startWatchdog();
         }
       } catch (e) {
-        console.log('Watchdog: Stream aún no disponible.', e.message);
+        console.log('Watchdog: sin señal.', e.message);
         startWatchdog();
       }
-    }, WATCHDOG_INTERVAL_MS);
+    }, WATCHDOG_MS);
   }
 
-  // --- UTILS ---
+  // ─── UTILS ────────────────────────────────────────────────────────────────
 
-  function updateVolume(v) { streamAudio.volume = parseFloat(v); }
+  function updateVolume(v) {
+    if (streamAudio) streamAudio.volume = parseFloat(v);
+  }
 
   async function pingWorker(action = null) {
     try {
-      const url = action ? `${WORKER_URL}?action=${action}` : WORKER_URL;
-      const res = await fetch(url, { method: action ? 'POST' : 'GET', cache: 'no-store' });
+      const url  = action ? `${WORKER_URL}?action=${action}` : WORKER_URL;
+      const res  = await fetch(url, { method: action ? 'POST' : 'GET', cache: 'no-store' });
       const data = await res.json();
       document.getElementById('listenersCount').textContent = data.listeners ?? 0;
       document.getElementById('listenersDisplay').style.opacity = '1';
@@ -609,23 +601,20 @@
 
   let lint;
   function startListenersCounter() { pingWorker('join'); lint = setInterval(pingWorker, 10000); }
-  function stopListenersCounter() { pingWorker('leave'); clearInterval(lint); }
+  function stopListenersCounter()  { pingWorker('leave'); clearInterval(lint); }
 
   window.addEventListener('beforeunload', () => {
     if (isPlaying) navigator.sendBeacon(`${WORKER_URL}?action=leave`);
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && isPlaying && currentMode === 'STREAM') {
-      if (streamAudio.paused) {
-        console.log('Página visible de nuevo. Reanudando stream...');
-        streamAudio.play().catch(() => startTTS());
-      }
+    if (!document.hidden && isPlaying && currentMode === 'STREAM' && streamAudio && streamAudio.paused) {
+      streamAudio.play().catch(() => { clearAllTimers(); startTTS(); });
     }
   });
+
+  // Crear el elemento audio inicial
+  createFreshAudioElement();
 </script>
 </body>
 </html>
-
-
-
