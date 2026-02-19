@@ -650,9 +650,9 @@
   function noiseGainForType(type, vol) {
     // Devuelve [gWhite, gPink, gBrown] según tipo activo
     if (type === 'off')   return [0,          0,          0         ];
-    if (type === 'white') return [vol * 0.04,  0,          0         ];
-    if (type === 'pink')  return [0,           vol * 0.07, 0         ];
-    if (type === 'brown') return [0,           0,          vol * 0.06];
+    if (type === 'white') return [vol * 0.015,  0,          0         ];
+    if (type === 'pink')  return [0,           vol * 0.025, 0         ];
+    if (type === 'brown') return [0,           0,          vol * 0.022];
     return [0, 0, 0];
   }
 
@@ -1241,4 +1241,5 @@
 </script>
 </body>
 </html>
+
 
