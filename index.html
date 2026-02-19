@@ -358,6 +358,13 @@
   let loopReps       = 7;
   let binauralFreq   = 0; // 0 = OFF; >0 = diferencia Hz entre osciladores
 
+  // ── SHORTWAVE FILTER STATE ─────────────────────────────────────────────────
+  let shortwaveActive  = false;
+  let swNodes          = null;   // { highpass, lowpass, waveShaper, streamDest, streamSrc }
+  let ttsMediaDest     = null;   // MediaStreamAudioDestinationNode para TTS
+  let ttsMediaSrc      = null;   // MediaElementAudioSourceNode conectado al <audio>
+  let ttsFilterAudio   = null;   // <audio> element que reproduce el stream del TTS
+
   const playBtn    = document.getElementById('playBtn');
   const playLabel  = document.getElementById('playLabel');
   const playIcon   = document.getElementById('playIcon');
@@ -668,17 +675,18 @@
       const srcW = audioCtx.createBufferSource();
       srcW.buffer = makeWhiteBuffer(audioCtx); srcW.loop = true;
       const gainW = audioCtx.createGain(); gainW.gain.value = gW;
-      srcW.connect(gainW).connect(audioCtx.destination); srcW.start();
+      const destW = shortwaveActive ? (enableShortwaveFilter(), swNodes.highpass) : audioCtx.destination;
+      srcW.connect(gainW).connect(destW); srcW.start();
 
       const srcP = audioCtx.createBufferSource();
       srcP.buffer = makePinkBuffer(audioCtx); srcP.loop = true;
       const gainP = audioCtx.createGain(); gainP.gain.value = gP;
-      srcP.connect(gainP).connect(audioCtx.destination); srcP.start();
+      srcP.connect(gainP).connect(shortwaveActive ? swNodes.highpass : audioCtx.destination); srcP.start();
 
       const srcB = audioCtx.createBufferSource();
       srcB.buffer = makeBrownBuffer(audioCtx); srcB.loop = true;
       const gainB = audioCtx.createGain(); gainB.gain.value = gB;
-      srcB.connect(gainB).connect(audioCtx.destination); srcB.start();
+      srcB.connect(gainB).connect(shortwaveActive ? swNodes.highpass : audioCtx.destination); srcB.start();
 
       // Osciladores binaurales
       const oscL = audioCtx.createOscillator(), oscR = audioCtx.createOscillator();
@@ -702,6 +710,69 @@
         noiseNodes[6].frequency.value = 200;
         noiseNodes[7].frequency.value = 200 + binauralFreq;
       }
+    }
+  }
+
+  // ── SHORTWAVE FILTER CHAIN ─────────────────────────────────────────────────
+
+  function buildShortwaveNodes() {
+    if (!audioCtx) return null;
+
+    const highpass = audioCtx.createBiquadFilter();
+    highpass.type            = 'highpass';
+    highpass.frequency.value = 120;
+    highpass.Q.value         = 0.707;
+
+    const lowpass = audioCtx.createBiquadFilter();
+    lowpass.type            = 'lowpass';
+    lowpass.frequency.value = 2800;
+    lowpass.Q.value         = 1.0;
+
+    const waveShaper = audioCtx.createWaveShaper();
+    const curve = new Float32Array(65536);
+    for (let i = 0; i < 65536; i++) {
+      const x = (i - 32768) / 32768;
+      curve[i] = Math.tanh(x * 2.2);
+    }
+    waveShaper.curve      = curve;
+    waveShaper.oversample = '4x';
+
+    // Cadena: highpass → lowpass → waveShaper → destination
+    highpass.connect(lowpass).connect(waveShaper).connect(audioCtx.destination);
+
+    return { highpass, lowpass, waveShaper };
+  }
+
+  function enableShortwaveFilter() {
+    if (swNodes || !audioCtx) return;
+    swNodes = buildShortwaveNodes();
+  }
+
+  function disableShortwaveFilter() {
+    if (swNodes) {
+      try { swNodes.highpass.disconnect(); } catch(e){}
+      try { swNodes.lowpass.disconnect(); } catch(e){}
+      try { swNodes.waveShaper.disconnect(); } catch(e){}
+      swNodes = null;
+    }
+  }
+
+  // Activa/desactiva el filtro shortwave según estado del preset.
+  // El filtro se aplica al ruido generativo (que sí pasa por Web Audio API).
+  // Para el TTS nativo (speechSynthesis), se simulan parámetros de voz robótica
+  // porque la API del navegador no permite redirigir su salida de audio.
+  function applyShortwaveState(active) {
+    shortwaveActive = active;
+    if (active) {
+      // Si el audioCtx ya existe, habilitar ahora; si no, se habilitará en initGenerativeAudio
+      if (audioCtx) enableShortwaveFilter();
+      // Parámetros de voz que dan textura de radio de onda corta
+      window._swTTSRate  = 0.65;
+      window._swTTSPitch = 0.85;
+    } else {
+      disableShortwaveFilter();
+      window._swTTSRate  = null;
+      window._swTTSPitch = null;
     }
   }
 
@@ -737,7 +808,8 @@
     const cfg = LANG_CONFIG[currentLang];
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
     msg.lang   = cfg.lang;
-    msg.rate   = 0.7;
+    msg.rate   = window._swTTSRate  ?? 0.7;
+    msg.pitch  = window._swTTSPitch ?? 1.0;
     msg.volume = parseFloat(document.getElementById('volume').value ?? 1);
 
     msg.onstart = () => { ttsSpeaking = true; };
@@ -782,9 +854,22 @@
 
   let presetActive    = false;
   let presetSnapshot  = null; // guarda el estado anterior al activar
+  let _presetApplying = false; // true mientras togglePreset está escribiendo knobs
 
   // Expone setters que los knobs registran al inicializarse
   const knobSetters = {};
+
+  // Llamar desde cualquier knob cuando el usuario lo mueve manualmente
+  function onUserKnobChange() {
+    if (_presetApplying) return; // cambio programático, ignorar
+    if (!presetActive) return;   // preset ya inactivo, nada que hacer
+    // Desactivar preset visualmente sin restaurar snapshot
+    presetActive = false;
+    applyShortwaveState(false);
+    const btn = document.getElementById('btnPreset');
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+  }
 
   function togglePreset() {
     presetActive = !presetActive;
@@ -801,14 +886,19 @@
         repsVal:     loopReps,
       };
 
-      // Aplicar preset: WHITE, Alpha 7.5 Hz, 7 reps, 20s pausa
+      // Aplicar preset: WHITE, Alpha 7.5 Hz, 7 reps, 20s pausa + filtro shortwave
+      _presetApplying = true;
       knobSetters.noise?.(0.375);   // posición en zona WHITE (0–0.25 → white)
       knobSetters.binaural?.(hzToPos(7.5));
       knobSetters.pause?.(20);
       knobSetters.reps?.(7);
+      applyShortwaveState(true);    // ← activar filtro lowpass/shortwave
+      _presetApplying = false;
 
     } else {
       // Restaurar snapshot
+      _presetApplying = true;
+      applyShortwaveState(false);   // ← desactivar filtro shortwave
       if (presetSnapshot) {
         const s = presetSnapshot;
         knobSetters.noise?.(s.noisePos);
@@ -816,6 +906,7 @@
         knobSetters.pause?.(s.pauseVal);
         knobSetters.reps?.(s.repsVal);
       }
+      _presetApplying = false;
     }
   }
 
@@ -878,6 +969,7 @@
     const valLbl = document.getElementById('binauralKnobVal');
 
     function applyPos(pos) {
+      onUserKnobChange();
       knobPos = Math.min(1, Math.max(0, pos));
       window._binauralPos = knobPos; // para snapshot del preset
       const hz   = posToFreq(knobPos);
@@ -961,6 +1053,7 @@
     }
 
     function setKnobValue(v) {
+      onUserKnobChange();
       v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
       pauseDuration = v * 1000;
       marker.style.transform = `translateX(-50%) rotate(${valToAngle(v)}deg)`;
@@ -1022,6 +1115,7 @@
     }
 
     function setKnobValue(v) {
+      onUserKnobChange();
       v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
       loopReps = v;
 
@@ -1125,6 +1219,7 @@
     const icon   = document.getElementById('noiseKnobIcon');
 
     function applyPos(pos) {
+      onUserKnobChange();
       knobPos  = Math.min(0.9999, Math.max(0, pos));
       const zone = posToZone(knobPos);
       noiseType = zone.type;
@@ -1241,5 +1336,3 @@
 </script>
 </body>
 </html>
-
-
