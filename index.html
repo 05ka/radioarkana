@@ -37,7 +37,30 @@
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
     #statusText { color: var(--gray); }
     #statusText.live { color: var(--white); }
-    #repLabel { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red-dim); margin-bottom: 16px; min-height: 14px; font-weight: bold; }
+    .rep-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      min-height: 14px;
+      font-weight: bold;
+    }
+    .rep-part:first-child { justify-self: start; }
+    .rep-part:last-child  { justify-self: end; }
+    .rep-part {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--red-dim);
+      transition: color 0.3s;
+    }
+    .rep-part.active { color: var(--red); }
+    .pause { color: var(--red-dim); }
+    .pause.active {
+      color: #ce9d06;
+      animation: pulse 2s infinite;
+    }
     .play-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--white); font-family: var(--font-body); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; padding: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 14px; transition: all 0.2s; }
     .play-btn:hover  { border-color: var(--red); background: rgba(230,48,48,0.06); }
     .play-btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
@@ -235,7 +258,10 @@
         <span id="listenersCount" style="font-size:10px;">—</span>
       </span>
     </div>
-    <p id="repLabel"></p>
+    <div id="repContainer" class="rep-container">
+      <span id="repCountLabel" class="rep-part">—</span>
+      <span id="pauseLabel"    class="rep-part pause">—</span>
+    </div>
     <button class="play-btn" id="playBtn" onclick="toggleMain()">
       <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       <span id="playLabel">Escuchar en directo</span>
@@ -372,7 +398,15 @@
   const modeLabel  = document.getElementById('modeLabel');
   const dot        = document.getElementById('dot');
   const wf         = document.getElementById('waveform');
-  const repLabel   = document.getElementById('repLabel');
+  const repCountLabel = document.getElementById('repCountLabel');
+  const pauseLabel    = document.getElementById('pauseLabel');
+
+  function setRepLabels(rep, pause, repActive, pauseActive) {
+    repCountLabel.textContent = rep   ?? '—';
+    pauseLabel.textContent    = pause ?? '—';
+    repCountLabel.classList.toggle('active', !!repActive);
+    pauseLabel.classList.toggle('active', !!pauseActive);
+  }
 
   for (let i = 0; i < 48; i++) {
     const b = document.createElement('div');
@@ -445,7 +479,7 @@
     modeLabel.textContent  = 'Sistema offline';
     playLabel.textContent  = 'Escuchar en directo';
     playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
-    repLabel.textContent   = '';
+    setRepLabels(null, null, false, false);
     document.getElementById('controlsRow').classList.remove('visible');
     stopListenersCounter();
   }
@@ -474,7 +508,7 @@
       statusText.textContent = 'En directo';
       statusText.className   = 'live';
       modeLabel.textContent  = 'ON AIR';
-      repLabel.textContent   = 'Señal estable';
+      setRepLabels('Señal estable', null, true, false);
       console.log('onplaying — stream activo.');
     };
 
@@ -803,7 +837,7 @@
       for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     }
     repCount++;
-    repLabel.textContent = `Rep ${repCount}/${loopReps}`;
+    setRepLabels(`Rep ${repCount}/${loopReps}`, null, true, false);
 
     const cfg = LANG_CONFIG[currentLang];
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
@@ -820,12 +854,12 @@
       if (repCount >= loopReps) repCount = 0;
 
       let secsLeft = Math.round(pauseDuration / 1000);
-      repLabel.textContent = `Pausa de ${secsLeft}s...`;
+      setRepLabels(`Rep ${repCount || loopReps}/${loopReps}`, `Pausa ${secsLeft}s`, false, true);
       clearInterval(countdownInterval);
       countdownInterval = setInterval(() => {
         secsLeft--;
         if (secsLeft > 0) {
-          repLabel.textContent = `Pausa de ${secsLeft}s...`;
+          pauseLabel.textContent = `Pausa ${secsLeft}s`;
         } else {
           clearInterval(countdownInterval);
           countdownInterval = null;
@@ -1134,7 +1168,7 @@
           clearInterval(countdownInterval);
           countdownInterval = null;
           ttsSpeaking = false;
-          repLabel.textContent = '';
+          setRepLabels(null, null, false, false);
         }
       } else {
         // TTS on
