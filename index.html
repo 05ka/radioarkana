@@ -23,6 +23,9 @@
     .station-name { font-family: var(--font-head); font-size: clamp(64px, 16vw, 88px); line-height: 0.88; letter-spacing: 0.02em; color: var(--white); margin-bottom: 4px; }
     .station-name span { color: var(--red); }
     .tagline { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gray); margin-bottom: 36px; }
+    .marquee-wrap { overflow: hidden; margin-bottom: 36px; }
+    .marquee-text { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); white-space: nowrap; display: inline-block; animation: marquee 18s linear infinite; }
+    @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
     .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; }
     .bar { width: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
     .playing .bar { background: var(--red); animation: wave var(--dur) ease-in-out infinite alternate; }
@@ -107,6 +110,10 @@
   <div class="card">
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
     <p class="tagline">Tarot Underground · Málaga</p>
+    <div class="marquee-wrap">
+      <span class="marquee-text">For those Dark Horses with the Spirit to look up and see . . . . A recondite family awaits</span>
+    </div>
+    
     <div class="waveform" id="waveform"></div>
     <div class="status-row">
       <span class="dot" id="dot"></span>
@@ -570,6 +577,7 @@
 </script>
 </body>
 </html>
+
 
 
 
