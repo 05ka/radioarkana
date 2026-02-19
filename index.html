@@ -46,6 +46,55 @@
     .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; display: flex; justify-content: space-between; }
     .footer-note { font-size: 9px; text-transform: uppercase; color: #333; }
     .footer-note a { color: #444; text-decoration: none; }
+
+    /* ── LANG TOGGLE ─────────────────────────────────────────────────────────── */
+    .lang-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .lang-row.visible { opacity: 1; }
+    .lang-label { font-size: 9px; text-transform: uppercase; color: var(--gray); letter-spacing: 0.15em; }
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .lang-opt {
+      font-family: var(--font-body);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      background: transparent;
+      color: var(--gray);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .lang-opt::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      height: 50%;
+      width: 1px;
+      background: var(--border);
+    }
+    .lang-opt:last-child::after { display: none; }
+    .lang-opt.active {
+      background: var(--red);
+      color: var(--white);
+    }
+    .lang-opt:not(.active):hover { color: var(--white); }
   </style>
 </head>
 <body>
@@ -75,6 +124,13 @@
       <span class="vol-label">VOL</span>
       <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" oninput="updateVolume(this.value)">
     </div>
+    <div class="lang-row" id="langRow">
+      <span class="lang-label">TTS</span>
+      <div class="lang-toggle" role="group" aria-label="Idioma TTS">
+        <button class="lang-opt active" id="langES" onclick="setLang('es')" aria-pressed="true">ES</button>
+        <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
+      </div>
+    </div>
   </div>
   <div class="footer">
     <span class="footer-note">Radio Arkana © 2026 by @mirage_a_trois</span>
@@ -87,7 +143,15 @@
 <script>
   const STREAM_URL     = 'https://stream.radioarkana.com/stream';
   const WORKER_URL     = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
-  const CARDS = ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"];
+  const CARDS = {
+    es: ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"],
+    en: ["The Fool","The Magician","The High Priestess","The Empress","The Emperor","The Hierophant","The Lovers","The Chariot","Strength","The Hermit","Wheel of Fortune","Justice","The Hanged Man","Death","Temperance","The Devil","The Tower","The Star","The Moon","The Sun","Judgement","The World"]
+  };
+  const LANG_CONFIG = {
+    es: { lang: 'es-ES', conj: 'con', and: 'y' },
+    en: { lang: 'en-US', conj: 'with', and: 'and' }
+  };
+  let currentLang = 'es';
 
   const INITIAL_CONNECT_MS = 10000;
   const WATCHDOG_MS        = 20000;
@@ -164,6 +228,7 @@
     playBtn.classList.add('active');
     wf.classList.add('playing');
     document.getElementById('volRow').classList.add('visible');
+    document.getElementById('langRow').classList.add('visible');
     playLabel.textContent = 'Detener';
     playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
     startListenersCounter();
@@ -188,6 +253,7 @@
     playLabel.textContent  = 'Escuchar en directo';
     playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
     repLabel.textContent   = '';
+    document.getElementById('langRow').classList.remove('visible');
     stopListenersCounter();
   }
 
@@ -394,14 +460,15 @@
     if (currentMode !== 'TTS' || !isPlaying) return;
     if (repCount === 0) {
       currentTrio = [];
-      const pool = [...CARDS];
+      const pool = [...CARDS[currentLang]];
       for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     }
     repCount++;
     repLabel.textContent = `Intervalo: Rep ${repCount}/7`;
 
-    const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, con ${currentTrio[1]}, y ${currentTrio[2]}.`);
-    msg.lang   = 'es-ES';
+    const cfg = LANG_CONFIG[currentLang];
+    const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
+    msg.lang   = cfg.lang;
     msg.rate   = 0.8;
     msg.volume = parseFloat(document.getElementById('volume').value ?? 1);
 
@@ -444,6 +511,27 @@
 
   // ── UTILS ──────────────────────────────────────────────────────────────────
 
+  // ── LANG TOGGLE ────────────────────────────────────────────────────────────
+
+  function setLang(lang) {
+    if (lang === currentLang) return;
+    currentLang = lang;
+    document.getElementById('langES').classList.toggle('active', lang === 'es');
+    document.getElementById('langEN').classList.toggle('active', lang === 'en');
+    document.getElementById('langES').setAttribute('aria-pressed', lang === 'es');
+    document.getElementById('langEN').setAttribute('aria-pressed', lang === 'en');
+    // Si TTS está activo, reiniciar el loop con el nuevo idioma
+    if (currentMode === 'TTS' && isPlaying) {
+      repCount = 0;
+      currentTrio = [];
+      window.speechSynthesis.cancel();
+      clearTimeout(ttsTimer);
+      clearInterval(countdownInterval);
+      ttsSpeaking = false;
+      ttsTimer = setTimeout(runTTSLoop, 400);
+    }
+  }
+
   function updateVolume(v) {
     const vol = parseFloat(v);
     if (streamAudio) streamAudio.volume = vol;
@@ -481,11 +569,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
