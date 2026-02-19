@@ -469,7 +469,7 @@
     const cfg = LANG_CONFIG[currentLang];
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
     msg.lang   = cfg.lang;
-    msg.rate   = 0.8;
+    msg.rate   = 0.7;
     msg.volume = parseFloat(document.getElementById('volume').value ?? 1);
 
     msg.onstart = () => { ttsSpeaking = true; };
@@ -569,5 +569,6 @@
 </script>
 </body>
 </html>
+
 
 
