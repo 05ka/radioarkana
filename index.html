@@ -398,7 +398,7 @@
       for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     }
     repCount++;
-    repLabel.textContent = `Interferencia Tarot: Rep ${repCount}/7`;
+    repLabel.textContent = `Intervalo: Rep ${repCount}/7`;
 
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, con ${currentTrio[1]}, y ${currentTrio[2]}.`);
     msg.lang   = 'es-ES';
@@ -481,3 +481,4 @@
 </script>
 </body>
 </html>
+
