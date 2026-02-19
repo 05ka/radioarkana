@@ -972,8 +972,8 @@
         const wasOff = !layerState.tts;
         layerState.tts = true;
         valLbl.textContent = `×${v}`;
-        marker.style.background = 'var(--white)';
-        if (icon) icon.style.color = 'var(--white)';
+        marker.style.background = 'var(--red)';
+        if (icon) icon.style.color = 'var(--red)';
         // Si TTS está activo y estaba parado, relanzar
         if (wasOff && currentMode === 'TTS' && isPlaying && !ttsSpeaking) {
           repCount = 0;
@@ -1089,3 +1089,4 @@
 </script>
 </body>
 </html>
+
