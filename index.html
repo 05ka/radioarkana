@@ -854,12 +854,12 @@
       if (repCount >= loopReps) repCount = 0;
 
       let secsLeft = Math.round(pauseDuration / 1000);
-      setRepLabels(`Rep ${repCount || loopReps}/${loopReps}`, `Pausa ${secsLeft}s`, false, true);
+      setRepLabels(`Rep ${repCount || loopReps}/${loopReps}`, ` ${secsLeft}s`, false, true);
       clearInterval(countdownInterval);
       countdownInterval = setInterval(() => {
         secsLeft--;
         if (secsLeft > 0) {
-          pauseLabel.textContent = `Pausa ${secsLeft}s`;
+          pauseLabel.textContent = ` ${secsLeft}s`;
         } else {
           clearInterval(countdownInterval);
           countdownInterval = null;
@@ -1370,3 +1370,4 @@
 </script>
 </body>
 </html>
+
