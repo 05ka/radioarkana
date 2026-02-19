@@ -45,7 +45,8 @@
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer; }
     .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; display: flex; justify-content: space-between; }
     .footer-note { font-size: 9px; text-transform: uppercase; color: #333; }
-    .footer-note a { color: #444; text-decoration: none; }
+    .footer-note a { color: #444; text-decoration: none; transition: color 0.2s; }
+    .footer-note a:hover { color: var(--red); }
 
     /* ── LANG TOGGLE ─────────────────────────────────────────────────────────── */
     .lang-row {
@@ -569,6 +570,7 @@
 </script>
 </body>
 </html>
+
 
 
 
