@@ -99,6 +99,118 @@
       color: var(--white);
     }
     .lang-opt:not(.active):hover { color: var(--white); }
+
+    /* ── AUDIO LAYER TOGGLES ─────────────────────────────────────────────────── */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      flex-wrap: wrap;
+    }
+    .controls-row.visible { opacity: 1; }
+    .layer-toggles {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .layer-btn {
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--gray);
+      cursor: pointer;
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .layer-btn:last-child { border-right: none; }
+    .layer-btn svg { display: block; }
+    .layer-btn.active { color: var(--red); }
+    .layer-btn:not(.active):hover { color: var(--white); }
+    #btnPreset.active svg { fill: var(--red); stroke: var(--red); }
+    #btnPreset:not(.active):hover svg { fill: none; }
+    .layer-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    /* ── KNOB ────────────────────────────────────────────────────────────────── */
+    .knob-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: ns-resize;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .knob {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .knob-wrap:hover .knob,
+    .knob-wrap.dragging .knob { border-color: var(--gray); }
+    .knob-wrap.dragging .knob  { border-color: var(--red); }
+    .knob-marker {
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 5px;
+      background: var(--gray);
+      border-radius: 1px;
+      transform-origin: 50% 1100%;
+      transition: background 0.2s;
+    }
+    .knob-wrap:hover .knob-marker,
+    .knob-wrap.dragging .knob-marker { background: var(--red); }
+    .knob-val {
+      font-family: var(--font-body);
+      font-size: 8px;
+      color: var(--gray);
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    .knob-wrap:hover .knob-val,
+    .knob-wrap.dragging .knob-val { color: var(--white); }
+
+    .knob-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      color: var(--gray);
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .knob-wrap:hover .knob-icon,
+    .knob-wrap.dragging .knob-icon { color: var(--white); }
   </style>
 </head>
 <body>
@@ -132,12 +244,65 @@
       <span class="vol-label">VOL</span>
       <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" oninput="updateVolume(this.value)">
     </div>
-    <div class="lang-row" id="langRow">
-      <span class="lang-label">🗣️</span>
+    <div class="controls-row" id="controlsRow">
+      <!-- Audio layer toggles -->
+      <div class="layer-toggles" role="group" aria-label="Capas de audio">
+        <button class="layer-btn active" id="btnNoise" onclick="toggleLayer('noise')" title="Estática" aria-pressed="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2M6 8h1M6 16h1M10 5h1M10 19h1M14 3h1M14 21h1M18 7h1M18 17h1M22 12h2M9 12h6"/></svg>
+        </button>
+      </div>
+      <!-- Binaural knob -->
+      <div class="knob-wrap" id="binauralKnob" title="Frecuencia binaural">
+        <div class="knob" id="binauralKnobDial">
+          <div class="knob-marker" id="binauralKnobMarker"></div>
+          <span class="knob-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M2 12 Q6 6 10 12 Q14 18 18 12 Q22 6 24 12"/>
+            </svg>
+          </span>
+        </div>
+        <span class="knob-val" id="binauralKnobVal">OFF</span>
+      </div>
+      <span style="width:1px;height:16px;background:var(--border);display:inline-block;margin:0 2px;"></span>
+      <!-- Loop knobs (pause + reps) -->
+      <div class="knob-wrap" id="pauseKnob" title="Pausa entre frases">
+        <div class="knob" id="knobDial">
+          <div class="knob-marker" id="knobMarker"></div>
+          <span class="knob-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <polyline points="12 7 12 12 15 14"/>
+            </svg>
+          </span>
+        </div>
+        <span class="knob-val" id="knobVal">20s</span>
+      </div>
+      <div class="knob-wrap" id="repsKnob" title="Repeticiones por serie">
+        <div class="knob" id="repsKnobDial">
+          <div class="knob-marker" id="repsKnobMarker"></div>
+          <span class="knob-icon">
+            <svg id="repsKnobIcon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="9" y1="22" x2="15" y2="22"/>
+            </svg>
+          </span>
+        </div>
+        <span class="knob-val" id="repsKnobVal">×7</span>
+      </div>
+      <span style="width:1px;height:16px;background:var(--border);display:inline-block;margin:0 2px;"></span>
       <div class="lang-toggle" role="group" aria-label="Idioma TTS">
         <button class="lang-opt active" id="langES" onclick="setLang('es')" aria-pressed="true">ES</button>
         <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
       </div>
+      <span style="width:1px;height:16px;background:var(--border);display:inline-block;margin:0 2px;"></span>
+      <!-- Preset star toggle -->
+      <button class="layer-btn" id="btnPreset" onclick="togglePreset()" title="Configuración Arkana" aria-pressed="false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </button>
     </div>
   </div>
   <div class="footer">
@@ -179,6 +344,12 @@
   let stallTimer          = null;
   let ttsSpeaking         = false;
   let streamAudio         = null;
+
+  // ── LAYER STATE ────────────────────────────────────────────────────────────
+  const layerState = { noise: true, tts: true }; // tts gestionado por knob reps
+  let pauseDuration  = 20000; // ms, rango 10000–25000
+  let loopReps       = 7;
+  let binauralFreq   = 0; // 0 = OFF; >0 = diferencia Hz entre osciladores
 
   const playBtn    = document.getElementById('playBtn');
   const playLabel  = document.getElementById('playLabel');
@@ -236,7 +407,7 @@
     playBtn.classList.add('active');
     wf.classList.add('playing');
     document.getElementById('volRow').classList.add('visible');
-    document.getElementById('langRow').classList.add('visible');
+    document.getElementById('controlsRow').classList.add('visible');
     playLabel.textContent = 'Detener';
     playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
     startListenersCounter();
@@ -261,7 +432,7 @@
     playLabel.textContent  = 'Escuchar en directo';
     playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
     repLabel.textContent   = '';
-    document.getElementById('langRow').classList.remove('visible');
+    document.getElementById('controlsRow').classList.remove('visible');
     stopListenersCounter();
   }
 
@@ -429,24 +600,30 @@
   function initGenerativeAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.resume();
+    const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
     if (noiseNodes.length === 0) {
       const buf  = audioCtx.createBuffer(1, 2 * audioCtx.sampleRate, audioCtx.sampleRate);
       const data = buf.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
       const src = audioCtx.createBufferSource(); src.buffer = buf; src.loop = true;
-      const nGain = audioCtx.createGain(); nGain.gain.value = 0.02;
+      const nGain = audioCtx.createGain(); nGain.gain.value = layerState.noise ? vol * 0.02 : 0;
       src.connect(nGain).connect(audioCtx.destination); src.start();
       const oscL = audioCtx.createOscillator(), oscR = audioCtx.createOscillator();
       const m = audioCtx.createChannelMerger(2);
-      const bGain = audioCtx.createGain(); bGain.gain.value = 0.03;
-      oscL.frequency.value = 200; oscR.frequency.value = 208;
+      const bGain = audioCtx.createGain(); bGain.gain.value = binauralFreq > 0 ? vol * 0.03 : 0;
+      oscL.frequency.value = 200;
+      oscR.frequency.value = binauralFreq > 0 ? 200 + binauralFreq : 208;
       oscL.connect(m, 0, 0); oscR.connect(m, 0, 1);
       m.connect(bGain).connect(audioCtx.destination);
       oscL.start(); oscR.start();
       noiseNodes = [src, nGain, oscL, oscR, bGain];
     } else {
-      noiseNodes[1].gain.value = 0.02;
-      noiseNodes[4].gain.value = 0.03;
+      noiseNodes[1].gain.value = layerState.noise ? vol * 0.02 : 0;
+      noiseNodes[4].gain.value = binauralFreq > 0 ? vol * 0.03 : 0;
+      if (binauralFreq > 0) {
+        noiseNodes[2].frequency.value = 200;
+        noiseNodes[3].frequency.value = 200 + binauralFreq;
+      }
     }
   }
 
@@ -466,13 +643,16 @@
 
   function runTTSLoop() {
     if (currentMode !== 'TTS' || !isPlaying) return;
+    if (!layerState.tts) return;
+
+    // Mismo trío durante loopReps veces, luego trío nuevo
     if (repCount === 0) {
       currentTrio = [];
       const pool = [...CARDS[currentLang]];
       for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     }
     repCount++;
-    repLabel.textContent = `Intervalo: Rep ${repCount}/7`;
+    repLabel.textContent = `Rep ${repCount}/${loopReps}`;
 
     const cfg = LANG_CONFIG[currentLang];
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
@@ -485,10 +665,9 @@
     msg.onend = () => {
       ttsSpeaking = false;
       if (currentMode !== 'TTS') return;
-      if (repCount >= 7) repCount = 0;
+      if (repCount >= loopReps) repCount = 0;
 
-      // Cuenta atrás de 20s hasta la siguiente frase
-      let secsLeft = 20;
+      let secsLeft = Math.round(pauseDuration / 1000);
       repLabel.textContent = `Pausa de ${secsLeft}s...`;
       clearInterval(countdownInterval);
       countdownInterval = setInterval(() => {
@@ -504,7 +683,7 @@
         clearInterval(countdownInterval);
         countdownInterval = null;
         runTTSLoop();
-      }, 20000);
+      }, pauseDuration);
     };
 
     msg.onerror = (e) => {
@@ -518,6 +697,339 @@
   }
 
   // ── UTILS ──────────────────────────────────────────────────────────────────
+
+  // ── PRESET ARKANA ──────────────────────────────────────────────────────────
+
+  let presetActive    = false;
+  let presetSnapshot  = null; // guarda el estado anterior al activar
+
+  // Expone setters que los knobs registran al inicializarse
+  const knobSetters = {};
+
+  function togglePreset() {
+    presetActive = !presetActive;
+    const btn = document.getElementById('btnPreset');
+    btn.classList.toggle('active', presetActive);
+    btn.setAttribute('aria-pressed', presetActive);
+
+    if (presetActive) {
+      // Guardar estado actual
+      presetSnapshot = {
+        noise:       layerState.noise,
+        binauralPos: window._binauralPos ?? 0,
+        pauseVal:    Math.round(pauseDuration / 1000),
+        repsVal:     loopReps,
+      };
+
+      // Aplicar preset: ruido ON, TTS ON (×7), Alpha 7.5 Hz, 7 reps, 20s pausa
+      if (!layerState.noise) { layerState.noise = true; document.getElementById('btnNoise').classList.add('active'); }
+      knobSetters.binaural?.(hzToPos(7.5));
+      knobSetters.pause?.(20);
+      knobSetters.reps?.(7); // activa TTS implícitamente
+
+    } else {
+      // Restaurar snapshot
+      if (presetSnapshot) {
+        const s = presetSnapshot;
+        layerState.noise = s.noise;
+        document.getElementById('btnNoise').classList.toggle('active', s.noise);
+        knobSetters.binaural?.(s.binauralPos);
+        knobSetters.pause?.(s.pauseVal);
+        knobSetters.reps?.(s.repsVal); // gestiona layerState.tts internamente
+        if (audioCtx && noiseNodes.length) {
+          const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
+          noiseNodes[1].gain.value = layerState.noise ? vol * 0.02 : 0;
+        }
+      }
+    }
+  }
+
+  // Convierte Hz binaurales a posición [0,1] del knob (inversa de posToFreq)
+  function hzToPos(hz) {
+    const OFF_THRESHOLD = 0.08;
+    if (hz <= 0) return 0;
+    const t = Math.log(hz / 0.5) / Math.log(40 / 0.5);
+    return OFF_THRESHOLD + t * (1 - OFF_THRESHOLD);
+  }
+
+  // ── KNOB BINAURAL ──────────────────────────────────────────────────────────
+
+  (function initBinauralKnob() {
+    // Escala continua: posición 0 = OFF, luego 0.5 → 40 Hz en log
+    // Dividimos el recorrido del knob en 6 zonas: OFF + 5 bandas
+    // Ángulos: -135° (OFF) → +135° (Gamma 40 Hz)
+    const ANG_MIN = -135, ANG_MAX = 135;
+    const DRAG_PX = 100;
+
+    // Bandas: [nombre, color acento, hz_min, hz_max]
+    const BANDS = [
+      { name: 'OFF',   color: 'var(--gray)', min: 0,    max: 0    },
+      { name: 'DELTA', color: '#6b8cff',     min: 0.5,  max: 4    },
+      { name: 'THETA', color: '#a855f7',     min: 4,    max: 8    },
+      { name: 'ALPHA', color: '#22c55e',     min: 8,    max: 12   },
+      { name: 'BETA',  color: '#f59e0b',     min: 12,   max: 30   },
+      { name: 'GAMMA', color: '#ef4444',     min: 30,   max: 40   },
+    ];
+
+    // Mapeamos posición [0,1] del knob a frecuencia Hz
+    // Zona OFF ocupa los primeros ~10% del recorrido, luego escala log de 0.5 a 40 Hz
+    const OFF_THRESHOLD = 0.08; // fracción del recorrido que es "OFF"
+
+    function posToFreq(pos) {
+      if (pos < OFF_THRESHOLD) return 0;
+      const t = (pos - OFF_THRESHOLD) / (1 - OFF_THRESHOLD); // [0,1] para el rango de frecuencias
+      // Escala logarítmica de 0.5 a 40 Hz
+      return 0.5 * Math.pow(40 / 0.5, t);
+    }
+
+    function freqToBand(hz) {
+      if (hz === 0) return BANDS[0];
+      if (hz < 4)   return BANDS[1];
+      if (hz < 8)   return BANDS[2];
+      if (hz < 12)  return BANDS[3];
+      if (hz < 30)  return BANDS[4];
+      return BANDS[5];
+    }
+
+    function posToAngle(pos) {
+      return ANG_MIN + pos * (ANG_MAX - ANG_MIN);
+    }
+
+    let knobPos  = 0; // [0,1], empieza en OFF
+    let dragging = false, startY = 0, startPos = 0;
+
+    const wrap   = document.getElementById('binauralKnob');
+    const marker = document.getElementById('binauralKnobMarker');
+    const valLbl = document.getElementById('binauralKnobVal');
+
+    function applyPos(pos) {
+      knobPos = Math.min(1, Math.max(0, pos));
+      window._binauralPos = knobPos; // para snapshot del preset
+      const hz   = posToFreq(knobPos);
+      const band = freqToBand(hz);
+      binauralFreq = hz;
+
+      marker.style.transform = `translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;
+      marker.style.background = band.color;
+      valLbl.textContent = band.name;
+      valLbl.style.color = band.name === 'OFF' ? 'var(--gray)' : band.color;
+
+      // Icono central hereda color de banda
+      const icon = document.querySelector('#binauralKnobDial .knob-icon');
+      if (icon) icon.style.color = band.name === 'OFF' ? 'var(--gray)' : band.color;
+
+      // Actualizar audio si está activo
+      if (audioCtx && noiseNodes.length) {
+        const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
+        if (hz > 0) {
+          noiseNodes[2].frequency.setTargetAtTime(200,           audioCtx.currentTime, 0.05);
+          noiseNodes[3].frequency.setTargetAtTime(200 + hz,      audioCtx.currentTime, 0.05);
+          noiseNodes[4].gain.setTargetAtTime(vol * 0.03,         audioCtx.currentTime, 0.05);
+        } else {
+          noiseNodes[4].gain.setTargetAtTime(0,                  audioCtx.currentTime, 0.05);
+        }
+      }
+    }
+
+    // Registrar setter para uso externo (preset)
+    knobSetters.binaural = applyPos;
+
+    // Inicializar en OFF
+    applyPos(0);
+
+    function onDown(e) {
+      dragging = true;
+      startY   = e.touches ? e.touches[0].clientY : e.clientY;
+      startPos = knobPos;
+      wrap.classList.add('dragging');
+      e.preventDefault();
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const delta   = startY - clientY;
+      applyPos(startPos + delta / DRAG_PX);
+      e.preventDefault();
+    }
+
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      wrap.classList.remove('dragging');
+    }
+
+    wrap.addEventListener('mousedown',  onDown);
+    wrap.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('mousemove',  onMove);
+    document.addEventListener('touchmove',  onMove, { passive: false });
+    document.addEventListener('mouseup',    onUp);
+    document.addEventListener('touchend',   onUp);
+  })();
+
+  // ── KNOB PAUSA ─────────────────────────────────────────────────────────────
+
+  (function initPauseKnob() {
+    const KNOB_MIN = 10, KNOB_MAX = 25, KNOB_DEFAULT = 20;
+    const DRAG_PX  = 80; // px de arrastre para recorrer el rango completo
+    // Ángulos: mín = -135°, máx = +135°
+    const ANG_MIN  = -135, ANG_MAX = 135;
+
+    let dragging = false, startY = 0, startVal = KNOB_DEFAULT;
+
+    const wrap   = document.getElementById('pauseKnob');
+    const marker = document.getElementById('knobMarker');
+    const valLbl = document.getElementById('knobVal');
+
+    function valToAngle(v) {
+      return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN);
+    }
+
+    function setKnobValue(v) {
+      v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
+      pauseDuration = v * 1000;
+      marker.style.transform = `translateX(-50%) rotate(${valToAngle(v)}deg)`;
+      valLbl.textContent = `${v}s`;
+    }
+
+    // Inicializar posición
+    setKnobValue(KNOB_DEFAULT);
+    knobSetters.pause = setKnobValue;
+
+    function onDown(e) {
+      dragging = true;
+      startY   = e.touches ? e.touches[0].clientY : e.clientY;
+      startVal = Math.round(pauseDuration / 1000);
+      wrap.classList.add('dragging');
+      e.preventDefault();
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const delta   = startY - clientY; // arrastrar hacia arriba = aumentar
+      const range   = KNOB_MAX - KNOB_MIN;
+      const change  = (delta / DRAG_PX) * range;
+      setKnobValue(startVal + change);
+      e.preventDefault();
+    }
+
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      wrap.classList.remove('dragging');
+    }
+
+    wrap.addEventListener('mousedown',  onDown);
+    wrap.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('mousemove',  onMove);
+    document.addEventListener('touchmove',  onMove, { passive: false });
+    document.addEventListener('mouseup',    onUp);
+    document.addEventListener('touchend',   onUp);
+  })();
+
+  // ── KNOB REPETICIONES ──────────────────────────────────────────────────────
+
+  (function initRepsKnob() {
+    const KNOB_MIN = 0, KNOB_MAX = 10, KNOB_DEFAULT = 7;
+    const DRAG_PX  = 60;
+    const ANG_MIN  = -135, ANG_MAX = 135;
+
+    let dragging = false, startY = 0, startVal = KNOB_DEFAULT;
+
+    const wrap   = document.getElementById('repsKnob');
+    const marker = document.getElementById('repsKnobMarker');
+    const valLbl = document.getElementById('repsKnobVal');
+    const icon   = document.getElementById('repsKnobIcon');
+
+    function valToAngle(v) {
+      return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN);
+    }
+
+    function setKnobValue(v) {
+      v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
+      loopReps = v;
+
+      marker.style.transform = `translateX(-50%) rotate(${valToAngle(v)}deg)`;
+
+      if (v === 0) {
+        // TTS off
+        layerState.tts = false;
+        valLbl.textContent = '—';
+        marker.style.background = 'var(--gray)';
+        if (icon) icon.style.color = 'var(--gray)';
+        // Detener voz si está activa
+        if (currentMode === 'TTS' && isPlaying) {
+          window.speechSynthesis.cancel();
+          clearTimeout(ttsTimer);
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          ttsSpeaking = false;
+          repLabel.textContent = '';
+        }
+      } else {
+        // TTS on
+        const wasOff = !layerState.tts;
+        layerState.tts = true;
+        valLbl.textContent = `×${v}`;
+        marker.style.background = 'var(--white)';
+        if (icon) icon.style.color = 'var(--white)';
+        // Si TTS está activo y estaba parado, relanzar
+        if (wasOff && currentMode === 'TTS' && isPlaying && !ttsSpeaking) {
+          repCount = 0;
+          ttsTimer = setTimeout(runTTSLoop, 400);
+        }
+      }
+    }
+
+    setKnobValue(KNOB_DEFAULT);
+    knobSetters.reps = setKnobValue;
+
+    function onDown(e) {
+      dragging = true;
+      startY   = e.touches ? e.touches[0].clientY : e.clientY;
+      startVal = loopReps;
+      wrap.classList.add('dragging');
+      e.preventDefault();
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const delta   = startY - clientY;
+      const range   = KNOB_MAX - KNOB_MIN;
+      const change  = (delta / DRAG_PX) * range;
+      setKnobValue(startVal + change);
+      e.preventDefault();
+    }
+
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      wrap.classList.remove('dragging');
+    }
+
+    wrap.addEventListener('mousedown',  onDown);
+    wrap.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('mousemove',  onMove);
+    document.addEventListener('touchmove',  onMove, { passive: false });
+    document.addEventListener('mouseup',    onUp);
+    document.addEventListener('touchend',   onUp);
+  })();
+
+  // ── LAYER TOGGLES ──────────────────────────────────────────────────────────
+
+  function toggleLayer(layer) {
+    layerState[layer] = !layerState[layer];
+    const btn = document.getElementById('btnNoise');
+    btn.classList.toggle('active', layerState[layer]);
+    btn.setAttribute('aria-pressed', layerState[layer]);
+
+    if (audioCtx && noiseNodes.length) {
+      const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
+      noiseNodes[1].gain.value = layerState.noise ? vol * 0.02 : 0;
+    }
+  }
 
   // ── LANG TOGGLE ────────────────────────────────────────────────────────────
 
@@ -544,8 +1056,8 @@
     const vol = parseFloat(v);
     if (streamAudio) streamAudio.volume = vol;
     if (audioCtx && noiseNodes.length) {
-      noiseNodes[1].gain.value = vol * 0.02;
-      noiseNodes[4].gain.value = vol * 0.03;
+      noiseNodes[1].gain.value = layerState.noise  ? vol * 0.02 : 0;
+      noiseNodes[4].gain.value = binauralFreq > 0  ? vol * 0.03 : 0;
     }
   }
 
@@ -577,12 +1089,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
