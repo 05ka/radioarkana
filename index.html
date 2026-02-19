@@ -414,12 +414,12 @@
 
       // Cuenta atrás de 20s hasta la siguiente frase
       let secsLeft = 20;
-      repLabel.textContent = `Buscando frecuencia FM (${secsLeft}s)...`;
+      repLabel.textContent = `Pausa de (${secsLeft}s)...`;
       clearInterval(countdownInterval);
       countdownInterval = setInterval(() => {
         secsLeft--;
         if (secsLeft > 0) {
-          repLabel.textContent = `Buscando frecuencia FM (${secsLeft}s)...`;
+          repLabel.textContent = `Pausa de (${secsLeft}s)...`;
         } else {
           clearInterval(countdownInterval);
           countdownInterval = null;
@@ -481,4 +481,5 @@
 </script>
 </body>
 </html>
+
 
