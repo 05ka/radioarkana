@@ -127,13 +127,23 @@
     .controls-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
+      gap: 0;
       margin-top: 16px;
       opacity: 0;
       transition: opacity 0.3s;
-      flex-wrap: wrap;
     }
     .controls-row.visible { opacity: 1; }
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ctrl-sep {
+      width: 1px; height: 16px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
     .layer-toggles {
       display: flex;
       align-items: center;
@@ -271,65 +281,66 @@
       <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" oninput="updateVolume(this.value)">
     </div>
     <div class="controls-row" id="controlsRow">
-      <!-- Noise type knob -->
-      <div class="knob-wrap" id="noiseKnob" title="Tipo de ruido">
-        <div class="knob" id="noiseKnobDial">
-          <div class="knob-marker" id="noiseKnobMarker"></div>
-          <span class="knob-icon" id="noiseKnobIcon">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 12h2M6 8h1M6 16h1M10 5h1M10 19h1M14 3h1M14 21h1M18 7h1M18 17h1M22 12h2M9 12h6"/>
-            </svg>
-          </span>
+      <div class="controls-left">
+        <!-- Noise type knob -->
+        <div class="knob-wrap" id="noiseKnob" title="Tipo de ruido">
+          <div class="knob" id="noiseKnobDial">
+            <div class="knob-marker" id="noiseKnobMarker"></div>
+            <span class="knob-icon" id="noiseKnobIcon">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12h2M6 8h1M6 16h1M10 5h1M10 19h1M14 3h1M14 21h1M18 7h1M18 17h1M22 12h2M9 12h6"/>
+              </svg>
+            </span>
+          </div>
+          <span class="knob-val" id="noiseKnobVal">OFF</span>
         </div>
-        <span class="knob-val" id="noiseKnobVal">OFF</span>
-      </div>
-      <!-- Binaural knob -->
-      <div class="knob-wrap" id="binauralKnob" title="Frecuencia binaural">
-        <div class="knob" id="binauralKnobDial">
-          <div class="knob-marker" id="binauralKnobMarker"></div>
-          <span class="knob-icon">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <path d="M2 12 Q6 6 10 12 Q14 18 18 12 Q22 6 24 12"/>
-            </svg>
-          </span>
+        <!-- Binaural knob -->
+        <div class="knob-wrap" id="binauralKnob" title="Frecuencia binaural">
+          <div class="knob" id="binauralKnobDial">
+            <div class="knob-marker" id="binauralKnobMarker"></div>
+            <span class="knob-icon">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M2 12 Q6 6 10 12 Q14 18 18 12 Q22 6 24 12"/>
+              </svg>
+            </span>
+          </div>
+          <span class="knob-val" id="binauralKnobVal">OFF</span>
         </div>
-        <span class="knob-val" id="binauralKnobVal">OFF</span>
-      </div>
-      <span style="width:1px;height:16px;background:var(--border);display:inline-block;margin:0 2px;"></span>
-      <!-- Loop knobs (pause + reps) -->
-      <div class="knob-wrap" id="pauseKnob" title="Pausa entre frases">
-        <div class="knob" id="knobDial">
-          <div class="knob-marker" id="knobMarker"></div>
-          <span class="knob-icon">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"/>
-              <polyline points="12 7 12 12 15 14"/>
-            </svg>
-          </span>
+        <span class="ctrl-sep"></span>
+        <!-- Loop knobs (pause + reps) -->
+        <div class="knob-wrap" id="pauseKnob" title="Pausa entre frases">
+          <div class="knob" id="knobDial">
+            <div class="knob-marker" id="knobMarker"></div>
+            <span class="knob-icon">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <polyline points="12 7 12 12 15 14"/>
+              </svg>
+            </span>
+          </div>
+          <span class="knob-val" id="knobVal">20s</span>
         </div>
-        <span class="knob-val" id="knobVal">20s</span>
-      </div>
-      <div class="knob-wrap" id="repsKnob" title="Repeticiones por serie">
-        <div class="knob" id="repsKnobDial">
-          <div class="knob-marker" id="repsKnobMarker"></div>
-          <span class="knob-icon">
-            <svg id="repsKnobIcon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="2" width="6" height="11" rx="3"/>
-              <path d="M5 10a7 7 0 0 0 14 0"/>
-              <line x1="12" y1="19" x2="12" y2="22"/>
-              <line x1="9" y1="22" x2="15" y2="22"/>
-            </svg>
-          </span>
+        <div class="knob-wrap" id="repsKnob" title="Repeticiones por serie">
+          <div class="knob" id="repsKnobDial">
+            <div class="knob-marker" id="repsKnobMarker"></div>
+            <span class="knob-icon">
+              <svg id="repsKnobIcon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="2" width="6" height="11" rx="3"/>
+                <path d="M5 10a7 7 0 0 0 14 0"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+                <line x1="9" y1="22" x2="15" y2="22"/>
+              </svg>
+            </span>
+          </div>
+          <span class="knob-val" id="repsKnobVal">×7</span>
         </div>
-        <span class="knob-val" id="repsKnobVal">×7</span>
+        <span class="ctrl-sep"></span>
+        <div class="lang-toggle" role="group" aria-label="Idioma TTS">
+          <button class="lang-opt active" id="langES" onclick="setLang('es')" aria-pressed="true">ES</button>
+          <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
+        </div>
       </div>
-      <span style="width:1px;height:16px;background:var(--border);display:inline-block;margin:0 2px;"></span>
-      <div class="lang-toggle" role="group" aria-label="Idioma TTS">
-        <button class="lang-opt active" id="langES" onclick="setLang('es')" aria-pressed="true">ES</button>
-        <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
-      </div>
-      <span style="width:1px;height:16px;background:var(--border);display:inline-block;margin:0 2px;"></span>
-      <!-- Preset star toggle -->
+      <!-- Preset star toggle — anclado al extremo derecho -->
       <button class="layer-btn" id="btnPreset" onclick="togglePreset()" title="Configuración Arkana" aria-pressed="false">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -1370,5 +1381,3 @@
 </script>
 </body>
 </html>
-
-
