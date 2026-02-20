@@ -37,9 +37,8 @@
     .marquee-text { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); white-space: nowrap; display: inline-block; animation: marquee 30s linear infinite; }
     @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
     .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; }
-    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
-    .playing .bar { background: var(--red); animation: wave var(--dur) ease-in-out infinite alternate; }
-    @keyframes wave { from { transform: scaleY(0.15); } to { transform: scaleY(1); } }
+    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: height 0.05s ease-out, background 0.3s; }
+    .playing .bar { background: var(--red); }
     .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); transition: background 0.3s; }
     .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
@@ -546,11 +545,68 @@
     pauseLabel.classList.toggle('active', !!pauseActive);
   }
 
-  for (let i = 0; i < 48; i++) {
+  // ── WAVEFORM REACTIVA ──────────────────────────────────────────────────────
+  const BAR_COUNT = 48;
+  const bars = [];
+  for (let i = 0; i < BAR_COUNT; i++) {
     const b = document.createElement('div');
     b.className = 'bar';
-    b.style.cssText = `height:${8+Math.random()*92}%; --dur:${0.4+Math.random()*0.8}s; animation-delay:${(i/48*0.6).toFixed(2)}s`;
+    b.dataset.idleH = `${8 + Math.random() * 30}%`;
+    b.style.height = b.dataset.idleH;
     wf.appendChild(b);
+    bars.push(b);
+  }
+
+  let analyser  = null;
+  let streamSrc = null;
+  let wfRafId   = null;
+  let wfSmooth  = new Float32Array(BAR_COUNT).fill(0);
+
+  function ensureAnalyser() {
+    if (!audioCtx || analyser) return;
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.75;
+    analyser.connect(audioCtx.destination);
+  }
+
+  function connectStreamToAnalyser(audioEl) {
+    if (!audioCtx) return;
+    ensureAnalyser();
+    if (streamSrc) { try { streamSrc.disconnect(); } catch(e){} }
+    streamSrc = audioCtx.createMediaElementSource(audioEl);
+    streamSrc.connect(analyser);
+  }
+
+  function drawWaveform() {
+    if (!analyser || !isPlaying) { wfRafId = null; return; }
+    wfRafId = requestAnimationFrame(drawWaveform);
+    const bins = analyser.frequencyBinCount;
+    const data = new Uint8Array(bins);
+    analyser.getByteFrequencyData(data);
+    for (let i = 0; i < BAR_COUNT; i++) {
+      const lo  = Math.floor(Math.pow(i / BAR_COUNT, 1.6) * bins);
+      const hi  = Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.6) * bins);
+      let sum = 0, count = Math.max(1, hi - lo);
+      for (let j = lo; j < hi; j++) sum += data[j];
+      const raw = sum / count / 255;
+      wfSmooth[i] = raw > wfSmooth[i]
+        ? wfSmooth[i] * 0.3 + raw * 0.7
+        : wfSmooth[i] * 0.85 + raw * 0.15;
+      bars[i].style.height = `${Math.max(4, wfSmooth[i] * 100)}%`;
+    }
+  }
+
+  function startWaveform() {
+    if (wfRafId) return;
+    wfSmooth.fill(0);
+    wfRafId = requestAnimationFrame(drawWaveform);
+  }
+
+  function stopWaveform() {
+    if (wfRafId) { cancelAnimationFrame(wfRafId); wfRafId = null; }
+    bars.forEach(b => { b.style.height = b.dataset.idleH; });
+    wfSmooth.fill(0);
   }
 
   // ── AUDIO ELEMENT ──────────────────────────────────────────────────────────
@@ -609,6 +665,7 @@
     clearAllTimers();
     window.speechSynthesis.cancel();
     if (audioCtx) audioCtx.suspend();
+    stopWaveform();
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
     dot.className          = 'dot';
@@ -647,6 +704,11 @@
       statusText.className   = 'live';
       modeLabel.textContent  = 'ON AIR';
       setRepLabels('Señal estable', null, true, false);
+      // Conectar stream al analyser y arrancar visualización
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx.resume();
+      connectStreamToAnalyser(audio);
+      startWaveform();
       console.log('onplaying — stream activo.');
     };
 
@@ -735,6 +797,11 @@
     modeLabel.textContent  = 'Emisión en Pruebas';
 
     initGenerativeAudio();
+    // Conectar el analyser al grafo generativo y arrancar visualización
+    ensureAnalyser();
+    // Los nodos generativos ya conectan a audioCtx.destination;
+    // reconectamos a través del analyser si aún no está en el grafo
+    startWaveform();
     runTTSLoop();
     scheduleWatchdog();
   }
@@ -828,7 +895,10 @@
   function initGenerativeAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.resume();
+    ensureAnalyser(); // garantiza que el analyser existe antes de conectar nodos
     const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
+    // Destino final: analyser → destination (para visualización reactiva)
+    const finalDest = analyser ?? audioCtx.destination;
 
     if (noiseNodes.length === 0) {
       const [gW, gP, gB] = noiseGainForType(noiseType, vol);
@@ -836,18 +906,18 @@
       const srcW = audioCtx.createBufferSource();
       srcW.buffer = makeWhiteBuffer(audioCtx); srcW.loop = true;
       const gainW = audioCtx.createGain(); gainW.gain.value = gW;
-      const destW = shortwaveActive ? (enableShortwaveFilter(), swNodes.highpass) : audioCtx.destination;
+      const destW = shortwaveActive ? (enableShortwaveFilter(), swNodes.highpass) : finalDest;
       srcW.connect(gainW).connect(destW); srcW.start();
 
       const srcP = audioCtx.createBufferSource();
       srcP.buffer = makePinkBuffer(audioCtx); srcP.loop = true;
       const gainP = audioCtx.createGain(); gainP.gain.value = gP;
-      srcP.connect(gainP).connect(shortwaveActive ? swNodes.highpass : audioCtx.destination); srcP.start();
+      srcP.connect(gainP).connect(shortwaveActive ? swNodes.highpass : finalDest); srcP.start();
 
       const srcB = audioCtx.createBufferSource();
       srcB.buffer = makeBrownBuffer(audioCtx); srcB.loop = true;
       const gainB = audioCtx.createGain(); gainB.gain.value = gB;
-      srcB.connect(gainB).connect(shortwaveActive ? swNodes.highpass : audioCtx.destination); srcB.start();
+      srcB.connect(gainB).connect(shortwaveActive ? swNodes.highpass : finalDest); srcB.start();
 
       const oscL = audioCtx.createOscillator(), oscR = audioCtx.createOscillator();
       const merger = audioCtx.createChannelMerger(2);
@@ -855,7 +925,7 @@
       oscL.frequency.value = 200;
       oscR.frequency.value = binauralFreq > 0 ? 200 + binauralFreq : 208;
       oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1);
-      merger.connect(gainBin).connect(audioCtx.destination);
+      merger.connect(gainBin).connect(finalDest);
       oscL.start(); oscR.start();
 
       noiseNodes = [srcW, gainW, srcP, gainP, srcB, gainB, oscL, oscR, gainBin];
