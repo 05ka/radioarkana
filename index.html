@@ -36,9 +36,26 @@
     .marquee-wrap { overflow: hidden; margin-bottom: 36px; }
     .marquee-text { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); white-space: nowrap; display: inline-block; animation: marquee 30s linear infinite; }
     @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
-    .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; }
-    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: height 0.05s ease-out, background 0.3s; }
-    .playing .bar { background: var(--red); }
+    .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; perspective: 200px; }
+    .bar {
+      width: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      transition: height 0.06s ease-out, background 0.4s, box-shadow 0.4s, transform 0.12s ease;
+      transform-origin: bottom center;
+    }
+    .playing .bar {
+      background: linear-gradient(to top, #4a0000, #e63030 60%, #ff8a8a);
+      box-shadow: 0 2px 8px rgba(230,48,48,0.35);
+    }
+    .playing .bar.tts-mode {
+      background: linear-gradient(to top, #7a1a1a, #e63030 55%, #ff6060);
+      box-shadow: 0 2px 10px rgba(230,48,48,0.5);
+    }
+    .playing .bar.high-peak {
+      box-shadow: 0 2px 14px rgba(230,48,48,0.65);
+      filter: brightness(1.18);
+    }
     .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); transition: background 0.3s; }
     .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
@@ -578,22 +595,67 @@
     streamSrc.connect(analyser);
   }
 
+  // Release factors por zona: graves lentos, agudos más rápidos
+  const RELEASE = [0.78, 0.88, 0.94];
+
   function drawWaveform() {
     if (!analyser || !isPlaying) { wfRafId = null; return; }
     wfRafId = requestAnimationFrame(drawWaveform);
+
     const bins = analyser.frequencyBinCount;
     const data = new Uint8Array(bins);
     analyser.getByteFrequencyData(data);
+
+    const isTTS      = currentMode === 'TTS';
+    const isSpeaking = isTTS && ttsSpeaking;
+    const now        = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+
+    // Respiración lenta en TTS cuando no está hablando
+    const breath = (isTTS && !isSpeaking)
+      ? Math.sin(now * 0.8) * 0.07 + 0.93
+      : 1.0;
+
     for (let i = 0; i < BAR_COUNT; i++) {
+      // Distribución logarítmica de bins
       const lo  = Math.floor(Math.pow(i / BAR_COUNT, 1.6) * bins);
       const hi  = Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.6) * bins);
       let sum = 0, count = Math.max(1, hi - lo);
       for (let j = lo; j < hi; j++) sum += data[j];
       const raw = sum / count / 255;
+
+      // Suavizado con release variable por zona
+      const zone    = i < BAR_COUNT * 0.35 ? 0 : i < BAR_COUNT * 0.7 ? 1 : 2;
+      const release = RELEASE[zone];
       wfSmooth[i] = raw > wfSmooth[i]
-        ? wfSmooth[i] * 0.3 + raw * 0.7
-        : wfSmooth[i] * 0.85 + raw * 0.15;
-      bars[i].style.height = `${Math.max(4, wfSmooth[i] * 100)}%`;
+        ? wfSmooth[i] * 0.25 + raw * 0.75
+        : wfSmooth[i] * release + raw * (1 - release);
+
+      // Center boost — pulso central tipo corazón
+      const dist        = Math.abs(i - BAR_COUNT / 2);
+      const centerBoost = dist < 8 ? 1.0 + (1 - dist / 8) * 0.25 : 1.0;
+
+      let height = Math.max(4, wfSmooth[i] * 100 * centerBoost * breath);
+
+      bars[i].style.height = `${height}%`;
+
+      // Clases de modo y pico
+      bars[i].classList.toggle('tts-mode',  isTTS);
+      bars[i].classList.toggle('high-peak', height > 55);
+
+      // Micromodulación de fase (ola orgánica)
+      const phase    = now * 1.8 + i * 0.09;
+      const microMod = Math.sin(phase) * 0.05;
+
+      // Glitch shortwave
+      let glitchX = 0, glitchScale = 1, glitchOpacity = 1;
+      if (shortwaveActive && isTTS && Math.random() < 0.06) {
+        glitchX       = (Math.random() * 0.4 - 0.2) * 4;
+        glitchScale   = 1 + (Math.random() * 0.4 - 0.2) * 0.5;
+        glitchOpacity = 0.75 + Math.random() * 0.35;
+      }
+
+      bars[i].style.transform = `scaleY(${(1 + microMod) * glitchScale}) translateX(${glitchX}px)`;
+      bars[i].style.opacity   = glitchOpacity;
     }
   }
 
@@ -605,7 +667,12 @@
 
   function stopWaveform() {
     if (wfRafId) { cancelAnimationFrame(wfRafId); wfRafId = null; }
-    bars.forEach(b => { b.style.height = b.dataset.idleH; });
+    bars.forEach(b => {
+      b.style.height    = b.dataset.idleH;
+      b.style.transform = '';
+      b.style.opacity   = '1';
+      b.classList.remove('tts-mode', 'high-peak');
+    });
     wfSmooth.fill(0);
   }
 
