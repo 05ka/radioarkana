@@ -376,7 +376,7 @@
     <div class="marquee-wrap">
       <span class="marquee-text" id="marqueeText">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"        ***** EMISION EN PRUEBAS *****       </span>
     </div>
-    
+
     <div class="waveform" id="waveform"></div>
     <div class="status-row">
       <span class="dot" id="dot"></span>
@@ -483,11 +483,12 @@
 <div id="audioContainer"></div>
 
 <script>
-  const STREAM_URL     = 'https://stream.radioarkana.com/stream';
-  const WORKER_URL     = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+  const STREAM_URL = 'https://stream.radioarkana.com/stream';
+  const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+
   const CARDS = {
     es: ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"],
-    en: ["The Fool","The Magician","The High Priestess","The Empress","The Emperor","The Hierophant","The Lovers","The Chariot","Strength","The Hermit","The Wheel of Fortune"," The Justice","The Hanged Man","Death","The Temperance","The Devil","The Tower","The Star","The Moon","The Sun","The Judgement","The World"]
+    en: ["The Fool","The Magician","The High Priestess","The Empress","The Emperor","The Hierophant","The Lovers","The Chariot","Strength","The Hermit","The Wheel of Fortune","The Justice","The Hanged Man","Death","The Temperance","The Devil","The Tower","The Star","The Moon","The Sun","The Judgement","The World"]
   };
   const LANG_CONFIG = {
     es: { lang: 'es-ES', conj: 'con', and: 'y' },
@@ -507,7 +508,7 @@
   let audioCtx            = null;
   let noiseNodes          = [];
   let ttsTimer            = null;
-  let countdownInterval   = null; // ← cuenta atrás entre frases TTS
+  let countdownInterval   = null;
   let watchdogTimer       = null;
   let initialConnectTimer = null;
   let stallTimer          = null;
@@ -515,18 +516,18 @@
   let streamAudio         = null;
 
   // ── LAYER STATE ────────────────────────────────────────────────────────────
-  const layerState = { tts: true }; // tts gestionado por knob reps
-  let noiseType      = 'off';       // 'off' | 'white' | 'pink' | 'brown'
-  let pauseDuration  = 20000; // ms, rango 10000–25000
-  let loopReps       = 7;
-  let binauralFreq   = 0; // 0 = OFF; >0 = diferencia Hz entre osciladores
+  const layerState = { tts: true };
+  let noiseType     = 'off';
+  let pauseDuration = 20000;
+  let loopReps      = 7;
+  let binauralFreq  = 0;
 
   // ── SHORTWAVE FILTER STATE ─────────────────────────────────────────────────
-  let shortwaveActive  = false;
-  let swNodes          = null;   // { highpass, lowpass, waveShaper, streamDest, streamSrc }
-  let ttsMediaDest     = null;   // MediaStreamAudioDestinationNode para TTS
-  let ttsMediaSrc      = null;   // MediaElementAudioSourceNode conectado al <audio>
-  let ttsFilterAudio   = null;   // <audio> element que reproduce el stream del TTS
+  let shortwaveActive = false;
+  let swNodes         = null;   // { highpass, lowpass, waveShaper }
+  let ttsMediaDest    = null;   // MediaStreamAudioDestinationNode para TTS
+  let ttsMediaSrc     = null;   // MediaElementAudioSourceNode conectado al <audio>
+  let ttsFilterAudio  = null;   // <audio> element que reproduce el stream del TTS
 
   const playBtn    = document.getElementById('playBtn');
   const playLabel  = document.getElementById('playLabel');
@@ -782,7 +783,6 @@
 
   // ── GENERATIVO ─────────────────────────────────────────────────────────────
 
-  // Genera buffer de ruido blanco puro
   function makeWhiteBuffer(ctx) {
     const buf  = ctx.createBuffer(1, 2 * ctx.sampleRate, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -790,7 +790,6 @@
     return buf;
   }
 
-  // Genera buffer de ruido rosa (Paul Kellet algorithm, 1/f)
   function makePinkBuffer(ctx) {
     const buf  = ctx.createBuffer(1, 2 * ctx.sampleRate, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -806,7 +805,6 @@
     return buf;
   }
 
-  // Genera buffer de ruido marrón (Brownian, random walk)
   function makeBrownBuffer(ctx) {
     const buf  = ctx.createBuffer(1, 2 * ctx.sampleRate, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -814,23 +812,16 @@
     for (let i = 0; i < data.length; i++) {
       const w = Math.random() * 2 - 1;
       last = (last + 0.02 * w) / 1.02;
-      data[i] = last * 3.5; // normalizar amplitud
+      data[i] = last * 3.5;
     }
     return buf;
   }
 
-  // noiseNodes layout:
-  // [0] srcWhite, [1] gainWhite,
-  // [2] srcPink,  [3] gainPink,
-  // [4] srcBrown, [5] gainBrown,
-  // [6] oscL, [7] oscR, [8] gainBinaural
-
   function noiseGainForType(type, vol) {
-    // Devuelve [gWhite, gPink, gBrown] según tipo activo
-    if (type === 'off')   return [0,          0,          0         ];
-    if (type === 'white') return [vol * 0.015,  0,          0         ];
-    if (type === 'pink')  return [0,           vol * 0.025, 0         ];
-    if (type === 'brown') return [0,           0,          vol * 0.022];
+    if (type === 'off')   return [0,           0,           0          ];
+    if (type === 'white') return [vol * 0.015,  0,           0          ];
+    if (type === 'pink')  return [0,            vol * 0.025, 0          ];
+    if (type === 'brown') return [0,            0,           vol * 0.022];
     return [0, 0, 0];
   }
 
@@ -840,7 +831,6 @@
     const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
 
     if (noiseNodes.length === 0) {
-      // Crear los tres sources de ruido en paralelo
       const [gW, gP, gB] = noiseGainForType(noiseType, vol);
 
       const srcW = audioCtx.createBufferSource();
@@ -859,7 +849,6 @@
       const gainB = audioCtx.createGain(); gainB.gain.value = gB;
       srcB.connect(gainB).connect(shortwaveActive ? swNodes.highpass : audioCtx.destination); srcB.start();
 
-      // Osciladores binaurales
       const oscL = audioCtx.createOscillator(), oscR = audioCtx.createOscillator();
       const merger = audioCtx.createChannelMerger(2);
       const gainBin = audioCtx.createGain(); gainBin.gain.value = binauralFreq > 0 ? vol * 0.03 : 0;
@@ -871,7 +860,6 @@
 
       noiseNodes = [srcW, gainW, srcP, gainP, srcB, gainB, oscL, oscR, gainBin];
     } else {
-      // Actualizar ganancias sin recrear nodos
       const [gW, gP, gB] = noiseGainForType(noiseType, vol);
       noiseNodes[1].gain.value = gW;
       noiseNodes[3].gain.value = gP;
@@ -888,17 +876,14 @@
 
   function buildShortwaveNodes() {
     if (!audioCtx) return null;
-
     const highpass = audioCtx.createBiquadFilter();
     highpass.type            = 'highpass';
     highpass.frequency.value = 120;
     highpass.Q.value         = 0.707;
-
     const lowpass = audioCtx.createBiquadFilter();
     lowpass.type            = 'lowpass';
     lowpass.frequency.value = 2800;
     lowpass.Q.value         = 1.0;
-
     const waveShaper = audioCtx.createWaveShaper();
     const curve = new Float32Array(65536);
     for (let i = 0; i < 65536; i++) {
@@ -907,10 +892,7 @@
     }
     waveShaper.curve      = curve;
     waveShaper.oversample = '4x';
-
-    // Cadena: highpass → lowpass → waveShaper → destination
     highpass.connect(lowpass).connect(waveShaper).connect(audioCtx.destination);
-
     return { highpass, lowpass, waveShaper };
   }
 
@@ -928,16 +910,10 @@
     }
   }
 
-  // Activa/desactiva el filtro shortwave según estado del preset.
-  // El filtro se aplica al ruido generativo (que sí pasa por Web Audio API).
-  // Para el TTS nativo (speechSynthesis), se simulan parámetros de voz robótica
-  // porque la API del navegador no permite redirigir su salida de audio.
   function applyShortwaveState(active) {
     shortwaveActive = active;
     if (active) {
-      // Si el audioCtx ya existe, habilitar ahora; si no, se habilitará en initGenerativeAudio
       if (audioCtx) enableShortwaveFilter();
-      // Parámetros de voz que dan textura de radio de onda corta
       window._swTTSRate  = 0.65;
       window._swTTSPitch = 0.95;
     } else {
@@ -967,7 +943,6 @@
     if (currentMode !== 'TTS' || !isPlaying) return;
     if (!layerState.tts) return;
 
-    // Mismo trío durante loopReps veces, luego trío nuevo
     if (repCount === 0) {
       currentTrio = [];
       const pool = [...CARDS[currentLang]];
@@ -1019,22 +994,16 @@
     window.speechSynthesis.speak(msg);
   }
 
-  // ── UTILS ──────────────────────────────────────────────────────────────────
-
   // ── PRESET ARKANA ──────────────────────────────────────────────────────────
 
   let presetActive    = false;
-  let presetSnapshot  = null; // guarda el estado anterior al activar
-  let _presetApplying = false; // true mientras togglePreset está escribiendo knobs
+  let presetSnapshot  = null;
+  let _presetApplying = false;
+  const knobSetters   = {};
 
-  // Expone setters que los knobs registran al inicializarse
-  const knobSetters = {};
-
-  // Llamar desde cualquier knob cuando el usuario lo mueve manualmente
   function onUserKnobChange() {
-    if (_presetApplying) return; // cambio programático, ignorar
-    if (!presetActive) return;   // preset ya inactivo, nada que hacer
-    // Desactivar preset visualmente sin restaurar snapshot
+    if (_presetApplying) return;
+    if (!presetActive) return;
     presetActive = false;
     applyShortwaveState(false);
     const btn = document.getElementById('btnPreset');
@@ -1049,27 +1018,22 @@
     btn.setAttribute('aria-pressed', presetActive);
 
     if (presetActive) {
-      // Guardar estado actual
       presetSnapshot = {
         noisePos:    window._noisePos ?? 0,
         binauralPos: window._binauralPos ?? 0,
         pauseVal:    Math.round(pauseDuration / 1000),
         repsVal:     loopReps,
       };
-
-      // Aplicar preset: WHITE, Alpha 7.5 Hz, 7 reps, 20s pausa + filtro shortwave
       _presetApplying = true;
-      knobSetters.noise?.(0.375);   // posición en zona WHITE (0–0.25 → white)
+      knobSetters.noise?.(0.375);
       knobSetters.binaural?.(hzToPos(7.5));
       knobSetters.pause?.(20);
       knobSetters.reps?.(7);
-      applyShortwaveState(true);    // ← activar filtro lowpass/shortwave
+      applyShortwaveState(true);
       _presetApplying = false;
-
     } else {
-      // Restaurar snapshot
       _presetApplying = true;
-      applyShortwaveState(false);   // ← desactivar filtro shortwave
+      applyShortwaveState(false);
       if (presetSnapshot) {
         const s = presetSnapshot;
         knobSetters.noise?.(s.noisePos);
@@ -1081,7 +1045,6 @@
     }
   }
 
-  // Convierte Hz binaurales a posición [0,1] del knob (inversa de posToFreq)
   function hzToPos(hz) {
     const OFF_THRESHOLD = 0.08;
     if (hz <= 0) return 0;
@@ -1092,30 +1055,21 @@
   // ── KNOB BINAURAL ──────────────────────────────────────────────────────────
 
   (function initBinauralKnob() {
-    // Escala continua: posición 0 = OFF, luego 0.5 → 40 Hz en log
-    // Dividimos el recorrido del knob en 6 zonas: OFF + 5 bandas
-    // Ángulos: -135° (OFF) → +135° (Gamma 40 Hz)
     const ANG_MIN = -135, ANG_MAX = 135;
     const DRAG_PX = 100;
-
-    // Bandas: [nombre, color acento, hz_min, hz_max]
     const BANDS = [
-      { name: 'OFF',   color: 'var(--gray)', min: 0,    max: 0    },
-      { name: 'DELTA', color: '#6b8cff',     min: 0.5,  max: 4    },
-      { name: 'THETA', color: '#a855f7',     min: 4,    max: 8    },
-      { name: 'ALPHA', color: '#22c55e',     min: 8,    max: 12   },
-      { name: 'BETA',  color: '#f59e0b',     min: 12,   max: 30   },
-      { name: 'GAMMA', color: '#ef4444',     min: 30,   max: 40   },
+      { name: 'OFF',   color: 'var(--gray)', min: 0,   max: 0  },
+      { name: 'DELTA', color: '#6b8cff',     min: 0.5, max: 4  },
+      { name: 'THETA', color: '#a855f7',     min: 4,   max: 8  },
+      { name: 'ALPHA', color: '#22c55e',     min: 8,   max: 12 },
+      { name: 'BETA',  color: '#f59e0b',     min: 12,  max: 30 },
+      { name: 'GAMMA', color: '#ef4444',     min: 30,  max: 40 },
     ];
-
-    // Mapeamos posición [0,1] del knob a frecuencia Hz
-    // Zona OFF ocupa los primeros ~10% del recorrido, luego escala log de 0.5 a 40 Hz
-    const OFF_THRESHOLD = 0.08; // fracción del recorrido que es "OFF"
+    const OFF_THRESHOLD = 0.08;
 
     function posToFreq(pos) {
       if (pos < OFF_THRESHOLD) return 0;
-      const t = (pos - OFF_THRESHOLD) / (1 - OFF_THRESHOLD); // [0,1] para el rango de frecuencias
-      // Escala logarítmica de 0.5 a 40 Hz
+      const t = (pos - OFF_THRESHOLD) / (1 - OFF_THRESHOLD);
       return 0.5 * Math.pow(40 / 0.5, t);
     }
 
@@ -1128,11 +1082,9 @@
       return BANDS[5];
     }
 
-    function posToAngle(pos) {
-      return ANG_MIN + pos * (ANG_MAX - ANG_MIN);
-    }
+    function posToAngle(pos) { return ANG_MIN + pos * (ANG_MAX - ANG_MIN); }
 
-    let knobPos  = 0; // [0,1], empieza en OFF
+    let knobPos  = 0;
     let dragging = false, startY = 0, startPos = 0;
 
     const wrap   = document.getElementById('binauralKnob');
@@ -1142,21 +1094,19 @@
     function applyPos(pos) {
       onUserKnobChange();
       knobPos = Math.min(1, Math.max(0, pos));
-      window._binauralPos = knobPos; // para snapshot del preset
+      window._binauralPos = knobPos;
       const hz   = posToFreq(knobPos);
       const band = freqToBand(hz);
       binauralFreq = hz;
 
-      marker.style.transform = `translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;
+      marker.style.transform  = `translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;
       marker.style.background = band.color;
-      valLbl.textContent = band.name;
-      valLbl.style.color = band.name === 'OFF' ? 'var(--gray)' : band.color;
+      valLbl.textContent      = band.name;
+      valLbl.style.color      = band.name === 'OFF' ? 'var(--gray)' : band.color;
 
-      // Icono central hereda color de banda
       const icon = document.querySelector('#binauralKnobDial .knob-icon');
       if (icon) icon.style.color = band.name === 'OFF' ? 'var(--gray)' : band.color;
 
-      // Actualizar audio si está activo
       if (audioCtx && noiseNodes.length) {
         const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
         if (hz > 0) {
@@ -1164,38 +1114,24 @@
           noiseNodes[7].frequency.setTargetAtTime(200 + hz, audioCtx.currentTime, 0.05);
           noiseNodes[8].gain.setTargetAtTime(vol * 0.03,    audioCtx.currentTime, 0.05);
         } else {
-          noiseNodes[8].gain.setTargetAtTime(0,             audioCtx.currentTime, 0.05);
+          noiseNodes[8].gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
         }
       }
     }
 
-    // Registrar setter para uso externo (preset)
     knobSetters.binaural = applyPos;
-
-    // Inicializar en OFF
     applyPos(0);
 
     function onDown(e) {
-      dragging = true;
-      startY   = e.touches ? e.touches[0].clientY : e.clientY;
-      startPos = knobPos;
-      wrap.classList.add('dragging');
-      e.preventDefault();
+      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startPos = knobPos; wrap.classList.add('dragging'); e.preventDefault();
     }
-
     function onMove(e) {
       if (!dragging) return;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const delta   = startY - clientY;
-      applyPos(startPos + delta / DRAG_PX);
-      e.preventDefault();
+      applyPos(startPos + (startY - clientY) / DRAG_PX); e.preventDefault();
     }
-
-    function onUp() {
-      if (!dragging) return;
-      dragging = false;
-      wrap.classList.remove('dragging');
-    }
+    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
 
     wrap.addEventListener('mousedown',  onDown);
     wrap.addEventListener('touchstart', onDown, { passive: false });
@@ -1209,19 +1145,14 @@
 
   (function initPauseKnob() {
     const KNOB_MIN = 10, KNOB_MAX = 25, KNOB_DEFAULT = 10;
-    const DRAG_PX  = 80; // px de arrastre para recorrer el rango completo
-    // Ángulos: mín = -135°, máx = +135°
-    const ANG_MIN  = -135, ANG_MAX = 135;
-
+    const DRAG_PX = 80, ANG_MIN = -135, ANG_MAX = 135;
     let dragging = false, startY = 0, startVal = KNOB_DEFAULT;
 
     const wrap   = document.getElementById('pauseKnob');
     const marker = document.getElementById('knobMarker');
     const valLbl = document.getElementById('knobVal');
 
-    function valToAngle(v) {
-      return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN);
-    }
+    function valToAngle(v) { return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN); }
 
     function setKnobValue(v) {
       onUserKnobChange();
@@ -1231,33 +1162,19 @@
       valLbl.textContent = `${v}s`;
     }
 
-    // Inicializar posición
     setKnobValue(KNOB_DEFAULT);
     knobSetters.pause = setKnobValue;
 
     function onDown(e) {
-      dragging = true;
-      startY   = e.touches ? e.touches[0].clientY : e.clientY;
-      startVal = Math.round(pauseDuration / 1000);
-      wrap.classList.add('dragging');
-      e.preventDefault();
+      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startVal = Math.round(pauseDuration / 1000); wrap.classList.add('dragging'); e.preventDefault();
     }
-
     function onMove(e) {
       if (!dragging) return;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const delta   = startY - clientY; // arrastrar hacia arriba = aumentar
-      const range   = KNOB_MAX - KNOB_MIN;
-      const change  = (delta / DRAG_PX) * range;
-      setKnobValue(startVal + change);
-      e.preventDefault();
+      setKnobValue(startVal + ((startY - clientY) / DRAG_PX) * (KNOB_MAX - KNOB_MIN)); e.preventDefault();
     }
-
-    function onUp() {
-      if (!dragging) return;
-      dragging = false;
-      wrap.classList.remove('dragging');
-    }
+    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
 
     wrap.addEventListener('mousedown',  onDown);
     wrap.addEventListener('touchstart', onDown, { passive: false });
@@ -1271,9 +1188,7 @@
 
   (function initRepsKnob() {
     const KNOB_MIN = 0, KNOB_MAX = 10, KNOB_DEFAULT = 1;
-    const DRAG_PX  = 60;
-    const ANG_MIN  = -135, ANG_MAX = 135;
-
+    const DRAG_PX = 60, ANG_MIN = -135, ANG_MAX = 135;
     let dragging = false, startY = 0, startVal = KNOB_DEFAULT;
 
     const wrap   = document.getElementById('repsKnob');
@@ -1281,24 +1196,19 @@
     const valLbl = document.getElementById('repsKnobVal');
     const icon   = document.getElementById('repsKnobIcon');
 
-    function valToAngle(v) {
-      return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN);
-    }
+    function valToAngle(v) { return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN); }
 
     function setKnobValue(v) {
       onUserKnobChange();
       v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
       loopReps = v;
-
       marker.style.transform = `translateX(-50%) rotate(${valToAngle(v)}deg)`;
 
       if (v === 0) {
-        // TTS off
         layerState.tts = false;
         valLbl.textContent = '—';
         marker.style.background = 'var(--gray)';
         if (icon) icon.style.color = 'var(--gray)';
-        // Detener voz si está activa
         if (currentMode === 'TTS' && isPlaying) {
           window.speechSynthesis.cancel();
           clearTimeout(ttsTimer);
@@ -1308,13 +1218,11 @@
           setRepLabels(null, null, false, false);
         }
       } else {
-        // TTS on
         const wasOff = !layerState.tts;
         layerState.tts = true;
         valLbl.textContent = `×${v}`;
         marker.style.background = 'var(--red)';
         if (icon) icon.style.color = 'var(--red)';
-        // Si TTS está activo y estaba parado, relanzar
         if (wasOff && currentMode === 'TTS' && isPlaying && !ttsSpeaking) {
           repCount = 0;
           ttsTimer = setTimeout(runTTSLoop, 400);
@@ -1326,28 +1234,15 @@
     knobSetters.reps = setKnobValue;
 
     function onDown(e) {
-      dragging = true;
-      startY   = e.touches ? e.touches[0].clientY : e.clientY;
-      startVal = loopReps;
-      wrap.classList.add('dragging');
-      e.preventDefault();
+      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startVal = loopReps; wrap.classList.add('dragging'); e.preventDefault();
     }
-
     function onMove(e) {
       if (!dragging) return;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const delta   = startY - clientY;
-      const range   = KNOB_MAX - KNOB_MIN;
-      const change  = (delta / DRAG_PX) * range;
-      setKnobValue(startVal + change);
-      e.preventDefault();
+      setKnobValue(startVal + ((startY - clientY) / DRAG_PX) * (KNOB_MAX - KNOB_MIN)); e.preventDefault();
     }
-
-    function onUp() {
-      if (!dragging) return;
-      dragging = false;
-      wrap.classList.remove('dragging');
-    }
+    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
 
     wrap.addEventListener('mousedown',  onDown);
     wrap.addEventListener('touchstart', onDown, { passive: false });
@@ -1360,11 +1255,7 @@
   // ── KNOB RUIDO ─────────────────────────────────────────────────────────────
 
   (function initNoiseKnob() {
-    // 4 zonas: OFF → WHITE → PINK → BROWN
-    // Posición [0,1] dividida en 4 segmentos iguales de 0.25
-    const ANG_MIN = -135, ANG_MAX = 135;
-    const DRAG_PX = 80;
-
+    const ANG_MIN = -135, ANG_MAX = 135, DRAG_PX = 80;
     const ZONES = [
       { type: 'off',   label: 'OFF',   color: 'var(--gray)' },
       { type: 'white', label: 'WHITE', color: '#e0dbd0'     },
@@ -1372,14 +1263,8 @@
       { type: 'brown', label: 'BROWN', color: '#a0704a'     },
     ];
 
-    function posToZone(pos) {
-      const idx = Math.min(3, Math.floor(pos * 4));
-      return ZONES[idx];
-    }
-
-    function posToAngle(pos) {
-      return ANG_MIN + pos * (ANG_MAX - ANG_MIN);
-    }
+    function posToZone(pos) { return ZONES[Math.min(3, Math.floor(pos * 4))]; }
+    function posToAngle(pos) { return ANG_MIN + pos * (ANG_MAX - ANG_MIN); }
 
     let knobPos  = 0;
     let dragging = false, startY = 0, startPos = 0;
@@ -1397,12 +1282,11 @@
       window._noisePos = knobPos;
 
       marker.style.transform  = `translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;
-      marker.style.background  = zone.color;
-      valLbl.textContent       = zone.label;
-      valLbl.style.color       = zone.color;
+      marker.style.background = zone.color;
+      valLbl.textContent      = zone.label;
+      valLbl.style.color      = zone.color;
       if (icon) icon.style.color = zone.color;
 
-      // Aplicar al grafo de audio si existe
       if (audioCtx && noiseNodes.length) {
         const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
         const [gW, gP, gB] = noiseGainForType(noiseType, vol);
@@ -1414,29 +1298,18 @@
     }
 
     knobSetters.noise = applyPos;
-    applyPos(0); // arranca en OFF
+    applyPos(0);
 
     function onDown(e) {
-      dragging = true;
-      startY   = e.touches ? e.touches[0].clientY : e.clientY;
-      startPos = knobPos;
-      wrap.classList.add('dragging');
-      e.preventDefault();
+      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startPos = knobPos; wrap.classList.add('dragging'); e.preventDefault();
     }
-
     function onMove(e) {
       if (!dragging) return;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const delta   = startY - clientY;
-      applyPos(startPos + delta / DRAG_PX);
-      e.preventDefault();
+      applyPos(startPos + (startY - clientY) / DRAG_PX); e.preventDefault();
     }
-
-    function onUp() {
-      if (!dragging) return;
-      dragging = false;
-      wrap.classList.remove('dragging');
-    }
+    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
 
     wrap.addEventListener('mousedown',  onDown);
     wrap.addEventListener('touchstart', onDown, { passive: false });
@@ -1455,10 +1328,8 @@
     document.getElementById('langEN').classList.toggle('active', lang === 'en');
     document.getElementById('langES').setAttribute('aria-pressed', lang === 'es');
     document.getElementById('langEN').setAttribute('aria-pressed', lang === 'en');
-    // Si TTS está activo, reiniciar el loop con el nuevo idioma
     if (currentMode === 'TTS' && isPlaying) {
-      repCount = 0;
-      currentTrio = [];
+      repCount = 0; currentTrio = [];
       window.speechSynthesis.cancel();
       clearTimeout(ttsTimer);
       clearInterval(countdownInterval);
@@ -1480,7 +1351,7 @@
   }
 
   // ── CONTADOR DE OYENTES CON HEARTBEAT ─────────────────────────────────────
-  // ID único por sesión — no persiste entre recargas (es correcto, cada carga es un oyente nuevo)
+  // ID único por sesión — cada carga de página es un oyente distinto
   const listenerId = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
   async function pingWorker(action = null) {
@@ -1497,8 +1368,7 @@
   let lint;
   function startListenersCounter() {
     pingWorker('join');
-    // Heartbeat cada 30s — mantiene viva la entrada en KV (TTL: 90s)
-    lint = setInterval(() => pingWorker('heartbeat'), 30000);
+    lint = setInterval(() => pingWorker('heartbeat'), 30000); // heartbeat cada 30s (TTL: 90s)
   }
   function stopListenersCounter() {
     pingWorker('leave');
@@ -1509,94 +1379,8 @@
     if (isPlaying) navigator.sendBeacon(`${WORKER_URL}?action=leave&id=${listenerId}`);
   });
 
-  freshAudio();
-
-   // ── SERVICE WORKER ──────────────────────────────────────────────────────────
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => {
-          console.log('[SW] Registrado:', reg.scope);
-          reg.addEventListener('updatefound', () => {
-            const nw = reg.installing;
-            nw.addEventListener('statechange', () => {
-              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[SW] Nueva versión disponible');
-              }
-            });
-          });
-        })
-        .catch(err => console.warn('[SW] Error de registro:', err));
-    });
-  }
-
-  // ── CONECTIVIDAD ────────────────────────────────────────────────────────────
-  const offlineBanner = document.getElementById('offlineBanner');
-
-  function handleOnline() {
-    offlineBanner.classList.remove('visible');
-    if (isPlaying && currentMode === 'TTS') {
-      console.log('[NET] Conexión restaurada → intentando stream');
-      clearAllTimers();
-      window.speechSynthesis.cancel();
-      ttsSpeaking = false;
-      tryStream();
-    }
-  }
-
-  function handleOffline() {
-    offlineBanner.classList.add('visible');
-    if (isPlaying && currentMode === 'STREAM') {
-      console.log('[NET] Conexión perdida → fallback TTS');
-      clearAllTimers();
-      startTTS();
-    }
-  }
-
-  window.addEventListener('online',  handleOnline);
-  window.addEventListener('offline', handleOffline);
-  if (!navigator.onLine) handleOffline();
-
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && isPlaying && currentMode === 'STREAM' && streamAudio && streamAudio.paused) {
-      streamAudio.play().catch(() => { clearAllTimers(); startTTS(); });
-    }
-  });
-
-  // ── PWA INSTALL PROMPT ──────────────────────────────────────────────────────
-  let deferredInstallPrompt = null;
-  const installBanner  = document.getElementById('installBanner');
-  const installBtn     = document.getElementById('installBtn');
-  const installDismiss = document.getElementById('installDismiss');
-
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    if (!localStorage.getItem('pwa-dismissed')) {
-      setTimeout(() => installBanner.classList.add('visible'), 3000);
-    }
-  });
-
-  installBtn.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) return;
-    installBanner.classList.remove('visible');
-    deferredInstallPrompt.prompt();
-    const { outcome } = await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-  });
-
-  installDismiss.addEventListener('click', () => {
-    installBanner.classList.remove('visible');
-    localStorage.setItem('pwa-dismissed', '1');
-  });
-
-  window.addEventListener('appinstalled', () => {
-    installBanner.classList.remove('visible');
-    deferredInstallPrompt = null;
-  });
-
-  // ── MARQUEE DINÁMICO ────────────────────────────────────────────────────────
-  const MARQUEE_POLL_MS = 30000; // 30 segundos
+  // ── MARQUEE DINÁMICO ───────────────────────────────────────────────────────
+  const MARQUEE_POLL_MS = 30000; // refresco cada 30 segundos
   const marqueeEl = document.getElementById('marqueeText');
 
   async function fetchMarquee() {
@@ -1604,23 +1388,24 @@
       const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
       const data = await res.json();
       if (data.text && data.text !== marqueeEl.textContent.trim()) {
-        // Fade suave al cambiar
         marqueeEl.style.opacity = '0';
         setTimeout(() => {
-          marqueeEl.textContent  = data.text + '       ';
+          marqueeEl.textContent   = data.text + '       ';
           marqueeEl.style.opacity = '1';
         }, 400);
       }
     } catch (e) {
-      // Sin conexión o error → mantener texto actual
+      // Sin conexión → mantener texto actual
     }
   }
 
   marqueeEl.style.transition = 'opacity 0.4s';
-  fetchMarquee(); // carga inmediata al arrancar
+  fetchMarquee(); // carga inmediata
   setInterval(fetchMarquee, MARQUEE_POLL_MS);
 
-  // ── SERVICE WORKER ──────────────────────────────────────────────────────────
+  freshAudio();
+
+  // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
@@ -1639,7 +1424,7 @@
     });
   }
 
-  // ── CONECTIVIDAD ────────────────────────────────────────────────────────────
+  // ── CONECTIVIDAD ───────────────────────────────────────────────────────────
   const offlineBanner = document.getElementById('offlineBanner');
 
   function handleOnline() {
@@ -1672,7 +1457,7 @@
     }
   });
 
-  // ── PWA INSTALL PROMPT ──────────────────────────────────────────────────────
+  // ── PWA INSTALL PROMPT ─────────────────────────────────────────────────────
   let deferredInstallPrompt = null;
   const installBanner  = document.getElementById('installBanner');
   const installBtn     = document.getElementById('installBtn');
@@ -1707,6 +1492,3 @@
 </script>
 </body>
 </html>
-
-
-
