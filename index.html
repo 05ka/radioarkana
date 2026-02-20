@@ -13,9 +13,9 @@
       --font-head: 'Bebas Neue', sans-serif; --font-body: 'Space Mono', monospace;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--white); font-family: var(--font-body); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    body { background: var(--bg); color: var(--white); font-family: var(--font-body); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; overflow-y: auto; }
     body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 100; opacity: 0.4; }
-    .wrap { width: min(460px, 92vw); display: flex; flex-direction: column; }
+    .wrap { width: min(460px, 92vw); display: flex; flex-direction: column; padding: 16px 0; }
     .header { background: var(--red); padding: 6px 20px; display: flex; align-items: center; justify-content: space-between; }
     .header-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.6); }
     .freq { font-size: 10px; letter-spacing: 0.15em; color: rgba(0,0,0,0.5); }
@@ -69,7 +69,7 @@
     .vol-label { font-size: 9px; text-transform: uppercase; color: var(--gray); width: 24px; }
     input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); outline: none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer; }
-    .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; display: flex; justify-content: space-between; }
+    .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; padding-bottom: max(12px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; flex-shrink: 0; }
     .footer-note { font-size: 9px; text-transform: uppercase; color: #333; }
     .footer-note a { color: #444; text-decoration: none; transition: color 0.2s; }
     .footer-note a:hover { color: var(--red); }
@@ -192,6 +192,35 @@
       cursor: ns-resize;
       user-select: none;
       -webkit-user-select: none;
+      position: relative;
+      padding: 14px 0;
+    }
+
+    .knob-arrow-up,
+    .knob-arrow-down {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--gray);
+      opacity: 0.3;
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 0.25s, color 0.2s;
+      line-height: 1;
+    }
+    .knob-arrow-up  { top: 1px; }
+    .knob-arrow-down { bottom: 1px; }
+
+    .knob-wrap:hover .knob-arrow-up,
+    .knob-wrap:hover .knob-arrow-down {
+      opacity: 0.75;
+      color: var(--white);
+    }
+    .knob-wrap.dragging .knob-arrow-up,
+    .knob-wrap.dragging .knob-arrow-down {
+      opacity: 1;
+      color: var(--red);
     }
     .knob {
       width: 26px;
@@ -284,6 +313,7 @@
       <div class="controls-left">
         <!-- Noise type knob -->
         <div class="knob-wrap" id="noiseKnob" title="Tipo de ruido">
+          <div class="knob-arrow-up">^</div>
           <div class="knob" id="noiseKnobDial">
             <div class="knob-marker" id="noiseKnobMarker"></div>
             <span class="knob-icon" id="noiseKnobIcon">
@@ -293,9 +323,11 @@
             </span>
           </div>
           <span class="knob-val" id="noiseKnobVal">OFF</span>
+          <div class="knob-arrow-down">v</div>
         </div>
         <!-- Binaural knob -->
         <div class="knob-wrap" id="binauralKnob" title="Frecuencia binaural">
+          <div class="knob-arrow-up">^</div>
           <div class="knob" id="binauralKnobDial">
             <div class="knob-marker" id="binauralKnobMarker"></div>
             <span class="knob-icon">
@@ -305,10 +337,12 @@
             </span>
           </div>
           <span class="knob-val" id="binauralKnobVal">OFF</span>
+          <div class="knob-arrow-down">v</div>
         </div>
         <span class="ctrl-sep"></span>
         <!-- Loop knobs (pause + reps) -->
         <div class="knob-wrap" id="pauseKnob" title="Pausa entre frases">
+          <div class="knob-arrow-up">^</div>
           <div class="knob" id="knobDial">
             <div class="knob-marker" id="knobMarker"></div>
             <span class="knob-icon">
@@ -319,8 +353,10 @@
             </span>
           </div>
           <span class="knob-val" id="knobVal">20s</span>
+          <div class="knob-arrow-down">v</div>
         </div>
         <div class="knob-wrap" id="repsKnob" title="Repeticiones por serie">
+          <div class="knob-arrow-up">^</div>
           <div class="knob" id="repsKnobDial">
             <div class="knob-marker" id="repsKnobMarker"></div>
             <span class="knob-icon">
@@ -333,6 +369,7 @@
             </span>
           </div>
           <span class="knob-val" id="repsKnobVal">×7</span>
+          <div class="knob-arrow-down">v</div>
         </div>
         <span class="ctrl-sep"></span>
         <div class="lang-toggle" role="group" aria-label="Idioma TTS">
@@ -1381,6 +1418,3 @@
 </script>
 </body>
 </html>
-
-
-
