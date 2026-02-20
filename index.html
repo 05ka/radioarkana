@@ -374,7 +374,7 @@
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
     <p class="tagline">Tarot Underground · Málaga</p>
     <div class="marquee-wrap">
-      <span class="marquee-text">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"        ***** EMISION EN PRUEBAS *****       </span>
+      <span class="marquee-text" id="marqueeText">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"        ***** EMISION EN PRUEBAS *****       </span>
     </div>
     
     <div class="waveform" id="waveform"></div>
@@ -1498,6 +1498,31 @@
   });
 
   freshAudio();
+
+  // ── MARQUEE DINÁMICO ────────────────────────────────────────────────────────
+  const MARQUEE_POLL_MS = 30000; // 30 segundos
+  const marqueeEl = document.getElementById('marqueeText');
+
+  async function fetchMarquee() {
+    try {
+      const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.text && data.text !== marqueeEl.textContent.trim()) {
+        // Fade suave al cambiar
+        marqueeEl.style.opacity = '0';
+        setTimeout(() => {
+          marqueeEl.textContent  = data.text + '       ';
+          marqueeEl.style.opacity = '1';
+        }, 400);
+      }
+    } catch (e) {
+      // Sin conexión o error → mantener texto actual
+    }
+  }
+
+  marqueeEl.style.transition = 'opacity 0.4s';
+  fetchMarquee(); // carga inmediata al arrancar
+  setInterval(fetchMarquee, MARQUEE_POLL_MS);
 
   // ── SERVICE WORKER ──────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
