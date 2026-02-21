@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radio Arkana · Guía de Usuario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --red: #e63030;
+      --red-dim: #7a1a1a;
+      --amber: #ce9d06;
+      --white: #f0ece4;
+      --gray: #555;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-body: 'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.35;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--red);
+      padding: 7px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .site-header-label {
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.55);
+    }
+
+    .hero {
+      padding: 56px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+    .hero-kicker {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 12px;
+    }
+    .hero-title {
+      font-family: var(--font-head);
+      font-size: clamp(56px, 12vw, 88px);
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+    }
+    .hero-title span { color: var(--red); }
+    .hero-sub {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      max-width: 420px;
+      line-height: 2;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      margin-bottom: 56px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-family: var(--font-head);
+      font-size: 36px;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      margin-bottom: 20px;
+      color: var(--white);
+    }
+
+    .section p {
+      color: #a09a90;
+      margin-bottom: 16px;
+      max-width: 600px;
+    }
+
+    .section p strong {
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    /* ── KNOB CARDS ── */
+    .knob-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    @media (max-width: 520px) {
+      .knob-grid { grid-template-columns: 1fr; }
+    }
+
+    .knob-card {
+      background: var(--surface);
+      padding: 24px;
+      position: relative;
+    }
+
+    .knob-card-icon {
+      font-family: var(--font-head);
+      font-size: 42px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .knob-card-name {
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .knob-card-title {
+      font-family: var(--font-head);
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+
+    .knob-card p {
+      font-size: 11px;
+      color: #8a8278;
+      line-height: 1.9;
+    }
+
+    .knob-card p strong { color: var(--white); }
+
+    /* ── RANGE TABLE ── */
+    .range-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 10px;
+    }
+    .range-table th {
+      text-align: left;
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+      padding: 6px 12px 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-weight: 400;
+    }
+    .range-table td {
+      padding: 8px 12px 8px 0;
+      color: #a09a90;
+      border-bottom: 1px solid #161616;
+      vertical-align: top;
+    }
+    .range-table td:first-child {
+      color: var(--white);
+      width: 90px;
+      font-weight: 700;
+    }
+    .range-table td .badge {
+      display: inline-block;
+      padding: 1px 7px;
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      border-radius: 1px;
+    }
+
+    .badge-delta  { background: rgba(107,140,255,0.15); color: #6b8cff; }
+    .badge-theta  { background: rgba(168,85,247,0.15);  color: #a855f7; }
+    .badge-alpha  { background: rgba(34,197,94,0.15);   color: #22c55e; }
+    .badge-beta   { background: rgba(245,158,11,0.15);  color: #f59e0b; }
+    .badge-gamma  { background: rgba(239,68,68,0.15);   color: #ef4444; }
+    .badge-white  { background: rgba(240,236,228,0.1);  color: #e0dbd0; }
+    .badge-pink   { background: rgba(232,143,160,0.15); color: #e88fa0; }
+    .badge-brown  { background: rgba(160,112,74,0.2);   color: #a0704a; }
+
+    /* ── PRESET BLOCK ── */
+    .preset-block {
+      border: 1px solid var(--red-dim);
+      background: rgba(230,48,48,0.04);
+      padding: 24px 28px;
+      margin: 28px 0;
+      position: relative;
+    }
+    .preset-block::before {
+      content: '★';
+      position: absolute;
+      top: -10px;
+      left: 24px;
+      background: var(--bg);
+      padding: 0 8px;
+      color: var(--red);
+      font-size: 14px;
+    }
+    .preset-block-title {
+      font-family: var(--font-head);
+      font-size: 20px;
+      letter-spacing: 0.05em;
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+    .preset-block p {
+      font-size: 11px;
+      color: #8a8278;
+      line-height: 1.9;
+      margin-bottom: 10px;
+    }
+    .preset-block p:last-child { margin-bottom: 0; }
+    .preset-block p strong { color: var(--white); }
+
+    /* ── STATUS INDICATORS ── */
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin: 20px 0 28px;
+    }
+    .status-item {
+      background: var(--surface);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.gray   { background: var(--gray); }
+    .status-dot.red    { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+    .status-dot.amber  { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    .status-info { flex: 1; }
+    .status-name {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 2px;
+    }
+    .status-desc {
+      font-size: 10px;
+      color: var(--gray);
+      line-height: 1.6;
+    }
+
+    /* ── TIP BOX ── */
+    .tip {
+      border-left: 2px solid var(--amber);
+      padding: 12px 18px;
+      margin: 20px 0;
+      background: rgba(206,157,6,0.05);
+    }
+    .tip-label {
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 6px;
+    }
+    .tip p {
+      font-size: 11px;
+      color: #a09a90;
+      line-height: 1.8;
+      margin: 0;
+    }
+    .tip p strong { color: var(--white); }
+
+    /* ── RECIPE CARDS ── */
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin: 24px 0;
+    }
+    @media (max-width: 520px) {
+      .recipe-grid { grid-template-columns: 1fr; }
+    }
+    .recipe-card {
+      background: var(--surface);
+      padding: 22px;
+    }
+    .recipe-title {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+    .recipe-name {
+      font-family: var(--font-head);
+      font-size: 18px;
+      color: var(--white);
+      margin-bottom: 14px;
+    }
+    .recipe-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .recipe-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      padding: 4px 0;
+      border-bottom: 1px solid #161616;
+    }
+    .recipe-row:last-child { border-bottom: none; }
+    .recipe-key { color: var(--gray); }
+    .recipe-val { color: var(--white); font-weight: 700; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #333;
+      margin-top: 48px;
+    }
+
+    /* ── SCROLL ANIMATION ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="site-header-label">Radio Arkana · Guía de usuario</span>
+  <span class="site-header-label">7.50 MHz · LOFI BINAURAL</span>
+</header>
+
+<div class="page">
+
+  <div class="hero fade-in">
+    <p class="hero-kicker">Manual de operación</p>
+    <h1 class="hero-title">CÓMO<br>ESCUCHAR<br><span>ARKANA</span></h1>
+    <p class="hero-sub">Una guía para sacar el máximo partido a los controles de la emisora. Ruido, frecuencias binaurales, letanías y el preset Arkana.</p>
+  </div>
+
+
+  <!-- ── SECCIÓN 1: QUÉ ES ── -->
+  <section class="section fade-in">
+    <p class="section-label">01 · Introducción</p>
+    <h2 class="section-title">QUÉ ESCUCHAS</h2>
+    <p>Radio Arkana tiene dos modos de emisión que conviven y se alternan de forma automática. Cuando la señal en directo está disponible, escuchas el <strong>stream en vivo</strong>. Cuando la señal cae o no hay cobertura, la radio entra en modo <strong>Letanía Arkana</strong>: una voz sintetizada que recita combinaciones de arcanos del Tarot en bucle, generadas en tiempo real en tu dispositivo.</p>
+    <p>Sobre cualquiera de los dos modos puedes superponer capas de ruido generativo y tonos binaurales, que se mezclan localmente en tu navegador. Nada de esto va al servidor: es tu propio espacio sonoro.</p>
+
+    <div class="status-list">
+      <div class="status-item">
+        <div class="status-dot gray"></div>
+        <div class="status-info">
+          <div class="status-name">Desconectado</div>
+          <div class="status-desc">La radio está parada. Pulsa el botón para iniciar.</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-dot amber"></div>
+        <div class="status-info">
+          <div class="status-name">Sincronizando...</div>
+          <div class="status-desc">La radio está intentando conectar al stream. Espera unos segundos.</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-dot red"></div>
+        <div class="status-info">
+          <div class="status-name">En directo</div>
+          <div class="status-desc">Señal recibida. Estás escuchando el stream en vivo.</div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-dot amber"></div>
+        <div class="status-info">
+          <div class="status-name">Letanía Arkana</div>
+          <div class="status-desc">El stream no está disponible. La voz sintetizada recita arcanos en bucle.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 2: KNOBS ── -->
+  <section class="section fade-in">
+    <p class="section-label">02 · Los controles</p>
+    <h2 class="section-title">LOS KNOBS</h2>
+    <p>Los cuatro mandos aparecen en la parte inferior del reproductor una vez que pulsas play. Se manejan arrastrando hacia arriba para subir el valor y hacia abajo para bajarlo. En móvil funcionan igual con el dedo.</p>
+
+    <div class="knob-grid">
+
+      <div class="knob-card">
+        <div class="knob-card-name">Knob 1</div>
+        <div class="knob-card-title">RUIDO</div>
+        <p>Genera una capa de <strong>ruido de fondo</strong> mezclado sobre el audio principal. Tiene cuatro posiciones: OFF, WHITE, PINK y BROWN. Gira hacia arriba para avanzar entre tipos.</p>
+        <p>El ruido es generado localmente por tu navegador y no afecta a la señal del stream.</p>
+      </div>
+
+      <div class="knob-card">
+        <div class="knob-card-name">Knob 2</div>
+        <div class="knob-card-title">BINAURAL</div>
+        <p>Activa un <strong>tono binaural</strong> estéreo. El oído izquierdo escucha 200 Hz, el derecho escucha 200 Hz más la frecuencia que elijas. El cerebro percibe la diferencia como un pulso.</p>
+        <p>Requiere <strong>auriculares</strong> para funcionar correctamente. Con altavoces los dos canales se mezclan y el efecto desaparece.</p>
+      </div>
+
+      <div class="knob-card">
+        <div class="knob-card-name">Knob 3</div>
+        <div class="knob-card-title">PAUSA</div>
+        <p>Controla el <strong>silencio entre frases</strong> de la Letanía Arkana. Rango de 10 a 25 segundos. Solo tiene efecto cuando la radio está en modo Letanía.</p>
+        <p>Más pausa da tiempo para que las combinaciones de arcanos <strong>resuenen</strong> antes de que llegue la siguiente.</p>
+      </div>
+
+      <div class="knob-card">
+        <div class="knob-card-name">Knob 4</div>
+        <div class="knob-card-title">REPETICIONES</div>
+        <p>Número de veces que se repite cada <strong>trío de arcanos</strong> antes de sortear uno nuevo. De 1 a 10 repeticiones. En posición cero, la Letanía se silencia completamente.</p>
+        <p>Más repeticiones crean un efecto de <strong>mantra</strong> antes de cambiar la combinación.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── TIPOS DE RUIDO ── -->
+  <section class="section fade-in">
+    <p class="section-label">02a · Ruido</p>
+    <h2 class="section-title">TIPOS DE RUIDO</h2>
+    <p>Cada tipo de ruido tiene una densidad espectral distinta. No son equivalentes: cada uno produce un efecto psicoacústico diferente.</p>
+
+    <table class="range-table">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Carácter</th>
+          <th>Uso recomendado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-white">WHITE</span></td>
+          <td>Energía uniforme en todas las frecuencias. Siseante, como lluvia estática.</td>
+          <td>Enmascarar ruidos exteriores. Foco intenso. Sensación de aislamiento.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-pink">PINK</span></td>
+          <td>Energía inversamente proporcional a la frecuencia. Más cálido que el blanco.</td>
+          <td>El más natural. Similar al sonido del agua o viento suave. Meditación, concentración prolongada.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-brown">BROWN</span></td>
+          <td>Energía muy concentrada en graves. Profundo, como un motor lejano o trueno continuo.</td>
+          <td>Relajación profunda. Sueño. Combinado con binaural DELTA es especialmente efectivo.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <div class="tip-label">Consejo</div>
+      <p>El ruido está mezclado a un nivel deliberadamente bajo para no tapar el audio principal. Si quieres más presencia, sube el volumen general con el slider de la parte inferior del reproductor.</p>
+    </div>
+  </section>
+
+  <!-- ── FRECUENCIAS BINAURALES ── -->
+  <section class="section fade-in">
+    <p class="section-label">02b · Binaural</p>
+    <h2 class="section-title">BANDAS BINAURALES</h2>
+    <p>El knob binaural recorre seis bandas de frecuencia cerebrales. El marcador del knob cambia de color según la banda activa.</p>
+
+    <table class="range-table">
+      <thead>
+        <tr>
+          <th>Banda</th>
+          <th>Frecuencia</th>
+          <th>Estado asociado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-delta">DELTA</span></td>
+          <td>0.5 – 4 Hz</td>
+          <td>Sueño profundo. Regeneración. Inconsciencia.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-theta">THETA</span></td>
+          <td>4 – 8 Hz</td>
+          <td>Hipnosis. Ensoñación. Estado liminal entre vigilia y sueño. Creatividad intuitiva.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-alpha">ALPHA</span></td>
+          <td>8 – 12 Hz</td>
+          <td>Relajación despierta. Meditación ligera. Flujo creativo.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-beta">BETA</span></td>
+          <td>12 – 30 Hz</td>
+          <td>Concentración activa. Pensamiento analítico. Alerta.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-gamma">GAMMA</span></td>
+          <td>30 – 40 Hz</td>
+          <td>Alta cognición. Integración de información. Insight.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <div class="tip-label">Importante</div>
+      <p><strong>Usa siempre auriculares</strong> con el binaural activado. El efecto requiere que cada oído reciba una frecuencia ligeramente diferente. Los altavoces mezclan los canales físicamente y el pulso desaparece.</p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 3: PRESET ARKANA ── -->
+  <section class="section fade-in">
+    <p class="section-label">03 · Configuración Arkana</p>
+    <h2 class="section-title">EL PRESET ★</h2>
+    <p>La estrella (★) en la esquina derecha de los controles activa el <strong>Preset Arkana</strong>: una configuración diseñada para la escucha ritual de la Letanía. Aplica simultáneamente:</p>
+
+    <div class="preset-block">
+      <div class="preset-block-title">Configuración Arkana</div>
+      <p><strong>Ruido:</strong> PINK — cálido y envolvente, sin saturar las frecuencias de la voz.</p>
+      <p><strong>Binaural:</strong> THETA a 7.5 Hz — zona liminal. Estado de ensoñación consciente, receptividad máxima a imágenes y asociaciones espontáneas.</p>
+      <p><strong>Pausa:</strong> 20 segundos — tiempo suficiente para que cada trío de arcanos genere resonancias antes del siguiente.</p>
+      <p><strong>Repeticiones:</strong> ×7 — ciclo de siete, número con peso simbólico en la tradición del Tarot.</p>
+      <p><strong>Filtro shortwave:</strong> activo — la voz pasa por un filtro de radio de onda corta (120 Hz – 2800 Hz con saturación suave), dándole una textura analógica y distante, como una transmisión desde otro lugar.</p>
+    </div>
+
+    <p>Al activar el preset, los cuatro knobs se mueven solos hasta sus posiciones. Si tocas cualquier knob mientras el preset está activo, se desactiva automáticamente y recuperas el control manual. La estrella vuelve a su estado inactivo.</p>
+    <p>Al desactivar el preset pulsando la estrella de nuevo, los knobs vuelven a donde estaban antes de activarlo.</p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 4: IDIOMA ── -->
+  <section class="section fade-in">
+    <p class="section-label">04 · Idioma</p>
+    <h2 class="section-title">ES / EN</h2>
+    <p>El toggle de idioma cambia la lengua de la Letanía Arkana. Afecta tanto al nombre de los arcanos como a la voz sintetizada y a las conjunciones entre cartas.</p>
+    <p>En español: <em>"El Loco, con La Torre, y El Sol."</em><br>En inglés: <em>"The Fool, and The Tower, with The Sun."</em></p>
+    <p>Si cambias el idioma mientras la Letanía está sonando, la frase actual termina y el bucle reinicia en el nuevo idioma con un nuevo sorteo de arcanos.</p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 5: RECETAS ── -->
+  <section class="section fade-in">
+    <p class="section-label">05 · Configuraciones recomendadas</p>
+    <h2 class="section-title">RECETAS</h2>
+    <p>Algunas combinaciones probadas para distintos contextos de escucha.</p>
+
+    <div class="recipe-grid">
+      <div class="recipe-card">
+        <div class="recipe-title">Para meditación</div>
+        <div class="recipe-name">CONTEMPLACIÓN</div>
+        <div class="recipe-settings">
+          <div class="recipe-row"><span class="recipe-key">Ruido</span><span class="recipe-val badge badge-pink">PINK</span></div>
+          <div class="recipe-row"><span class="recipe-key">Binaural</span><span class="recipe-val badge badge-alpha">ALPHA</span></div>
+          <div class="recipe-row"><span class="recipe-key">Pausa</span><span class="recipe-val">25s</span></div>
+          <div class="recipe-row"><span class="recipe-key">Reps</span><span class="recipe-val">×3</span></div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="recipe-title">Para trabajo profundo</div>
+        <div class="recipe-name">FOCO</div>
+        <div class="recipe-settings">
+          <div class="recipe-row"><span class="recipe-key">Ruido</span><span class="recipe-val badge badge-white">WHITE</span></div>
+          <div class="recipe-row"><span class="recipe-key">Binaural</span><span class="recipe-val badge badge-beta">BETA</span></div>
+          <div class="recipe-row"><span class="recipe-key">Pausa</span><span class="recipe-val">10s</span></div>
+          <div class="recipe-row"><span class="recipe-key">Reps</span><span class="recipe-val">×1</span></div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="recipe-title">Para dormir</div>
+        <div class="recipe-name">DESCENSO</div>
+        <div class="recipe-settings">
+          <div class="recipe-row"><span class="recipe-key">Ruido</span><span class="recipe-val badge badge-brown">BROWN</span></div>
+          <div class="recipe-row"><span class="recipe-key">Binaural</span><span class="recipe-val badge badge-delta">DELTA</span></div>
+          <div class="recipe-row"><span class="recipe-key">Pausa</span><span class="recipe-val">25s</span></div>
+          <div class="recipe-row"><span class="recipe-key">Reps</span><span class="recipe-val">—</span></div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="recipe-title">Para escritura / lectura</div>
+        <div class="recipe-name">FLUJO</div>
+        <div class="recipe-settings">
+          <div class="recipe-row"><span class="recipe-key">Ruido</span><span class="recipe-val badge badge-pink">PINK</span></div>
+          <div class="recipe-row"><span class="recipe-key">Binaural</span><span class="recipe-val badge badge-theta">THETA</span></div>
+          <div class="recipe-row"><span class="recipe-key">Pausa</span><span class="recipe-val">20s</span></div>
+          <div class="recipe-row"><span class="recipe-key">Reps</span><span class="recipe-val">×5</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tip-label">El preset Arkana</div>
+      <p>Es esencialmente la receta <strong>FLUJO</strong> con filtro shortwave y 7 repeticiones. Si no sabes por dónde empezar, pulsa la ★ y déjate llevar.</p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 6: OFFLINE ── -->
+  <section class="section fade-in">
+    <p class="section-label">06 · Modo offline</p>
+    <h2 class="section-title">SIN CONEXIÓN</h2>
+    <p>Si pierdes conexión mientras escuchas, la radio lo detecta automáticamente y aparece un aviso en la parte superior de la pantalla. El modo cambia a Letanía Arkana, que funciona completamente sin internet porque la voz se genera en tu propio dispositivo.</p>
+    <p>Cuando la conexión se restaura, la radio intenta reconectar al stream. Si lo logra, vuelve al directo de forma transparente, esperando a que la frase de la Letanía en curso termine antes de hacer el cambio.</p>
+    <p>El ruido y el binaural funcionan en cualquier modo, con o sin conexión.</p>
+  </section>
+
+  <!-- ── SECCIÓN 7: FUNDAMENTOS ── -->
+  <section class="section fade-in">
+    <p class="section-label">07 · Para saber más</p>
+    <h2 class="section-title">FUNDAMENTOS</h2>
+    <p>Si quieres entender qué hay detrás de Radio Arkana — por qué los arcanos, por qué la repetición, por qué el estado liminal — existe un texto que explica los fundamentos teóricos del proyecto.</p>
+    <div class="preset-block">
+      <div class="preset-block-title">El Fenómeno de Inducción Imaginativa</div>
+      <p>Un ensayo sobre los mecanismos de la imaginación inducida, el papel del símbolo en estados alterados de conciencia y la lógica detrás del sistema Arkana.</p>
+      <p>
+        <a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa"
+           target="_blank"
+           rel="noopener"
+           style="color: var(--red); text-decoration: none; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; border-bottom: 1px solid var(--red-dim); padding-bottom: 2px; transition: border-color 0.2s;"
+           onmouseover="this.style.borderColor='var(--red)'"
+           onmouseout="this.style.borderColor='var(--red-dim)'">
+          Leer en Substack →
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <footer class="site-footer">
+    <span>Radio Arkana © 2026</span>
+    <span>@mirage_a_trois</span>
+  </footer>
+
+</div>
+
+<script>
+  // Scroll fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
