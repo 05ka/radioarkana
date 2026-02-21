@@ -892,7 +892,7 @@
     try {
       const ctrl = new AbortController();
       const tid  = setTimeout(() => ctrl.abort(), 5000);
-      const res  = await fetch('https://stream.radioarkana.com/status-json.xsl', {
+      const res  = await fetch(`${WORKER_URL}/status`, {
         cache: 'no-store', signal: ctrl.signal
       });
       clearTimeout(tid);
