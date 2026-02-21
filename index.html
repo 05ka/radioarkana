@@ -884,17 +884,15 @@
 
   async function runWatchdog(myWatchdog) {
     if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-    console.log('Watchdog: consultando /status del Worker...');
-    // Consulta el endpoint /status del Worker, que a su vez pregunta a Icecast.
-    // Nunca toca el stream de audio directamente → sin errores QUIC en cloudflared.
-    // Ciclo completamente automático:
-    //   stream cae → TTS activo → watchdog cada 20s
-    //   stream vuelve → { live: true } → reconexión automática → TTS se detiene
-    //   stream cae de nuevo → onended/onstalled → TTS de nuevo
+    console.log('Watchdog: consultando status-json.xsl de Icecast...');
+    // Consultamos status-json.xsl directamente desde el browser.
+    // El Worker no puede hacer fetch a su propio dominio de Cloudflare (loop bloqueado).
+    // El browser sí puede — y no genera errores QUIC porque es una petición HTTP normal,
+    // no una conexión de stream de audio.
     try {
       const ctrl = new AbortController();
       const tid  = setTimeout(() => ctrl.abort(), 5000);
-      const res  = await fetch(`${WORKER_URL}/status`, {
+      const res  = await fetch('https://stream.radioarkana.com/status-json.xsl', {
         cache: 'no-store', signal: ctrl.signal
       });
       clearTimeout(tid);
@@ -902,11 +900,19 @@
 
       if (res.ok) {
         const data = await res.json();
-        const streamVivo = data.live === true;
+        // Icecast devuelve source como objeto (1 mount) o array (varios) o ausente
+        const raw = data?.icestats?.source;
+        let sources = [];
+        if (Array.isArray(raw))                   sources = raw;
+        else if (raw && typeof raw === 'object')  sources = [raw];
+        // Detectamos el mount por listenurl (Icecast no incluye campo mount en el JSON)
+        const streamVivo = sources.some(s =>
+          s.listenurl?.endsWith('/stream') || s['content-type']?.startsWith('audio/')
+        );
+        console.log('Watchdog status:', { sources: sources.length, streamVivo });
 
         if (streamVivo) {
           if (ttsSpeaking) {
-            // Esperamos a que termine la frase actual antes de cortar el TTS
             console.log('Watchdog: stream detectado, esperando fin de frase TTS...');
             watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
             return;
@@ -920,6 +926,7 @@
           watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
         }
       } else {
+        console.log('Watchdog: Icecast no responde HTTP', res.status);
         watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
       }
     } catch (e) {
