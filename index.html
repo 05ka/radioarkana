@@ -513,7 +513,7 @@
   let currentLang = 'es';
 
   const INITIAL_CONNECT_MS = 10000;
-  const WATCHDOG_MS        = 20000;
+  const WATCHDOG_MS        = 12000;
   const STALL_MS           = 8000;
 
   let isPlaying   = false;
@@ -879,7 +879,7 @@
     if (!isPlaying || currentMode !== 'TTS') return;
     clearTimeout(watchdogTimer);
     const myWatchdog = ++watchdogId;
-    watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
+    watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000);
   }
 
   async function runWatchdog(myWatchdog) {
