@@ -682,9 +682,102 @@
     <p>El ruido y el binaural funcionan en cualquier modo, con o sin conexión.</p>
   </section>
 
-  <!-- ── SECCIÓN 7: FUNDAMENTOS ── -->
+  <!-- ── SECCIÓN 7: COMUNIDAD ── -->
   <section class="section fade-in">
-    <p class="section-label">07 · Para saber más</p>
+    <p class="section-label">07 · Comunidad imaginal</p>
+    <h2 class="section-title">LOS QUE<br>ESCUCHAN</h2>
+    <p>En la esquina derecha de la fila de estado verás un pequeño icono de persona junto a un número. Es el <strong>contador de oyentes activos</strong>: cuántas personas están escuchando Radio Arkana en este mismo momento.</p>
+    <p>No es una estadística. Es un recordatorio de que la Letanía no la escuchas solo. Hay otros que en este instante tienen los mismos arcanos resonando, el mismo ruido de fondo, el mismo pulso binaural. Una <strong>comunidad imaginal</strong> dispersa geográficamente pero sincronizada en el éter.</p>
+
+    <div class="status-list">
+      <div class="status-item">
+        <div class="status-info" style="display:flex; align-items:center; gap:14px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:var(--red); flex-shrink:0;"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          <div>
+            <div class="status-name">El contador aparece al pulsar play</div>
+            <div class="status-desc">Cada sesión de escucha activa suma al recuento. Se actualiza cada 30 segundos y desaparece al detener la reproducción.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contador en vivo -->
+    <div style="margin-top: 24px; border: 1px solid var(--border); background: var(--surface); padding: 20px 24px; display: flex; align-items: center; gap: 18px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--red); flex-shrink:0;"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      <div style="flex:1;">
+        <div style="font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gray); margin-bottom:4px;">Escuchando ahora mismo</div>
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <span id="guiaListeners" style="font-family:var(--font-head); font-size:48px; line-height:1; color:var(--white);">—</span>
+          <span style="font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gray);">oyentes activos</span>
+        </div>
+      </div>
+      <div id="guiaDot" style="width:8px; height:8px; border-radius:50%; background:var(--gray); flex-shrink:0;"></div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 8: PWA ── -->
+  <section class="section fade-in">
+    <p class="section-label">08 · Instalación</p>
+    <h2 class="section-title">INSTALAR<br>LA APP</h2>
+    <p>Radio Arkana puede instalarse como aplicación en tu dispositivo, sin pasar por ninguna tienda. En Chrome y Edge verás un aviso en la parte inferior de la pantalla al cabo de unos segundos de escucha. En iOS, usa el botón de compartir de Safari y selecciona <strong>Añadir a pantalla de inicio</strong>.</p>
+
+    <div class="preset-block">
+      <div class="preset-block-title">Conectada al éter arkano</div>
+      <p>Una vez instalada, la app funciona aunque no tengas conexión a internet. El stream en directo requiere señal, pero la <strong>Letanía Arkana</strong> — la voz, el ruido generativo, el binaural — se genera completamente en tu dispositivo.</p>
+      <p>Sin servidor. Sin red. Solo tú, los arcanos y el éter.</p>
+    </div>
+
+    <!-- Botón de instalación PWA -->
+    <div id="pwaInstallWrap" style="margin: 24px 0; display:none;">
+      <button id="pwaInstallBtn" style="
+        width: 100%;
+        background: transparent;
+        border: 1px solid var(--red);
+        color: var(--white);
+        font-family: var(--font-body);
+        font-size: 11px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        padding: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.2s;
+      ">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        Instalar Radio Arkana
+      </button>
+    </div>
+
+    <!-- Mensaje iOS -->
+    <div id="pwaIosMsg" style="margin: 24px 0; display:none; border: 1px solid var(--border); background: var(--surface); padding: 18px 22px;">
+      <div style="font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--amber); margin-bottom:8px;">iOS · Safari</div>
+      <p style="font-size:11px; color:#8a8278; line-height:1.9; margin:0;">Pulsa el botón de compartir
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:middle; margin:0 3px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        en Safari y selecciona <strong style="color:var(--white);">Añadir a pantalla de inicio</strong>.</p>
+    </div>
+
+    <!-- Mensaje ya instalada -->
+    <div id="pwaInstalledMsg" style="margin: 24px 0; display:none; border: 1px solid var(--border); background: var(--surface); padding: 18px 22px;">
+      <div style="font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--red); margin-bottom:8px;">App instalada</div>
+      <p style="font-size:11px; color:#8a8278; line-height:1.9; margin:0;">Radio Arkana ya está instalada en este dispositivo.</p>
+    </div>
+
+    <div class="tip">
+      <div class="tip-label">Compatibilidad</div>
+      <p>La instalación como PWA funciona en <strong>Chrome, Edge y Firefox</strong> en escritorio y Android. En iOS requiere <strong>Safari</strong> — otros navegadores de iPhone no ofrecen la opción de instalación.</p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── SECCIÓN 9: FUNDAMENTOS ── -->
+  <section class="section fade-in">
+    <p class="section-label">09 · Para saber más</p>
     <h2 class="section-title">FUNDAMENTOS</h2>
     <p>Si quieres entender qué hay detrás de Radio Arkana — por qué los arcanos, por qué la repetición, por qué el estado liminal — existe un texto que explica los fundamentos teóricos del proyecto.</p>
     <div class="preset-block">
@@ -713,7 +806,87 @@
 </div>
 
 <script>
-  // Scroll fade-in
+  const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+
+  // ── CONTADOR DE OYENTES EN VIVO ────────────────────────────────────────────
+  const listenersEl = document.getElementById('guiaListeners');
+  const dotEl       = document.getElementById('guiaDot');
+
+  async function fetchListeners() {
+    try {
+      const res  = await fetch(`${WORKER_URL}`, { cache: 'no-store' });
+      const data = await res.json();
+      const n    = data.listeners ?? 0;
+      listenersEl.textContent = n;
+      // Dot: rojo pulsante si hay oyentes, gris si no
+      if (n > 0) {
+        dotEl.style.background  = 'var(--red)';
+        dotEl.style.boxShadow   = '0 0 8px var(--red)';
+        dotEl.style.animation   = 'pulse 1.4s infinite';
+      } else {
+        dotEl.style.background  = 'var(--gray)';
+        dotEl.style.boxShadow   = 'none';
+        dotEl.style.animation   = 'none';
+      }
+    } catch (e) {
+      listenersEl.textContent = '—';
+    }
+  }
+
+  fetchListeners();
+  setInterval(fetchListeners, 30000);
+
+  // ── PWA INSTALL ────────────────────────────────────────────────────────────
+  const installWrap    = document.getElementById('pwaInstallWrap');
+  const installBtn     = document.getElementById('pwaInstallBtn');
+  const iosMsg         = document.getElementById('pwaIosMsg');
+  const installedMsg   = document.getElementById('pwaInstalledMsg');
+
+  let deferredPrompt = null;
+
+  // ¿Ya instalada?
+  if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+    installedMsg.style.display = 'block';
+  } else {
+    // iOS sin soporte beforeinstallprompt
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      iosMsg.style.display = 'block';
+    }
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installWrap.style.display = 'block';
+    iosMsg.style.display      = 'none';
+  });
+
+  installBtn.addEventListener('mouseover', () => {
+    installBtn.style.background = 'rgba(230,48,48,0.1)';
+  });
+  installBtn.addEventListener('mouseout', () => {
+    installBtn.style.background = 'transparent';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installWrap.style.display = 'none';
+    if (outcome === 'accepted') {
+      installedMsg.style.display = 'block';
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installWrap.style.display  = 'none';
+    installedMsg.style.display = 'block';
+    deferredPrompt = null;
+  });
+
+  // ── SCROLL FADE-IN ─────────────────────────────────────────────────────────
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
