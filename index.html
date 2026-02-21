@@ -884,33 +884,47 @@
 
   async function runWatchdog(myWatchdog) {
     if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-    console.log('Watchdog: probando señal FM...');
+    console.log('Watchdog: consultando /status del Worker...');
+    // Consulta el endpoint /status del Worker, que a su vez pregunta a Icecast.
+    // Nunca toca el stream de audio directamente → sin errores QUIC en cloudflared.
+    // Ciclo completamente automático:
+    //   stream cae → TTS activo → watchdog cada 20s
+    //   stream vuelve → { live: true } → reconexión automática → TTS se detiene
+    //   stream cae de nuevo → onended/onstalled → TTS de nuevo
     try {
       const ctrl = new AbortController();
       const tid  = setTimeout(() => ctrl.abort(), 5000);
-      const res  = await fetch(STREAM_URL, {
-        method: 'GET', headers: { 'Range': 'bytes=0-0' },
+      const res  = await fetch(`${WORKER_URL}/status`, {
         cache: 'no-store', signal: ctrl.signal
       });
       clearTimeout(tid);
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
 
-      if (res.ok || res.status === 206) {
-        if (ttsSpeaking) {
-          console.log('FM detectada, esperando fin de frase TTS...');
-          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
-          return;
+      if (res.ok) {
+        const data = await res.json();
+        const streamVivo = data.live === true;
+
+        if (streamVivo) {
+          if (ttsSpeaking) {
+            // Esperamos a que termine la frase actual antes de cortar el TTS
+            console.log('Watchdog: stream detectado, esperando fin de frase TTS...');
+            watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
+            return;
+          }
+          console.log('Watchdog: stream disponible → reconectando.');
+          stopTTSAudio();
+          currentMode = 'NONE';
+          tryStream();
+        } else {
+          console.log('Watchdog: stream offline → manteniendo TTS.');
+          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
         }
-        console.log('Watchdog: FM disponible. Reconectando...');
-        stopTTSAudio();
-        currentMode = 'NONE';
-        tryStream();
       } else {
         watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
       }
     } catch (e) {
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-      console.log('Watchdog: sin señal.', e.message);
+      console.log('Watchdog: error de red.', e.message);
       watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
     }
   }
