@@ -1023,36 +1023,19 @@
     ctx.shadowBlur  = 6;
     ctx.fillText('RADIO ARKANA EVENT', vW - 20, 32);
 
-    // ── 4. Waveform — redibujar desde los datos actuales, mismas proporciones ─
-    ctx.shadowBlur = 0;
+    // ── 4. URL de la emisora (sustituye waveform) ─────────────────────────────
     const overlayRect = document.getElementById('cameraOverlayBar').getBoundingClientRect();
     const viewRect    = viewport.getBoundingClientRect();
-    // Posición Y del overlayBar relativa al viewport
     const overlayTop  = overlayRect.top - viewRect.top;
-    const waveTop     = overlayTop + 44;          // mismo padding-top del overlayBar
-    const waveH       = 28;
-    const waveLeft    = 24;
-    const waveRight   = vW - 24;
-    const waveWidth   = waveRight - waveLeft;
-    const barStep     = waveWidth / BAR_COUNT;
+    const urlY        = overlayTop + 54;
 
-    ctx.beginPath();
-    ctx.strokeStyle = '#e63030';
-    ctx.lineWidth   = 1.5;
-    ctx.shadowColor = '#e63030';
-    ctx.shadowBlur  = 5;
-    for (let i = 0; i < BAR_COUNT; i++) {
-      const val  = wfSmooth[i] ?? 0;
-      const x    = waveLeft + i * barStep + barStep / 2;
-      const barH = Math.max(2, val * waveH * 0.85);
-      const y    = waveTop + (waveH - barH) / 2;
-      if (i === 0) ctx.moveTo(x, waveTop + waveH / 2);
-      ctx.lineTo(x, y);
-      ctx.lineTo(x, y + barH);
-      ctx.lineTo(x + barStep * 0.55, waveTop + waveH / 2);
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.font        = '700 11px "Space Mono", monospace';
+    ctx.fillStyle   = 'rgba(230,48,48,0.75)';
+    ctx.textAlign   = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur  = 6;
+    ctx.fillText('radioarkana.com', 24, urlY);
+    ctx.shadowBlur  = 0;
 
     // ── 5. Texto cartas — wrapping idéntico al DOM ────────────────────────────
     const cardsEl   = document.getElementById('cameraCards');
