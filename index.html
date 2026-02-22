@@ -97,10 +97,9 @@
     .lang-opt:not(.active):hover { color: var(--white); }
 
     /* ── CONTROLS ROW ────────────────────────────────────────────────────────── */
-    .controls-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; opacity: 0; transition: opacity 0.3s; }
+    .controls-row { display: flex; align-items: center; margin-top: 16px; opacity: 0; transition: opacity 0.3s; }
     .controls-row.visible { opacity: 1; }
-    .controls-left  { display: flex; align-items: center; gap: 8px; }
-    .controls-right { display: flex; align-items: center; gap: 4px; }
+    .controls-left  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .ctrl-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
     .layer-btn { background: transparent; border: none; border-right: 1px solid var(--border); color: var(--gray); cursor: pointer; padding: 5px 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
     .layer-btn:last-child { border-right: none; }
@@ -110,9 +109,9 @@
     #btnPreset.active svg { fill: var(--red); stroke: var(--red); }
     #btnPreset:not(.active):hover svg { fill: none; }
     .layer-btn.active::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
-    #btnTheme.active::after  { display: none; }
+    #btnTheme.active { color: rgba(0,0,0,0.75); }
+    [data-theme="light"] #btnTheme { color: rgba(0,0,0,0.35); }
     #btnCamera.active::after { display: none; }
-    #btnTheme.active { color: var(--gray); }
     #btnCamera { display: none; }
     #btnCamera.visible { display: flex; }
 
@@ -220,6 +219,15 @@
   <div class="header">
     <span class="header-label" id="modeLabel">Sistema offline</span>
     <span class="freq">7.50 MHz · LOFI BINAURAL</span>
+    <button id="btnTheme" onclick="toggleTheme()" title="Tema claro/oscuro" aria-pressed="false" style="background:transparent;border:none;cursor:pointer;padding:4px 0 4px 12px;display:flex;align-items:center;color:rgba(0,0,0,0.45);transition:color 0.2s;" onmouseover="this.style.color='rgba(0,0,0,0.75)'" onmouseout="this.style.color='rgba(0,0,0,0.45)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1"  x2="12" y2="3"/>  <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>  <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
   </div>
   <div class="card">
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
@@ -294,22 +302,12 @@
           <button class="lang-opt active" id="langES" onclick="setLang('es')" aria-pressed="true">ES</button>
           <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
         </div>
-      </div>
-      <div class="controls-right">
+        <span class="ctrl-sep"></span>
         <!-- Botón cámara — aparece cuando hay cartas activas -->
         <button class="layer-btn" id="btnCamera" onclick="openCamera()" title="Capturar sincronicidad" aria-label="Capturar sincronicidad">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4"/>
-          </svg>
-        </button>
-        <button class="layer-btn" id="btnTheme" onclick="toggleTheme()" title="Tema claro/oscuro" aria-pressed="false">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1"  x2="12" y2="3"/>  <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>  <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
           </svg>
         </button>
         <button class="layer-btn" id="btnPreset" onclick="togglePreset()" title="Configuración Arkana" aria-pressed="false">
