@@ -725,6 +725,7 @@
     playLabel.textContent = 'Detener';
     playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
     startListenersCounter();
+    startMarqueePolling();
     tryStream();
   }
 
@@ -749,6 +750,7 @@
     setRepLabels(null, null, false, false);
     document.getElementById('controlsRow').classList.remove('visible');
     stopListenersCounter();
+    stopMarqueePolling();
   }
 
   // ── BEEP DE CONEXIÓN ───────────────────────────────────────────────────────
@@ -1119,33 +1121,40 @@
   }
 
   let repCount = 0, currentTrio = [];
+  let deck = [];
+
+  function shuffleDeck() {
+    deck = [...CARDS[currentLang]];
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  function drawTrio() {
+    if (deck.length < 3) shuffleDeck();
+    return [deck.pop(), deck.pop(), deck.pop()];
+  }
 
   function runTTSLoop() {
     if (currentMode !== 'TTS' || !isPlaying) return;
     if (!layerState.tts) return;
-
     if (repCount === 0) {
-      currentTrio = [];
-      const pool = [...CARDS[currentLang]];
-      for (let i = 0; i < 3; i++) currentTrio.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+      currentTrio = drawTrio();
     }
     repCount++;
     setRepLabels(`Rep ${repCount}/${loopReps}`, null, true, false);
-
     const cfg = LANG_CONFIG[currentLang];
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
     msg.lang   = cfg.lang;
     msg.rate   = window._swTTSRate  ?? 0.7;
     msg.pitch  = window._swTTSPitch ?? 1.0;
     msg.volume = parseFloat(document.getElementById('volume').value ?? 1);
-
     msg.onstart = () => { ttsSpeaking = true; };
-
     msg.onend = () => {
       ttsSpeaking = false;
       if (currentMode !== 'TTS') return;
       if (repCount >= loopReps) repCount = 0;
-
       let secsLeft = Math.round(pauseDuration / 1000);
       setRepLabels(`Rep ${repCount || loopReps}/${loopReps}`, ` ${secsLeft}s`, false, true);
       clearInterval(countdownInterval);
@@ -1164,17 +1173,14 @@
         runTTSLoop();
       }, pauseDuration);
     };
-
     msg.onerror = (e) => {
       console.warn('SpeechSynthesis error:', e.error);
       ttsSpeaking = false;
       if (currentMode !== 'TTS') return;
       ttsTimer = setTimeout(runTTSLoop, 5000);
     };
-
     window.speechSynthesis.speak(msg);
   }
-
   // ── PRESET ARKANA ──────────────────────────────────────────────────────────
 
   let presetActive    = false;
@@ -1505,6 +1511,7 @@
   function setLang(lang) {
     if (lang === currentLang) return;
     currentLang = lang;
+    deck = []; 
     document.getElementById('langES').classList.toggle('active', lang === 'es');
     document.getElementById('langEN').classList.toggle('active', lang === 'en');
     document.getElementById('langES').setAttribute('aria-pressed', lang === 'es');
@@ -1549,7 +1556,7 @@
   let lint;
   function startListenersCounter() {
     pingWorker('join');
-    lint = setInterval(() => pingWorker('heartbeat'), 30000); // heartbeat cada 30s (TTL: 90s)
+    lint = setInterval(() => pingWorker('heartbeat'), 60000); // heartbeat cada 30s (TTL: 90s)
   }
   function stopListenersCounter() {
     pingWorker('leave');
@@ -1561,28 +1568,51 @@
   });
 
   // ── MARQUEE DINÁMICO ───────────────────────────────────────────────────────
-  const MARQUEE_POLL_MS = 30000; // refresco cada 30 segundos
+  const MARQUEE_POLL_MS = 60000; // refresco cada 30 segundos
+  const MARQUEE_CACHE_KEY = 'arkana_marquee';
+  const MARQUEE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
   const marqueeEl = document.getElementById('marqueeText');
 
   async function fetchMarquee() {
     try {
-      const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
-      const data = await res.json();
-      if (data.text && data.text !== marqueeEl.textContent.trim()) {
-        marqueeEl.style.opacity = '0';
-        setTimeout(() => {
-          marqueeEl.textContent   = data.text + '       ';
-          marqueeEl.style.opacity = '1';
-        }, 400);
+     const cached = localStorage.getItem(MARQUEE_CACHE_KEY);
+     if (cached) {
+      const { text, ts } = JSON.parse(cached);
+      if (Date.now() - ts < MARQUEE_CACHE_TTL) {
+        applyMarquee(text);
+        return; // no request al Worker
       }
-    } catch (e) {
-      // Sin conexión → mantener texto actual
     }
+    const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.text) {
+      localStorage.setItem(MARQUEE_CACHE_KEY, JSON.stringify({ text: data.text, ts: Date.now() }));
+      applyMarquee(data.text);
+    }
+    } catch (e) {}
   }
 
-  marqueeEl.style.transition = 'opacity 0.4s';
-  fetchMarquee(); // carga inmediata
-  setInterval(fetchMarquee, MARQUEE_POLL_MS);
+  function applyMarquee(text) {
+    if (text !== marqueeEl.textContent.trim()) {
+     marqueeEl.style.opacity = '0';
+     setTimeout(() => { marqueeEl.textContent = text + '       '; marqueeEl.style.opacity = '1'; }, 400);
+   }
+  }   
+  
+  let marqueeInterval = null;
+  
+  function startMarqueePolling() {
+    if (marqueeInterval) return;
+    marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS);
+  }
+  
+  function stopMarqueePolling() {
+    clearInterval(marqueeInterval);
+    marqueeInterval = null;
+  }
+
+  // Carga inicial (usa caché si existe, no gasta request)
+  fetchMarquee();
 
   freshAudio();
 
