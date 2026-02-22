@@ -33,15 +33,9 @@
       --white:   #1a1612;
       --gray:    #7a7068;
     }
-
     [data-theme="light"] body::before { opacity: 0.15; }
-
-    [data-theme="light"] .playing .bar {
-      background: linear-gradient(to top, #8a0000, #c42020 60%, #e05050);
-    }
-    [data-theme="light"] .playing .bar.tts-mode {
-      background: linear-gradient(to top, #8a3030, #c42020 55%, #d04040);
-    }
+    [data-theme="light"] .playing .bar { background: linear-gradient(to top, #8a0000, #c42020 60%, #e05050); }
+    [data-theme="light"] .playing .bar.tts-mode { background: linear-gradient(to top, #8a3030, #c42020 55%, #d04040); }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--white); font-family: var(--font-body); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; overflow-y: auto; transition: background 0.3s, color 0.3s; }
@@ -58,60 +52,27 @@
     .marquee-text { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); white-space: nowrap; display: inline-block; animation: marquee 30s linear infinite; }
     @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
     .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; perspective: 200px; }
-    .bar {
-      width: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      transition: height 0.06s ease-out, background 0.4s, box-shadow 0.4s, transform 0.12s ease;
-      transform-origin: bottom center;
-    }
-    .playing .bar {
-      background: linear-gradient(to top, #4a0000, #e63030 60%, #ff8a8a);
-      box-shadow: 0 2px 8px rgba(230,48,48,0.35);
-    }
-    .playing .bar.tts-mode {
-      background: linear-gradient(to top, #7a1a1a, #e63030 55%, #ff6060);
-      box-shadow: 0 2px 10px rgba(230,48,48,0.5);
-    }
-    .playing .bar.high-peak {
-      box-shadow: 0 2px 14px rgba(230,48,48,0.65);
-      filter: brightness(1.18);
-    }
+    .bar { width: 3px; background: var(--border); border-radius: 2px; transition: height 0.06s ease-out, background 0.4s, box-shadow 0.4s, transform 0.12s ease; transform-origin: bottom center; }
+    .playing .bar { background: linear-gradient(to top, #4a0000, #e63030 60%, #ff8a8a); box-shadow: 0 2px 8px rgba(230,48,48,0.35); }
+    .playing .bar.tts-mode { background: linear-gradient(to top, #7a1a1a, #e63030 55%, #ff6060); box-shadow: 0 2px 10px rgba(230,48,48,0.5); }
+    .playing .bar.high-peak { box-shadow: 0 2px 14px rgba(230,48,48,0.65); filter: brightness(1.18); }
     .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); transition: background 0.3s; }
     .dot.live    { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
     .dot.tts     { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 2s infinite; }
     .dot.syncing { background: #ce9d06; box-shadow: 0 0 12px #ce9d06; animation: pulse-fast 0.7s infinite; }
-    @keyframes pulse      { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-    @keyframes pulse-fast { 0%,100% { opacity:1; transform: scale(1);    }
-                            50%     { opacity:0.5; transform: scale(1.4); } }
-    #statusText          { color: var(--gray); }
-    #statusText.live     { color: var(--white); }
-    #statusText.syncing  { color: #ce9d06; }
-    .rep-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 16px;
-      min-height: 14px;
-      font-weight: bold;
-    }
+    @keyframes pulse      { 0%,100%{opacity:1;}50%{opacity:0.4;} }
+    @keyframes pulse-fast { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.4);} }
+    #statusText         { color: var(--gray); }
+    #statusText.live    { color: var(--white); }
+    #statusText.syncing { color: #ce9d06; }
+    .rep-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center; margin-bottom: 16px; min-height: 14px; font-weight: bold; }
     .rep-part:first-child { justify-self: start; }
     .rep-part:last-child  { justify-self: end; }
-    .rep-part {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--red-dim);
-      transition: color 0.3s;
-    }
+    .rep-part { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red-dim); transition: color 0.3s; }
     .rep-part.active { color: var(--red); }
     .pause { color: var(--red-dim); }
-    .pause.active {
-      color: #ce9d06;
-      animation: pulse 2s infinite;
-    }
+    .pause.active { color: #ce9d06; animation: pulse 2s infinite; }
     .play-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--white); font-family: var(--font-body); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; padding: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 14px; transition: all 0.2s; }
     .play-btn:hover  { border-color: var(--red); background: rgba(230,48,48,0.06); }
     .play-btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
@@ -128,292 +89,129 @@
     [data-theme="light"] .footer-note a { color: var(--gray); }
 
     /* ── LANG TOGGLE ─────────────────────────────────────────────────────────── */
-    .lang-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 16px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .lang-row.visible { opacity: 1; }
-    .lang-label { font-size: 9px; text-transform: uppercase; color: var(--gray); letter-spacing: 0.15em; }
-    .lang-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-      cursor: pointer;
-    }
-    .lang-opt {
-      font-family: var(--font-body);
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      padding: 5px 10px;
-      background: transparent;
-      color: var(--gray);
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-    }
-    .lang-opt::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 25%;
-      height: 50%;
-      width: 1px;
-      background: var(--border);
-    }
+    .lang-toggle { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
+    .lang-opt { font-family: var(--font-body); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; padding: 5px 10px; background: transparent; color: var(--gray); border: none; cursor: pointer; transition: all 0.2s; position: relative; }
+    .lang-opt::after { content: ''; position: absolute; right: 0; top: 25%; height: 50%; width: 1px; background: var(--border); }
     .lang-opt:last-child::after { display: none; }
-    .lang-opt.active {
-      background: var(--red);
-      color: var(--white);
-    }
+    .lang-opt.active { background: var(--red); color: var(--white); }
     .lang-opt:not(.active):hover { color: var(--white); }
 
-    /* ── AUDIO LAYER TOGGLES ─────────────────────────────────────────────────── */
-    .controls-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0;
-      margin-top: 16px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
+    /* ── CONTROLS ROW ────────────────────────────────────────────────────────── */
+    .controls-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; opacity: 0; transition: opacity 0.3s; }
     .controls-row.visible { opacity: 1; }
-    .controls-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .controls-right {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .ctrl-sep {
-      width: 1px; height: 16px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-    .layer-toggles {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .layer-btn {
-      background: transparent;
-      border: none;
-      border-right: 1px solid var(--border);
-      color: var(--gray);
-      cursor: pointer;
-      padding: 5px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      position: relative;
-    }
+    .controls-left  { display: flex; align-items: center; gap: 8px; }
+    .controls-right { display: flex; align-items: center; gap: 4px; }
+    .ctrl-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+    .layer-btn { background: transparent; border: none; border-right: 1px solid var(--border); color: var(--gray); cursor: pointer; padding: 5px 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
     .layer-btn:last-child { border-right: none; }
     .layer-btn svg { display: block; }
     .layer-btn.active { color: var(--red); }
     .layer-btn:not(.active):hover { color: var(--white); }
     #btnPreset.active svg { fill: var(--red); stroke: var(--red); }
     #btnPreset:not(.active):hover svg { fill: none; }
-    .layer-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: 3px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--red);
-    }
-    /* Theme button no dot indicator */
-    #btnTheme.active::after { display: none; }
+    .layer-btn.active::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
+    #btnTheme.active::after  { display: none; }
+    #btnCamera.active::after { display: none; }
     #btnTheme.active { color: var(--gray); }
+    #btnCamera { display: none; }
+    #btnCamera.visible { display: flex; }
 
     /* ── KNOB ────────────────────────────────────────────────────────────────── */
-    .knob-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      cursor: ns-resize;
-      user-select: none;
-      -webkit-user-select: none;
-      position: relative;
-      padding: 14px 0;
-    }
-
-    .knob-arrow-up,
-    .knob-arrow-down {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 9px;
-      color: var(--gray);
-      opacity: 0.3;
-      pointer-events: none;
-      user-select: none;
-      transition: opacity 0.25s, color 0.2s;
-      line-height: 1;
-    }
-    .knob-arrow-up  { top: 1px; }
+    .knob-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: ns-resize; user-select: none; -webkit-user-select: none; position: relative; padding: 14px 0; }
+    .knob-arrow-up, .knob-arrow-down { position: absolute; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--gray); opacity: 0.3; pointer-events: none; user-select: none; transition: opacity 0.25s, color 0.2s; line-height: 1; }
+    .knob-arrow-up { top: 1px; }
     .knob-arrow-down { bottom: 1px; }
+    .knob-wrap:hover .knob-arrow-up, .knob-wrap:hover .knob-arrow-down { opacity: 0.75; color: var(--white); }
+    .knob-wrap.dragging .knob-arrow-up, .knob-wrap.dragging .knob-arrow-down { opacity: 1; color: var(--red); }
+    .knob { width: 26px; height: 26px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); position: relative; transition: border-color 0.2s; }
+    .knob-wrap:hover .knob, .knob-wrap.dragging .knob { border-color: var(--gray); }
+    .knob-wrap.dragging .knob { border-color: var(--red); }
+    .knob-marker { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 0; height: 0; background: var(--gray); border-radius: 0; transform-origin: 50% 1100%; transition: background 0.2s; }
+    .knob-wrap:hover .knob-marker, .knob-wrap.dragging .knob-marker { background: var(--red); }
+    .knob-val { font-family: var(--font-body); font-size: 8px; color: var(--gray); letter-spacing: 0.1em; transition: color 0.2s; line-height: 1; }
+    .knob-wrap:hover .knob-val, .knob-wrap.dragging .knob-val { color: var(--white); }
+    .knob-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; color: var(--gray); transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
+    .knob-wrap:hover .knob-icon, .knob-wrap.dragging .knob-icon { color: var(--white); }
 
-    .knob-wrap:hover .knob-arrow-up,
-    .knob-wrap:hover .knob-arrow-down {
-      opacity: 0.75;
-      color: var(--white);
-    }
-    .knob-wrap.dragging .knob-arrow-up,
-    .knob-wrap.dragging .knob-arrow-down {
-      opacity: 1;
-      color: var(--red);
-    }
-    .knob {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      position: relative;
-      transition: border-color 0.2s;
-    }
-    .knob-wrap:hover .knob,
-    .knob-wrap.dragging .knob { border-color: var(--gray); }
-    .knob-wrap.dragging .knob  { border-color: var(--red); }
-    .knob-marker {
-      position: absolute;
-      top: 2px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0px;
-      height: 0px;
-      background: var(--gray);
-      border-radius: 0px;
-      transform-origin: 50% 1100%;
-      transition: background 0.2s;
-    }
-    .knob-wrap:hover .knob-marker,
-    .knob-wrap.dragging .knob-marker { background: var(--red); }
-    .knob-val {
-      font-family: var(--font-body);
-      font-size: 8px;
-      color: var(--gray);
-      letter-spacing: 0.1em;
-      transition: color 0.2s;
-      line-height: 1;
-    }
-    .knob-wrap:hover .knob-val,
-    .knob-wrap.dragging .knob-val { color: var(--white); }
-
-    .knob-icon {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      color: var(--gray);
-      transition: color 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .knob-wrap:hover .knob-icon,
-    .knob-wrap.dragging .knob-icon { color: var(--white); }
-
-    /* ── OFFLINE BANNER ──────────────────────────────────────────────────────── */
-    #offlineBanner {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      background: #1a1a00;
-      border-bottom: 1px solid #5a5000;
-      color: #ce9d06;
-      font-family: var(--font-body);
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      text-align: center;
-      padding: 7px 16px;
-      z-index: 200;
-      transform: translateY(-100%);
-      transition: transform 0.3s ease;
-    }
+    /* ── BANNERS ─────────────────────────────────────────────────────────────── */
+    #offlineBanner { position: fixed; top: 0; left: 0; right: 0; background: #1a1a00; border-bottom: 1px solid #5a5000; color: #ce9d06; font-family: var(--font-body); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; text-align: center; padding: 7px 16px; z-index: 200; transform: translateY(-100%); transition: transform 0.3s ease; }
     #offlineBanner.visible { transform: translateY(0); }
-
-    /* ── PWA INSTALL BANNER ──────────────────────────────────────────────────── */
-    #installBanner {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 20px;
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
-      z-index: 200;
-      transform: translateY(100%);
-      transition: transform 0.4s ease;
-    }
+    #installBanner { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); z-index: 200; transform: translateY(100%); transition: transform 0.4s ease; }
     #installBanner.visible { transform: translateY(0); }
-    #installBanner p {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--gray);
-      flex: 1;
-    }
+    #installBanner p { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray); flex: 1; }
     #installBanner strong { color: var(--white); }
-    .install-btn {
-      background: transparent;
-      border: 1px solid var(--red);
-      color: var(--red);
-      font-family: var(--font-body);
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      padding: 6px 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex-shrink: 0;
-    }
+    .install-btn { background: transparent; border: 1px solid var(--red); color: var(--red); font-family: var(--font-body); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; padding: 6px 14px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
     .install-btn:hover { background: rgba(230,48,48,0.1); }
-    .install-dismiss {
-      background: none;
-      border: none;
-      color: var(--gray);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0 4px;
-      line-height: 1;
-    }
+    .install-dismiss { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1; }
+
+    /* ── CÁMARA SINCRONICIDAD ────────────────────────────────────────────────── */
+    #cameraModal { display: none; position: fixed; inset: 0; z-index: 500; background: #000; flex-direction: column; }
+    #cameraModal.active { display: flex; }
+    #cameraViewport { position: relative; flex: 1; overflow: hidden; background: #000; }
+    #cameraVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #cameraCanvas { display: none; }
+    #cameraHUD { position: absolute; inset: 0; pointer-events: none; }
+    #cameraWatermark { position: absolute; top: 20px; right: 20px; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(230,48,48,0.85); text-shadow: 0 1px 6px rgba(0,0,0,0.95); }
+    #cameraOverlayBar { position: absolute; bottom: 0; left: 0; right: 0; padding: 44px 24px 20px; background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.65) 60%, transparent 100%); }
+    #cameraWaveCanvas { width: 100%; height: 28px; display: block; margin-bottom: 10px; opacity: 0.8; }
+    #cameraCards { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px, 6.5vw, 38px); letter-spacing: 0.04em; color: #f0ece4; line-height: 1.05; text-shadow: 0 2px 12px rgba(0,0,0,0.9); }
+    #cameraMeta { margin-top: 6px; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; color: #e63030; text-shadow: 0 1px 6px rgba(0,0,0,0.9); }
+    #cameraControls { background: #0a0a0a; padding: 18px 28px; padding-bottom: max(18px, env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; }
+    .cam-side-btn { background: none; border: 1px solid #2a2a2a; color: #666; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 10px 14px; cursor: pointer; transition: all 0.2s; min-width: 72px; text-align: center; }
+    .cam-side-btn:hover { border-color: #555; color: #f0ece4; }
+    #cameraShutter { width: 68px; height: 68px; border-radius: 50%; background: #f0ece4; border: 4px solid #444; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    #cameraShutter:hover { border-color: #e63030; transform: scale(1.04); }
+    #cameraShutter:active { transform: scale(0.93); background: #e63030; }
+
+    /* ── PREVIEW ─────────────────────────────────────────────────────────────── */
+    #cameraPreview { display: none; position: fixed; inset: 0; z-index: 600; background: #000; flex-direction: column; }
+    #cameraPreview.active { display: flex; }
+    #previewImg { flex: 1; object-fit: contain; width: 100%; display: block; }
+    #previewControls { background: #0a0a0a; padding: 16px 24px; padding-bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 10px; }
+    .preview-btn { flex: 1; background: transparent; border: 1px solid #2a2a2a; color: #f0ece4; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 8px; cursor: pointer; transition: all 0.2s; }
+    .preview-btn.primary { border-color: #e63030; color: #e63030; }
+    .preview-btn:hover { background: rgba(230,48,48,0.08); border-color: #e63030; color: #e63030; }
   </style>
 </head>
 <body>
 
-<!-- Offline indicator -->
 <div id="offlineBanner">⚡ Sin conexión · Modo local activo · El streaming se reanudará al reconectar</div>
 
-<!-- PWA install prompt -->
 <div id="installBanner">
   <p><strong>Radio Arkana</strong> — Instalar como app</p>
   <button class="install-btn" id="installBtn">Instalar</button>
   <button class="install-dismiss" id="installDismiss" aria-label="Cerrar">✕</button>
+</div>
+
+<!-- ── MODAL CÁMARA ──────────────────────────────────────────────────────────── -->
+<div id="cameraModal">
+  <div id="cameraViewport">
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <canvas id="cameraCanvas"></canvas>
+    <div id="cameraHUD">
+      <div id="cameraWatermark">Radio Arkana Event</div>
+      <div id="cameraOverlayBar">
+        <canvas id="cameraWaveCanvas"></canvas>
+        <div id="cameraCards">— · — · —</div>
+        <div id="cameraMeta">—</div>
+      </div>
+    </div>
+  </div>
+  <div id="cameraControls">
+    <button class="cam-side-btn" id="cameraClose">✕ Cerrar</button>
+    <button id="cameraShutter" aria-label="Disparar"></button>
+    <button class="cam-side-btn" id="cameraFlip">⇄ Girar</button>
+  </div>
+</div>
+
+<!-- ── PREVIEW ───────────────────────────────────────────────────────────────── -->
+<div id="cameraPreview">
+  <img id="previewImg" alt="Sincronicidad capturada">
+  <div id="previewControls">
+    <button class="preview-btn" id="previewRetry">← Repetir</button>
+    <button class="preview-btn primary" id="previewDownload">↓ Guardar</button>
+    <button class="preview-btn primary" id="previewShare">↗ Compartir</button>
+  </div>
 </div>
 
 <div class="wrap">
@@ -427,17 +225,16 @@
     <div class="marquee-wrap">
       <span class="marquee-text" id="marqueeText">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"        ***** EMISION EN PRUEBAS *****       </span>
     </div>
-
     <div class="waveform" id="waveform"></div>
     <div class="status-row">
       <span class="dot" id="dot"></span>
       <span id="statusText">Desconectado</span>
-      <span id="listenersDisplay" style="margin-left:auto; display:flex; align-items:center; gap:6px; opacity:0; transition: opacity 0.5s;">
+      <span id="listenersDisplay" style="margin-left:auto;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.5s;">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:var(--red)"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
         <span id="listenersCount" style="font-size:10px;">—</span>
       </span>
     </div>
-    <div id="repContainer" class="rep-container">
+    <div class="rep-container">
       <span id="repCountLabel" class="rep-part">—</span>
       <span id="pauseLabel"    class="rep-part pause">—</span>
     </div>
@@ -451,46 +248,32 @@
     </div>
     <div class="controls-row" id="controlsRow">
       <div class="controls-left">
-        <!-- Noise type knob -->
         <div class="knob-wrap" id="noiseKnob" title="Tipo de ruido">
           <div class="knob-arrow-up">^</div>
           <div class="knob" id="noiseKnobDial">
             <div class="knob-marker" id="noiseKnobMarker"></div>
             <span class="knob-icon" id="noiseKnobIcon">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12h2M6 8h1M6 16h1M10 5h1M10 19h1M14 3h1M14 21h1M18 7h1M18 17h1M22 12h2M9 12h6"/>
-              </svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2M6 8h1M6 16h1M10 5h1M10 19h1M14 3h1M14 21h1M18 7h1M18 17h1M22 12h2M9 12h6"/></svg>
             </span>
           </div>
           <span class="knob-val" id="noiseKnobVal">OFF</span>
           <div class="knob-arrow-down">v</div>
         </div>
-        <!-- Binaural knob -->
         <div class="knob-wrap" id="binauralKnob" title="Frecuencia binaural">
           <div class="knob-arrow-up">^</div>
           <div class="knob" id="binauralKnobDial">
             <div class="knob-marker" id="binauralKnobMarker"></div>
-            <span class="knob-icon">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <path d="M2 12 Q6 6 10 12 Q14 18 18 12 Q22 6 24 12"/>
-              </svg>
-            </span>
+            <span class="knob-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 12 Q6 6 10 12 Q14 18 18 12 Q22 6 24 12"/></svg></span>
           </div>
           <span class="knob-val" id="binauralKnobVal">OFF</span>
           <div class="knob-arrow-down">v</div>
         </div>
         <span class="ctrl-sep"></span>
-        <!-- Loop knobs (pause + reps) -->
         <div class="knob-wrap" id="pauseKnob" title="Pausa entre frases">
           <div class="knob-arrow-up">^</div>
           <div class="knob" id="knobDial">
             <div class="knob-marker" id="knobMarker"></div>
-            <span class="knob-icon">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="9"/>
-                <polyline points="12 7 12 12 15 14"/>
-              </svg>
-            </span>
+            <span class="knob-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span>
           </div>
           <span class="knob-val" id="knobVal">20s</span>
           <div class="knob-arrow-down">v</div>
@@ -499,14 +282,7 @@
           <div class="knob-arrow-up">^</div>
           <div class="knob" id="repsKnobDial">
             <div class="knob-marker" id="repsKnobMarker"></div>
-            <span class="knob-icon">
-              <svg id="repsKnobIcon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="2" width="6" height="11" rx="3"/>
-                <path d="M5 10a7 7 0 0 0 14 0"/>
-                <line x1="12" y1="19" x2="12" y2="22"/>
-                <line x1="9" y1="22" x2="15" y2="22"/>
-              </svg>
-            </span>
+            <span class="knob-icon"><svg id="repsKnobIcon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg></span>
           </div>
           <span class="knob-val" id="repsKnobVal">×7</span>
           <div class="knob-arrow-down">v</div>
@@ -517,19 +293,21 @@
           <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
         </div>
       </div>
-      <!-- Right side: theme toggle + preset -->
       <div class="controls-right">
+        <!-- Botón cámara — aparece cuando hay cartas activas -->
+        <button class="layer-btn" id="btnCamera" onclick="openCamera()" title="Capturar sincronicidad" aria-label="Capturar sincronicidad">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </button>
         <button class="layer-btn" id="btnTheme" onclick="toggleTheme()" title="Tema claro/oscuro" aria-pressed="false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1"  x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            <line x1="12" y1="1"  x2="12" y2="3"/>  <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>  <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
           </svg>
         </button>
         <button class="layer-btn" id="btnPreset" onclick="togglePreset()" title="Configuración Arkana" aria-pressed="false">
@@ -568,7 +346,7 @@
   const STALL_MS           = 8000;
 
   let isPlaying   = false;
-  let currentMode = 'NONE'; // 'LOADING' | 'STREAM' | 'TTS'
+  let currentMode = 'NONE';
   let attemptId   = 0;
   let watchdogId  = 0;
 
@@ -582,19 +360,14 @@
   let ttsSpeaking         = false;
   let streamAudio         = null;
 
-  // ── LAYER STATE ────────────────────────────────────────────────────────────
-  const layerState = { tts: true };
+  const layerState  = { tts: true };
   let noiseType     = 'off';
   let pauseDuration = 20000;
   let loopReps      = 7;
   let binauralFreq  = 0;
 
-  // ── SHORTWAVE FILTER STATE ─────────────────────────────────────────────────
   let shortwaveActive = false;
   let swNodes         = null;
-  let ttsMediaDest    = null;
-  let ttsMediaSrc     = null;
-  let ttsFilterAudio  = null;
 
   const playBtn    = document.getElementById('playBtn');
   const playLabel  = document.getElementById('playLabel');
@@ -610,17 +383,17 @@
     repCountLabel.textContent = rep   ?? '—';
     pauseLabel.textContent    = pause ?? '—';
     repCountLabel.classList.toggle('active', !!repActive);
-    pauseLabel.classList.toggle('active', !!pauseActive);
+    pauseLabel.classList.toggle('active',    !!pauseActive);
   }
 
-  // ── WAVEFORM REACTIVA ──────────────────────────────────────────────────────
+  // ── WAVEFORM ───────────────────────────────────────────────────────────────
   const BAR_COUNT = 48;
   const bars = [];
   for (let i = 0; i < BAR_COUNT; i++) {
     const b = document.createElement('div');
     b.className = 'bar';
     b.dataset.idleH = `${8 + Math.random() * 30}%`;
-    b.style.height = b.dataset.idleH;
+    b.style.height  = b.dataset.idleH;
     wf.appendChild(b);
     bars.push(b);
   }
@@ -651,84 +424,55 @@
   function drawWaveform() {
     if (!analyser || !isPlaying) { wfRafId = null; return; }
     wfRafId = requestAnimationFrame(drawWaveform);
-
     const bins = analyser.frequencyBinCount;
     const data = new Uint8Array(bins);
     analyser.getByteFrequencyData(data);
-
     const isTTS      = currentMode === 'TTS';
     const isSpeaking = isTTS && ttsSpeaking;
     const now        = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
-
-    const breath = (isTTS && !isSpeaking)
-      ? Math.sin(now * 0.8) * 0.07 + 0.93
-      : 1.0;
-
+    const breath     = (isTTS && !isSpeaking) ? Math.sin(now * 0.8) * 0.07 + 0.93 : 1.0;
     for (let i = 0; i < BAR_COUNT; i++) {
       const lo  = Math.floor(Math.pow(i / BAR_COUNT, 1.6) * bins);
       const hi  = Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.6) * bins);
       let sum = 0, count = Math.max(1, hi - lo);
       for (let j = lo; j < hi; j++) sum += data[j];
-      const raw = sum / count / 255;
-
-      const zone    = i < BAR_COUNT * 0.35 ? 0 : i < BAR_COUNT * 0.7 ? 1 : 2;
-      const release = RELEASE[zone];
+      const raw  = sum / count / 255;
+      const zone = i < BAR_COUNT * 0.35 ? 0 : i < BAR_COUNT * 0.7 ? 1 : 2;
       wfSmooth[i] = raw > wfSmooth[i]
         ? wfSmooth[i] * 0.25 + raw * 0.75
-        : wfSmooth[i] * release + raw * (1 - release);
-
+        : wfSmooth[i] * RELEASE[zone] + raw * (1 - RELEASE[zone]);
       const dist        = Math.abs(i - BAR_COUNT / 2);
       const centerBoost = dist < 8 ? 1.0 + (1 - dist / 8) * 0.25 : 1.0;
-
-      let height = Math.max(4, wfSmooth[i] * 100 * centerBoost * breath);
-
+      const height      = Math.max(4, wfSmooth[i] * 100 * centerBoost * breath);
       bars[i].style.height = `${height}%`;
-
       bars[i].classList.toggle('tts-mode',  isTTS);
       bars[i].classList.toggle('high-peak', height > 55);
-
-      const phase    = now * 1.8 + i * 0.09;
-      const microMod = Math.sin(phase) * 0.05;
-
+      const microMod = Math.sin(now * 1.8 + i * 0.09) * 0.05;
       let glitchX = 0, glitchScale = 1, glitchOpacity = 1;
       if (shortwaveActive && isTTS && Math.random() < 0.06) {
-        glitchX       = (Math.random() * 0.4 - 0.2) * 4;
-        glitchScale   = 1 + (Math.random() * 0.4 - 0.2) * 0.5;
+        glitchX = (Math.random() * 0.4 - 0.2) * 4;
+        glitchScale = 1 + (Math.random() * 0.4 - 0.2) * 0.5;
         glitchOpacity = 0.75 + Math.random() * 0.35;
       }
-
       bars[i].style.transform = `scaleY(${(1 + microMod) * glitchScale}) translateX(${glitchX}px)`;
       bars[i].style.opacity   = glitchOpacity;
     }
   }
 
-  function startWaveform() {
-    if (wfRafId) return;
-    wfSmooth.fill(0);
-    wfRafId = requestAnimationFrame(drawWaveform);
-  }
-
+  function startWaveform() { if (wfRafId) return; wfSmooth.fill(0); wfRafId = requestAnimationFrame(drawWaveform); }
   function stopWaveform() {
     if (wfRafId) { cancelAnimationFrame(wfRafId); wfRafId = null; }
-    bars.forEach(b => {
-      b.style.height    = b.dataset.idleH;
-      b.style.transform = '';
-      b.style.opacity   = '1';
-      b.classList.remove('tts-mode', 'high-peak');
-    });
+    bars.forEach(b => { b.style.height = b.dataset.idleH; b.style.transform = ''; b.style.opacity = '1'; b.classList.remove('tts-mode','high-peak'); });
     wfSmooth.fill(0);
   }
 
   // ── AUDIO ELEMENT ──────────────────────────────────────────────────────────
-
   function freshAudio() {
     const container = document.getElementById('audioContainer');
     if (streamAudio) {
       streamAudio.onplaying = streamAudio.onpause = streamAudio.onended =
       streamAudio.onwaiting = streamAudio.onstalled = streamAudio.onerror = null;
-      streamAudio.pause();
-      streamAudio.removeAttribute('src');
-      streamAudio.load();
+      streamAudio.pause(); streamAudio.removeAttribute('src'); streamAudio.load();
       container.removeChild(streamAudio);
     }
     streamAudio = document.createElement('audio');
@@ -739,18 +483,14 @@
     return streamAudio;
   }
 
-  // ── TIMERS ─────────────────────────────────────────────────────────────────
-
   function clearAllTimers() {
-    clearTimeout(watchdogTimer);
-    clearTimeout(ttsTimer);
-    clearTimeout(initialConnectTimer);
-    clearTimeout(stallTimer);
+    clearTimeout(watchdogTimer); clearTimeout(ttsTimer);
+    clearTimeout(initialConnectTimer); clearTimeout(stallTimer);
     clearInterval(countdownInterval);
     watchdogTimer = ttsTimer = initialConnectTimer = stallTimer = countdownInterval = null;
   }
 
-  // ── TEMA CLARO/OSCURO ──────────────────────────────────────────────────────
+  // ── TEMA ───────────────────────────────────────────────────────────────────
   function toggleTheme() {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     const newTheme = isLight ? 'dark' : 'light';
@@ -760,34 +500,21 @@
     btn.classList.toggle('active', newTheme === 'light');
     btn.setAttribute('aria-pressed', newTheme === 'light');
   }
-
-  // Aplicar tema guardado al cargar
   const savedTheme = localStorage.getItem('arkana-theme');
   if (savedTheme) {
     document.documentElement.setAttribute('data-theme', savedTheme);
-    if (savedTheme === 'light') {
-      document.getElementById('btnTheme').classList.add('active');
-      document.getElementById('btnTheme').setAttribute('aria-pressed', 'true');
-    }
+    if (savedTheme === 'light') { document.getElementById('btnTheme').classList.add('active'); document.getElementById('btnTheme').setAttribute('aria-pressed','true'); }
   }
 
   // ── WAKELOCK ───────────────────────────────────────────────────────────────
   let wakeLock = null;
-
   async function requestWakeLock() {
     if (!('wakeLock' in navigator)) return;
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
-    } catch (e) {}
+    try { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } catch(e) {}
   }
-
-  function releaseWakeLock() {
-    if (wakeLock) { wakeLock.release(); wakeLock = null; }
-  }
+  function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
 
   // ── MAIN ───────────────────────────────────────────────────────────────────
-
   function toggleMain() { if (!isPlaying) start(); else stop(); }
 
   function start() {
@@ -805,10 +532,9 @@
   }
 
   function stop() {
-    isPlaying = false;
+    isPlaying   = false;
     currentMode = 'NONE';
-    attemptId++;
-    watchdogId++;
+    attemptId++; watchdogId++;
     freshAudio();
     clearAllTimers();
     window.speechSynthesis.cancel();
@@ -825,159 +551,83 @@
     playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
     setRepLabels(null, null, false, false);
     document.getElementById('controlsRow').classList.remove('visible');
+    document.getElementById('btnCamera').classList.remove('visible');
     stopListenersCounter();
     stopMarqueePolling();
   }
 
-  // ── BEEP DE CONEXIÓN ───────────────────────────────────────────────────────
-
+  // ── BEEP ───────────────────────────────────────────────────────────────────
   function playConnectBeep() {
     try {
-      const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-      const now  = ctx.currentTime;
-      [[440, 0, 0.08], [660, 0.12, 0.08]].forEach(([freq, delay, dur]) => {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type        = 'sine';
-        osc.frequency.setValueAtTime(freq, now + delay);
-        gain.gain.setValueAtTime(0, now + delay);
-        gain.gain.linearRampToValueAtTime(0.18, now + delay + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + delay);
-        osc.stop(now + delay + dur + 0.02);
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      [[440,0,0.08],[660,0.12,0.08]].forEach(([freq,delay,dur]) => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now+delay);
+        gain.gain.setValueAtTime(0, now+delay);
+        gain.gain.linearRampToValueAtTime(0.18, now+delay+0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now+delay+dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now+delay); osc.stop(now+delay+dur+0.02);
       });
       setTimeout(() => ctx.close(), 600);
     } catch(e) {}
   }
 
   // ── STREAM ─────────────────────────────────────────────────────────────────
-
   function tryStream() {
     if (!isPlaying) return;
     clearAllTimers();
     const myAttempt = ++attemptId;
     currentMode = 'LOADING';
-
-    statusText.textContent = 'Sincronizando...';
-    statusText.className   = 'syncing';
-    modeLabel.textContent  = 'Conectando...';
-    dot.className          = 'dot syncing';
+    statusText.textContent = 'Sincronizando...'; statusText.className = 'syncing';
+    modeLabel.textContent  = 'Conectando...'; dot.className = 'dot syncing';
     playConnectBeep();
-
     const audio = freshAudio();
-
     audio.onplaying = () => {
-      if (!isPlaying || myAttempt !== attemptId) return;
-      if (currentMode === 'TTS') return;
+      if (!isPlaying || myAttempt !== attemptId || currentMode === 'TTS') return;
       currentMode = 'STREAM';
-      clearTimeout(initialConnectTimer);
-      clearTimeout(stallTimer);
-      dot.className          = 'dot live';
-      statusText.textContent = 'En directo';
-      statusText.className   = 'live';
-      modeLabel.textContent  = 'ON AIR';
-      setRepLabels('Señal estable', null, true, false);
+      clearTimeout(initialConnectTimer); clearTimeout(stallTimer);
+      dot.className = 'dot live'; statusText.textContent = 'En directo'; statusText.className = 'live';
+      modeLabel.textContent = 'ON AIR'; setRepLabels('Señal estable', null, true, false);
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      audioCtx.resume();
-      connectStreamToAnalyser(audio);
-      startWaveform();
-      console.log('onplaying — stream activo.');
+      audioCtx.resume(); connectStreamToAnalyser(audio); startWaveform();
     };
-
-    audio.onended = () => {
-      if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
-      console.warn('onended → TTS');
-      clearAllTimers();
-      startTTS();
-    };
-
+    audio.onended = () => { if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return; clearAllTimers(); startTTS(); };
     audio.onpause = () => {
       if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
-      console.log('onpause.');
       clearTimeout(stallTimer);
-      stallTimer = setTimeout(() => {
-        if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
-        console.warn('pause sin reanudar → TTS');
-        clearAllTimers();
-        startTTS();
-      }, STALL_MS);
+      stallTimer = setTimeout(() => { if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return; clearAllTimers(); startTTS(); }, STALL_MS);
     };
-
     audio.onwaiting = () => {
       if (!isPlaying || myAttempt !== attemptId || currentMode === 'LOADING') return;
-      console.log('onwaiting — modo:', currentMode);
       clearTimeout(stallTimer);
-      stallTimer = setTimeout(() => {
-        if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
-        console.warn('waiting prolongado → TTS');
-        clearAllTimers();
-        startTTS();
-      }, STALL_MS);
+      stallTimer = setTimeout(() => { if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return; clearAllTimers(); startTTS(); }, STALL_MS);
     };
-
     audio.onstalled = () => {
       if (!isPlaying || myAttempt !== attemptId || currentMode === 'LOADING') return;
       clearTimeout(stallTimer);
-      stallTimer = setTimeout(() => {
-        if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return;
-        console.warn('stall prolongado → TTS');
-        clearAllTimers();
-        startTTS();
-      }, STALL_MS);
+      stallTimer = setTimeout(() => { if (!isPlaying || myAttempt !== attemptId || currentMode !== 'STREAM') return; clearAllTimers(); startTTS(); }, STALL_MS);
     };
-
     audio.onerror = () => {
       if (!isPlaying || myAttempt !== attemptId || currentMode === 'TTS') return;
       const err = audio.error;
-      console.error('onerror:', err);
-      if (!err || err.code === MediaError.MEDIA_ERR_NETWORK || err.code === MediaError.MEDIA_ERR_DECODE) {
-        clearAllTimers();
-        startTTS();
-      }
+      if (!err || err.code === MediaError.MEDIA_ERR_NETWORK || err.code === MediaError.MEDIA_ERR_DECODE) { clearAllTimers(); startTTS(); }
     };
-
-    audio.src = `${STREAM_URL}?cb=${Date.now()}`;
-    audio.load();
-
-    initialConnectTimer = setTimeout(() => {
-      if (!isPlaying || myAttempt !== attemptId || currentMode !== 'LOADING') return;
-      console.warn('timeout inicial → TTS');
-      startTTS();
-    }, INITIAL_CONNECT_MS);
-
-    audio.play().catch(err => {
-      console.warn('play() rechazado:', err);
-      if (!isPlaying || myAttempt !== attemptId || currentMode !== 'LOADING') return;
-      startTTS();
-    });
+    audio.src = `${STREAM_URL}?cb=${Date.now()}`; audio.load();
+    initialConnectTimer = setTimeout(() => { if (!isPlaying || myAttempt !== attemptId || currentMode !== 'LOADING') return; startTTS(); }, INITIAL_CONNECT_MS);
+    audio.play().catch(() => { if (!isPlaying || myAttempt !== attemptId || currentMode !== 'LOADING') return; startTTS(); });
   }
 
   // ── TTS ────────────────────────────────────────────────────────────────────
-
   function startTTS() {
     if (!isPlaying || currentMode === 'TTS') return;
-    currentMode = 'TTS';
-    attemptId++;
-    watchdogId++;
-    console.log('Activando TTS...');
-    clearAllTimers();
-    freshAudio();
-
-    dot.className          = 'dot tts';
-    statusText.textContent = 'Letanía Arkana';
-    statusText.className   = '';
-    modeLabel.textContent  = 'Emisión en Pruebas';
-
-    initGenerativeAudio();
-    ensureAnalyser();
-    startWaveform();
-    runTTSLoop();
-    scheduleWatchdog();
+    currentMode = 'TTS'; attemptId++; watchdogId++;
+    clearAllTimers(); freshAudio();
+    dot.className = 'dot tts'; statusText.textContent = 'Letanía Arkana'; statusText.className = '';
+    modeLabel.textContent = 'Emisión en Pruebas';
+    initGenerativeAudio(); ensureAnalyser(); startWaveform(); runTTSLoop(); scheduleWatchdog();
   }
-
-  // ── WATCHDOG ───────────────────────────────────────────────────────────────
 
   function scheduleWatchdog() {
     if (!isPlaying || currentMode !== 'TTS') return;
@@ -988,798 +638,464 @@
 
   async function runWatchdog(myWatchdog) {
     if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-    console.log('Watchdog: consultando /status via Worker...');
     try {
       const ctrl = new AbortController();
       const tid  = setTimeout(() => ctrl.abort(), 5000);
-      const res  = await fetch(`${WORKER_URL}/status`, {
-        cache: 'no-store', signal: ctrl.signal
-      });
+      const res  = await fetch(`${WORKER_URL}/status`, { cache: 'no-store', signal: ctrl.signal });
       clearTimeout(tid);
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-
       if (res.ok) {
-        const data = await res.json();
-        const streamVivo = data.live === true;
-        console.log('Watchdog status:', { streamVivo });
-
-        if (streamVivo) {
-          if (ttsSpeaking) {
-            console.log('Watchdog: stream detectado, esperando fin de frase TTS...');
-            watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
-            return;
-          }
-          console.log('Watchdog: stream disponible → reconectando.');
-          stopTTSAudio();
-          currentMode = 'NONE';
-          if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().then(() => tryStream());
-          } else {
-            tryStream();
-          }
-        } else {
-          console.log('Watchdog: stream offline → manteniendo TTS.');
-          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000);
-        }
-      } else {
-        console.log('Watchdog: Worker no responde HTTP', res.status);
-        watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
-      }
-    } catch (e) {
+        const { live } = await res.json();
+        if (live === true) {
+          if (ttsSpeaking) { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000); return; }
+          stopTTSAudio(); currentMode = 'NONE';
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().then(() => tryStream()); else tryStream();
+        } else { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000); }
+      } else { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS); }
+    } catch(e) {
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-      console.log('Watchdog: error de red.', e.message);
       watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
     }
   }
 
   // ── GENERATIVO ─────────────────────────────────────────────────────────────
-
-  function makeWhiteBuffer(ctx) {
-    const buf  = ctx.createBuffer(1, 2 * ctx.sampleRate, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-    return buf;
-  }
-
-  function makePinkBuffer(ctx) {
-    const buf  = ctx.createBuffer(1, 2 * ctx.sampleRate, ctx.sampleRate);
-    const data = buf.getChannelData(0);
+  function makeWhiteBuffer(ctx) { const buf = ctx.createBuffer(1, 2*ctx.sampleRate, ctx.sampleRate); const d = buf.getChannelData(0); for (let i=0;i<d.length;i++) d[i]=Math.random()*2-1; return buf; }
+  function makePinkBuffer(ctx)  {
+    const buf = ctx.createBuffer(1, 2*ctx.sampleRate, ctx.sampleRate); const d = buf.getChannelData(0);
     let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-    for (let i = 0; i < data.length; i++) {
-      const w = Math.random() * 2 - 1;
-      b0 = 0.99886*b0 + w*0.0555179; b1 = 0.99332*b1 + w*0.0750759;
-      b2 = 0.96900*b2 + w*0.1538520; b3 = 0.86650*b3 + w*0.3104856;
-      b4 = 0.55000*b4 + w*0.5329522; b5 = -0.7616*b5 - w*0.0168980;
-      data[i] = (b0+b1+b2+b3+b4+b5+b6+w*0.5362) * 0.11;
-      b6 = w * 0.115926;
-    }
-    return buf;
+    for (let i=0;i<d.length;i++) { const w=Math.random()*2-1; b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856; b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; } return buf;
   }
-
-  function makeBrownBuffer(ctx) {
-    const buf  = ctx.createBuffer(1, 2 * ctx.sampleRate, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < data.length; i++) {
-      const w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02;
-      data[i] = last * 3.5;
-    }
-    return buf;
-  }
-
+  function makeBrownBuffer(ctx) { const buf = ctx.createBuffer(1, 2*ctx.sampleRate, ctx.sampleRate); const d = buf.getChannelData(0); let last=0; for (let i=0;i<d.length;i++) { const w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.5; } return buf; }
   function noiseGainForType(type, vol) {
-    if (type === 'off')   return [0,           0,           0          ];
-    if (type === 'white') return [vol * 0.015,  0,           0          ];
-    if (type === 'pink')  return [0,            vol * 0.025, 0          ];
-    if (type === 'brown') return [0,            0,           vol * 0.022];
-    return [0, 0, 0];
+    if (type==='white') return [vol*0.015,0,0]; if (type==='pink') return [0,vol*0.025,0]; if (type==='brown') return [0,0,vol*0.022]; return [0,0,0];
   }
-
   function initGenerativeAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioCtx.resume();
-    ensureAnalyser();
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    audioCtx.resume(); ensureAnalyser();
     const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
     const finalDest = analyser ?? audioCtx.destination;
-
     if (noiseNodes.length === 0) {
-      const [gW, gP, gB] = noiseGainForType(noiseType, vol);
-
-      const srcW = audioCtx.createBufferSource();
-      srcW.buffer = makeWhiteBuffer(audioCtx); srcW.loop = true;
-      const gainW = audioCtx.createGain(); gainW.gain.value = gW;
+      const [gW,gP,gB] = noiseGainForType(noiseType, vol);
+      const srcW=audioCtx.createBufferSource(); srcW.buffer=makeWhiteBuffer(audioCtx); srcW.loop=true;
+      const gainW=audioCtx.createGain(); gainW.gain.value=gW;
       const destW = shortwaveActive ? (enableShortwaveFilter(), swNodes.highpass) : finalDest;
       srcW.connect(gainW).connect(destW); srcW.start();
-
-      const srcP = audioCtx.createBufferSource();
-      srcP.buffer = makePinkBuffer(audioCtx); srcP.loop = true;
-      const gainP = audioCtx.createGain(); gainP.gain.value = gP;
+      const srcP=audioCtx.createBufferSource(); srcP.buffer=makePinkBuffer(audioCtx); srcP.loop=true;
+      const gainP=audioCtx.createGain(); gainP.gain.value=gP;
       srcP.connect(gainP).connect(shortwaveActive ? swNodes.highpass : finalDest); srcP.start();
-
-      const srcB = audioCtx.createBufferSource();
-      srcB.buffer = makeBrownBuffer(audioCtx); srcB.loop = true;
-      const gainB = audioCtx.createGain(); gainB.gain.value = gB;
+      const srcB=audioCtx.createBufferSource(); srcB.buffer=makeBrownBuffer(audioCtx); srcB.loop=true;
+      const gainB=audioCtx.createGain(); gainB.gain.value=gB;
       srcB.connect(gainB).connect(shortwaveActive ? swNodes.highpass : finalDest); srcB.start();
-
-      const oscL = audioCtx.createOscillator(), oscR = audioCtx.createOscillator();
-      const merger = audioCtx.createChannelMerger(2);
-      const gainBin = audioCtx.createGain(); gainBin.gain.value = binauralFreq > 0 ? vol * 0.03 : 0;
-      oscL.frequency.value = 200;
-      oscR.frequency.value = binauralFreq > 0 ? 200 + binauralFreq : 208;
-      oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1);
-      merger.connect(gainBin).connect(finalDest);
+      const oscL=audioCtx.createOscillator(), oscR=audioCtx.createOscillator();
+      const merger=audioCtx.createChannelMerger(2);
+      const gainBin=audioCtx.createGain(); gainBin.gain.value=binauralFreq>0?vol*0.03:0;
+      oscL.frequency.value=200; oscR.frequency.value=binauralFreq>0?200+binauralFreq:208;
+      oscL.connect(merger,0,0); oscR.connect(merger,0,1); merger.connect(gainBin).connect(finalDest);
       oscL.start(); oscR.start();
-
-      noiseNodes = [srcW, gainW, srcP, gainP, srcB, gainB, oscL, oscR, gainBin];
+      noiseNodes=[srcW,gainW,srcP,gainP,srcB,gainB,oscL,oscR,gainBin];
     } else {
-      const [gW, gP, gB] = noiseGainForType(noiseType, vol);
-      noiseNodes[1].gain.value = gW;
-      noiseNodes[3].gain.value = gP;
-      noiseNodes[5].gain.value = gB;
-      noiseNodes[8].gain.value = binauralFreq > 0 ? vol * 0.03 : 0;
-      if (binauralFreq > 0) {
-        noiseNodes[6].frequency.value = 200;
-        noiseNodes[7].frequency.value = 200 + binauralFreq;
-      }
+      const [gW,gP,gB]=noiseGainForType(noiseType,vol);
+      noiseNodes[1].gain.value=gW; noiseNodes[3].gain.value=gP; noiseNodes[5].gain.value=gB;
+      noiseNodes[8].gain.value=binauralFreq>0?vol*0.03:0;
+      if (binauralFreq>0) { noiseNodes[6].frequency.value=200; noiseNodes[7].frequency.value=200+binauralFreq; }
     }
   }
 
-  // ── SHORTWAVE FILTER CHAIN ─────────────────────────────────────────────────
-
+  // ── SHORTWAVE ──────────────────────────────────────────────────────────────
   function buildShortwaveNodes() {
     if (!audioCtx) return null;
-    const highpass = audioCtx.createBiquadFilter();
-    highpass.type            = 'highpass';
-    highpass.frequency.value = 120;
-    highpass.Q.value         = 0.707;
-    const lowpass = audioCtx.createBiquadFilter();
-    lowpass.type            = 'lowpass';
-    lowpass.frequency.value = 2800;
-    lowpass.Q.value         = 1.0;
-    const waveShaper = audioCtx.createWaveShaper();
-    const curve = new Float32Array(65536);
-    for (let i = 0; i < 65536; i++) {
-      const x = (i - 32768) / 32768;
-      curve[i] = Math.tanh(x * 2.2);
-    }
-    waveShaper.curve      = curve;
-    waveShaper.oversample = '4x';
-    highpass.connect(lowpass).connect(waveShaper).connect(audioCtx.destination);
-    return { highpass, lowpass, waveShaper };
+    const hp=audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=120; hp.Q.value=0.707;
+    const lp=audioCtx.createBiquadFilter(); lp.type='lowpass';  lp.frequency.value=2800; lp.Q.value=1.0;
+    const ws=audioCtx.createWaveShaper();
+    const curve=new Float32Array(65536);
+    for (let i=0;i<65536;i++) { const x=(i-32768)/32768; curve[i]=Math.tanh(x*2.2); }
+    ws.curve=curve; ws.oversample='4x';
+    hp.connect(lp).connect(ws).connect(audioCtx.destination);
+    return {highpass:hp,lowpass:lp,waveShaper:ws};
   }
-
-  function enableShortwaveFilter() {
-    if (swNodes || !audioCtx) return;
-    swNodes = buildShortwaveNodes();
-  }
-
-  function disableShortwaveFilter() {
-    if (swNodes) {
-      try { swNodes.highpass.disconnect(); } catch(e){}
-      try { swNodes.lowpass.disconnect(); } catch(e){}
-      try { swNodes.waveShaper.disconnect(); } catch(e){}
-      swNodes = null;
-    }
-  }
-
+  function enableShortwaveFilter()  { if (swNodes||!audioCtx) return; swNodes=buildShortwaveNodes(); }
+  function disableShortwaveFilter() { if (swNodes) { try{swNodes.highpass.disconnect();}catch(e){} try{swNodes.lowpass.disconnect();}catch(e){} try{swNodes.waveShaper.disconnect();}catch(e){} swNodes=null; } }
   function applyShortwaveState(active) {
-    shortwaveActive = active;
-    if (active) {
-      if (audioCtx) enableShortwaveFilter();
-      window._swTTSRate  = 0.65;
-      window._swTTSPitch = 0.95;
-    } else {
-      disableShortwaveFilter();
-      window._swTTSRate  = null;
-      window._swTTSPitch = null;
-    }
+    shortwaveActive=active;
+    if (active) { if (audioCtx) enableShortwaveFilter(); window._swTTSRate=0.65; window._swTTSPitch=0.95; }
+    else { disableShortwaveFilter(); window._swTTSRate=null; window._swTTSPitch=null; }
   }
-
   function stopTTSAudio() {
-    window.speechSynthesis.cancel();
-    clearTimeout(ttsTimer);
-    clearInterval(countdownInterval);
-    countdownInterval = null;
-    ttsSpeaking = false;
-    if (audioCtx && noiseNodes.length) {
-      noiseNodes[1].gain.value = 0;
-      noiseNodes[3].gain.value = 0;
-      noiseNodes[5].gain.value = 0;
-      noiseNodes[8].gain.value = 0;
-    }
+    window.speechSynthesis.cancel(); clearTimeout(ttsTimer); clearInterval(countdownInterval); countdownInterval=null; ttsSpeaking=false;
+    if (audioCtx&&noiseNodes.length) { noiseNodes[1].gain.value=noiseNodes[3].gain.value=noiseNodes[5].gain.value=noiseNodes[8].gain.value=0; }
   }
 
-  let repCount = 0, currentTrio = [];
-  let deck = [];
+  // ── TTS LOOP ───────────────────────────────────────────────────────────────
+  let repCount=0, currentTrio=[], deck=[];
 
   function shuffleDeck() {
-    deck = [...CARDS[currentLang]];
-    for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
+    deck=[...CARDS[currentLang]];
+    for (let i=deck.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
   }
-
-  function drawTrio() {
-    if (deck.length < 3) shuffleDeck();
-    return [deck.pop(), deck.pop(), deck.pop()];
-  }
+  function drawTrio() { if (deck.length<3) shuffleDeck(); return [deck.pop(),deck.pop(),deck.pop()]; }
 
   function runTTSLoop() {
-    if (currentMode !== 'TTS' || !isPlaying) return;
-    if (!layerState.tts) return;
-    if (repCount === 0) {
-      currentTrio = drawTrio();
-    }
+    if (currentMode!=='TTS'||!isPlaying||!layerState.tts) return;
+    if (repCount===0) currentTrio=drawTrio();
     repCount++;
     setRepLabels(`Rep ${repCount}/${loopReps}`, null, true, false);
+    // Mostrar botón cámara en cuanto hay cartas activas
+    document.getElementById('btnCamera').classList.add('visible');
+
     const cfg = LANG_CONFIG[currentLang];
     const msg = new SpeechSynthesisUtterance(`${currentTrio[0]}, ${cfg.conj} ${currentTrio[1]}, ${cfg.and} ${currentTrio[2]}.`);
     msg.lang   = cfg.lang;
     msg.rate   = window._swTTSRate  ?? 0.7;
     msg.pitch  = window._swTTSPitch ?? 1.0;
     msg.volume = parseFloat(document.getElementById('volume').value ?? 1);
-    msg.onstart = () => { ttsSpeaking = true; };
-    msg.onend = () => {
-      ttsSpeaking = false;
-      if (currentMode !== 'TTS') return;
-      if (repCount >= loopReps) repCount = 0;
-      let secsLeft = Math.round(pauseDuration / 1000);
-      setRepLabels(`Rep ${repCount || loopReps}/${loopReps}`, ` ${secsLeft}s`, false, true);
+    msg.onstart = () => { ttsSpeaking=true; };
+    msg.onend   = () => {
+      ttsSpeaking=false;
+      if (currentMode!=='TTS') return;
+      if (repCount>=loopReps) repCount=0;
+      let secsLeft=Math.round(pauseDuration/1000);
+      setRepLabels(`Rep ${repCount||loopReps}/${loopReps}`,` ${secsLeft}s`,false,true);
       clearInterval(countdownInterval);
-      countdownInterval = setInterval(() => {
-        secsLeft--;
-        if (secsLeft > 0) {
-          pauseLabel.textContent = ` ${secsLeft}s`;
-        } else {
-          clearInterval(countdownInterval);
-          countdownInterval = null;
-        }
-      }, 1000);
-      ttsTimer = setTimeout(() => {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-        runTTSLoop();
-      }, pauseDuration);
+      countdownInterval=setInterval(()=>{ secsLeft--; if (secsLeft>0) pauseLabel.textContent=` ${secsLeft}s`; else { clearInterval(countdownInterval); countdownInterval=null; } },1000);
+      ttsTimer=setTimeout(()=>{ clearInterval(countdownInterval); countdownInterval=null; runTTSLoop(); },pauseDuration);
     };
-    msg.onerror = (e) => {
-      console.warn('SpeechSynthesis error:', e.error);
-      ttsSpeaking = false;
-      if (currentMode !== 'TTS') return;
-      ttsTimer = setTimeout(runTTSLoop, 5000);
-    };
+    msg.onerror=()=>{ ttsSpeaking=false; if (currentMode!=='TTS') return; ttsTimer=setTimeout(runTTSLoop,5000); };
     window.speechSynthesis.speak(msg);
   }
 
-  // ── PRESET ARKANA ──────────────────────────────────────────────────────────
-
-  let presetActive    = false;
-  let presetSnapshot  = null;
-  let _presetApplying = false;
-  const knobSetters   = {};
+  // ── PRESET ─────────────────────────────────────────────────────────────────
+  let presetActive=false, presetSnapshot=null, _presetApplying=false;
+  const knobSetters={};
 
   function onUserKnobChange() {
-    if (_presetApplying) return;
-    if (!presetActive) return;
-    presetActive = false;
-    applyShortwaveState(false);
-    const btn = document.getElementById('btnPreset');
-    btn.classList.remove('active');
-    btn.setAttribute('aria-pressed', 'false');
+    if (_presetApplying||!presetActive) return;
+    presetActive=false; applyShortwaveState(false);
+    const btn=document.getElementById('btnPreset'); btn.classList.remove('active'); btn.setAttribute('aria-pressed','false');
   }
-
   function togglePreset() {
-    presetActive = !presetActive;
-    const btn = document.getElementById('btnPreset');
-    btn.classList.toggle('active', presetActive);
-    btn.setAttribute('aria-pressed', presetActive);
-
+    presetActive=!presetActive;
+    const btn=document.getElementById('btnPreset'); btn.classList.toggle('active',presetActive); btn.setAttribute('aria-pressed',presetActive);
     if (presetActive) {
-      presetSnapshot = {
-        noisePos:    window._noisePos ?? 0,
-        binauralPos: window._binauralPos ?? 0,
-        pauseVal:    Math.round(pauseDuration / 1000),
-        repsVal:     loopReps,
-      };
-      _presetApplying = true;
-      knobSetters.noise?.(0.375);
-      knobSetters.binaural?.(hzToPos(7.5));
-      knobSetters.pause?.(20);
-      knobSetters.reps?.(7);
-      applyShortwaveState(true);
-      _presetApplying = false;
+      presetSnapshot={noisePos:window._noisePos??0,binauralPos:window._binauralPos??0,pauseVal:Math.round(pauseDuration/1000),repsVal:loopReps};
+      _presetApplying=true; knobSetters.noise?.(0.375); knobSetters.binaural?.(hzToPos(7.5)); knobSetters.pause?.(20); knobSetters.reps?.(7); applyShortwaveState(true); _presetApplying=false;
     } else {
-      _presetApplying = true;
-      applyShortwaveState(false);
-      if (presetSnapshot) {
-        const s = presetSnapshot;
-        knobSetters.noise?.(s.noisePos);
-        knobSetters.binaural?.(s.binauralPos);
-        knobSetters.pause?.(s.pauseVal);
-        knobSetters.reps?.(s.repsVal);
-      }
-      _presetApplying = false;
+      _presetApplying=true; applyShortwaveState(false);
+      if (presetSnapshot) { const s=presetSnapshot; knobSetters.noise?.(s.noisePos); knobSetters.binaural?.(s.binauralPos); knobSetters.pause?.(s.pauseVal); knobSetters.reps?.(s.repsVal); }
+      _presetApplying=false;
     }
   }
+  function hzToPos(hz) { const T=0.08; if (hz<=0) return 0; const t=Math.log(hz/0.5)/Math.log(40/0.5); return T+t*(1-T); }
 
-  function hzToPos(hz) {
-    const OFF_THRESHOLD = 0.08;
-    if (hz <= 0) return 0;
-    const t = Math.log(hz / 0.5) / Math.log(40 / 0.5);
-    return OFF_THRESHOLD + t * (1 - OFF_THRESHOLD);
-  }
-
-  // ── KNOB BINAURAL ──────────────────────────────────────────────────────────
-
+  // ── KNOBS ──────────────────────────────────────────────────────────────────
   (function initBinauralKnob() {
-    const ANG_MIN = -135, ANG_MAX = 135;
-    const DRAG_PX = 100;
-    const BANDS = [
-      { name: 'OFF',   color: 'var(--gray)', min: 0,   max: 0  },
-      { name: 'DELTA', color: '#6b8cff',     min: 0.5, max: 4  },
-      { name: 'THETA', color: '#a855f7',     min: 4,   max: 8  },
-      { name: 'ALPHA', color: '#22c55e',     min: 8,   max: 12 },
-      { name: 'BETA',  color: '#f59e0b',     min: 12,  max: 30 },
-      { name: 'GAMMA', color: '#ef4444',     min: 30,  max: 40 },
-    ];
-    const OFF_THRESHOLD = 0.08;
-
-    function posToFreq(pos) {
-      if (pos < OFF_THRESHOLD) return 0;
-      const t = (pos - OFF_THRESHOLD) / (1 - OFF_THRESHOLD);
-      return 0.5 * Math.pow(40 / 0.5, t);
-    }
-
-    function freqToBand(hz) {
-      if (hz === 0) return BANDS[0];
-      if (hz < 4)   return BANDS[1];
-      if (hz < 8)   return BANDS[2];
-      if (hz < 12)  return BANDS[3];
-      if (hz < 30)  return BANDS[4];
-      return BANDS[5];
-    }
-
-    function posToAngle(pos) { return ANG_MIN + pos * (ANG_MAX - ANG_MIN); }
-
-    let knobPos  = 0;
-    let dragging = false, startY = 0, startPos = 0;
-
-    const wrap   = document.getElementById('binauralKnob');
-    const marker = document.getElementById('binauralKnobMarker');
-    const valLbl = document.getElementById('binauralKnobVal');
-
+    const ANG_MIN=-135,ANG_MAX=135,DRAG_PX=100;
+    const BANDS=[{name:'OFF',color:'var(--gray)'},{name:'DELTA',color:'#6b8cff'},{name:'THETA',color:'#a855f7'},{name:'ALPHA',color:'#22c55e'},{name:'BETA',color:'#f59e0b'},{name:'GAMMA',color:'#ef4444'}];
+    const OFF_THRESHOLD=0.08;
+    function posToFreq(pos) { if (pos<OFF_THRESHOLD) return 0; const t=(pos-OFF_THRESHOLD)/(1-OFF_THRESHOLD); return 0.5*Math.pow(40/0.5,t); }
+    function freqToBand(hz) { if (!hz) return BANDS[0]; if (hz<4) return BANDS[1]; if (hz<8) return BANDS[2]; if (hz<12) return BANDS[3]; if (hz<30) return BANDS[4]; return BANDS[5]; }
+    function posToAngle(pos) { return ANG_MIN+pos*(ANG_MAX-ANG_MIN); }
+    let knobPos=0,dragging=false,startY=0,startPos=0;
+    const wrap=document.getElementById('binauralKnob'),marker=document.getElementById('binauralKnobMarker'),valLbl=document.getElementById('binauralKnobVal');
     function applyPos(pos) {
-      onUserKnobChange();
-      knobPos = Math.min(1, Math.max(0, pos));
-      window._binauralPos = knobPos;
-      const hz   = posToFreq(knobPos);
-      const band = freqToBand(hz);
-      binauralFreq = hz;
-
-      marker.style.transform  = `translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;
-      marker.style.background = band.color;
-      valLbl.textContent      = band.name;
-      valLbl.style.color      = band.name === 'OFF' ? 'var(--gray)' : band.color;
-
-      const icon = document.querySelector('#binauralKnobDial .knob-icon');
-      if (icon) icon.style.color = band.name === 'OFF' ? 'var(--gray)' : band.color;
-
-      if (audioCtx && noiseNodes.length) {
-        const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
-        if (hz > 0) {
-          noiseNodes[6].frequency.setTargetAtTime(200,      audioCtx.currentTime, 0.05);
-          noiseNodes[7].frequency.setTargetAtTime(200 + hz, audioCtx.currentTime, 0.05);
-          noiseNodes[8].gain.setTargetAtTime(vol * 0.03,    audioCtx.currentTime, 0.05);
-        } else {
-          noiseNodes[8].gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
-        }
-      }
+      onUserKnobChange(); knobPos=Math.min(1,Math.max(0,pos)); window._binauralPos=knobPos;
+      const hz=posToFreq(knobPos),band=freqToBand(hz); binauralFreq=hz;
+      marker.style.transform=`translateX(-50%) rotate(${posToAngle(knobPos)}deg)`; marker.style.background=band.color;
+      valLbl.textContent=band.name; valLbl.style.color=band.name==='OFF'?'var(--gray)':band.color;
+      const icon=document.querySelector('#binauralKnobDial .knob-icon'); if (icon) icon.style.color=band.name==='OFF'?'var(--gray)':band.color;
+      if (audioCtx&&noiseNodes.length) { const vol=parseFloat(document.getElementById('volume').value??0.8); if (hz>0) { noiseNodes[6].frequency.setTargetAtTime(200,audioCtx.currentTime,0.05); noiseNodes[7].frequency.setTargetAtTime(200+hz,audioCtx.currentTime,0.05); noiseNodes[8].gain.setTargetAtTime(vol*0.03,audioCtx.currentTime,0.05); } else { noiseNodes[8].gain.setTargetAtTime(0,audioCtx.currentTime,0.05); } }
     }
-
-    knobSetters.binaural = applyPos;
-    applyPos(0);
-
-    function onDown(e) {
-      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startPos = knobPos; wrap.classList.add('dragging'); e.preventDefault();
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      applyPos(startPos + (startY - clientY) / DRAG_PX); e.preventDefault();
-    }
-    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
-
-    wrap.addEventListener('mousedown',  onDown);
-    wrap.addEventListener('touchstart', onDown, { passive: false });
-    document.addEventListener('mousemove',  onMove);
-    document.addEventListener('touchmove',  onMove, { passive: false });
-    document.addEventListener('mouseup',    onUp);
-    document.addEventListener('touchend',   onUp);
+    knobSetters.binaural=applyPos; applyPos(0);
+    function onDown(e){dragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;startPos=knobPos;wrap.classList.add('dragging');e.preventDefault();}
+    function onMove(e){if(!dragging)return;applyPos(startPos+(startY-(e.touches?e.touches[0].clientY:e.clientY))/DRAG_PX);e.preventDefault();}
+    function onUp(){if(!dragging)return;dragging=false;wrap.classList.remove('dragging');}
+    wrap.addEventListener('mousedown',onDown);wrap.addEventListener('touchstart',onDown,{passive:false});
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);document.addEventListener('touchend',onUp);
   })();
-
-  // ── KNOB PAUSA ─────────────────────────────────────────────────────────────
 
   (function initPauseKnob() {
-    const KNOB_MIN = 10, KNOB_MAX = 25, KNOB_DEFAULT = 10;
-    const DRAG_PX = 80, ANG_MIN = -135, ANG_MAX = 135;
-    let dragging = false, startY = 0, startVal = KNOB_DEFAULT;
-
-    const wrap   = document.getElementById('pauseKnob');
-    const marker = document.getElementById('knobMarker');
-    const valLbl = document.getElementById('knobVal');
-
-    function valToAngle(v) { return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN); }
-
-    function setKnobValue(v) {
-      onUserKnobChange();
-      v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
-      pauseDuration = v * 1000;
-      marker.style.transform = `translateX(-50%) rotate(${valToAngle(v)}deg)`;
-      valLbl.textContent = `${v}s`;
-    }
-
-    setKnobValue(KNOB_DEFAULT);
-    knobSetters.pause = setKnobValue;
-
-    function onDown(e) {
-      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startVal = Math.round(pauseDuration / 1000); wrap.classList.add('dragging'); e.preventDefault();
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      setKnobValue(startVal + ((startY - clientY) / DRAG_PX) * (KNOB_MAX - KNOB_MIN)); e.preventDefault();
-    }
-    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
-
-    wrap.addEventListener('mousedown',  onDown);
-    wrap.addEventListener('touchstart', onDown, { passive: false });
-    document.addEventListener('mousemove',  onMove);
-    document.addEventListener('touchmove',  onMove, { passive: false });
-    document.addEventListener('mouseup',    onUp);
-    document.addEventListener('touchend',   onUp);
+    const KNOB_MIN=10,KNOB_MAX=25,KNOB_DEFAULT=10,DRAG_PX=80,ANG_MIN=-135,ANG_MAX=135;
+    let dragging=false,startY=0,startVal=KNOB_DEFAULT;
+    const wrap=document.getElementById('pauseKnob'),marker=document.getElementById('knobMarker'),valLbl=document.getElementById('knobVal');
+    function valToAngle(v){return ANG_MIN+((v-KNOB_MIN)/(KNOB_MAX-KNOB_MIN))*(ANG_MAX-ANG_MIN);}
+    function setKnobValue(v){onUserKnobChange();v=Math.min(KNOB_MAX,Math.max(KNOB_MIN,Math.round(v)));pauseDuration=v*1000;marker.style.transform=`translateX(-50%) rotate(${valToAngle(v)}deg)`;valLbl.textContent=`${v}s`;}
+    setKnobValue(KNOB_DEFAULT);knobSetters.pause=setKnobValue;
+    function onDown(e){dragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;startVal=Math.round(pauseDuration/1000);wrap.classList.add('dragging');e.preventDefault();}
+    function onMove(e){if(!dragging)return;setKnobValue(startVal+((startY-(e.touches?e.touches[0].clientY:e.clientY))/DRAG_PX)*(KNOB_MAX-KNOB_MIN));e.preventDefault();}
+    function onUp(){if(!dragging)return;dragging=false;wrap.classList.remove('dragging');}
+    wrap.addEventListener('mousedown',onDown);wrap.addEventListener('touchstart',onDown,{passive:false});
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);document.addEventListener('touchend',onUp);
   })();
-
-  // ── KNOB REPETICIONES ──────────────────────────────────────────────────────
 
   (function initRepsKnob() {
-    const KNOB_MIN = 0, KNOB_MAX = 10, KNOB_DEFAULT = 1;
-    const DRAG_PX = 60, ANG_MIN = -135, ANG_MAX = 135;
-    let dragging = false, startY = 0, startVal = KNOB_DEFAULT;
-
-    const wrap   = document.getElementById('repsKnob');
-    const marker = document.getElementById('repsKnobMarker');
-    const valLbl = document.getElementById('repsKnobVal');
-    const icon   = document.getElementById('repsKnobIcon');
-
-    function valToAngle(v) { return ANG_MIN + ((v - KNOB_MIN) / (KNOB_MAX - KNOB_MIN)) * (ANG_MAX - ANG_MIN); }
-
+    const KNOB_MIN=0,KNOB_MAX=10,KNOB_DEFAULT=1,DRAG_PX=60,ANG_MIN=-135,ANG_MAX=135;
+    let dragging=false,startY=0,startVal=KNOB_DEFAULT;
+    const wrap=document.getElementById('repsKnob'),marker=document.getElementById('repsKnobMarker'),valLbl=document.getElementById('repsKnobVal'),icon=document.getElementById('repsKnobIcon');
+    function valToAngle(v){return ANG_MIN+((v-KNOB_MIN)/(KNOB_MAX-KNOB_MIN))*(ANG_MAX-ANG_MIN);}
     function setKnobValue(v) {
-      onUserKnobChange();
-      v = Math.min(KNOB_MAX, Math.max(KNOB_MIN, Math.round(v)));
-      loopReps = v;
-      marker.style.transform = `translateX(-50%) rotate(${valToAngle(v)}deg)`;
-
-      if (v === 0) {
-        layerState.tts = false;
-        valLbl.textContent = '—';
-        marker.style.background = 'var(--gray)';
-        if (icon) icon.style.color = 'var(--gray)';
-        if (currentMode === 'TTS' && isPlaying) {
-          window.speechSynthesis.cancel();
-          clearTimeout(ttsTimer);
-          clearInterval(countdownInterval);
-          countdownInterval = null;
-          ttsSpeaking = false;
-          setRepLabels(null, null, false, false);
-        }
-      } else {
-        const wasOff = !layerState.tts;
-        layerState.tts = true;
-        valLbl.textContent = `×${v}`;
-        marker.style.background = 'var(--red)';
-        if (icon) icon.style.color = 'var(--red)';
-        if (wasOff && currentMode === 'TTS' && isPlaying && !ttsSpeaking) {
-          repCount = 0;
-          ttsTimer = setTimeout(runTTSLoop, 400);
-        }
-      }
+      onUserKnobChange();v=Math.min(KNOB_MAX,Math.max(KNOB_MIN,Math.round(v)));loopReps=v;
+      marker.style.transform=`translateX(-50%) rotate(${valToAngle(v)}deg)`;
+      if (v===0) { layerState.tts=false;valLbl.textContent='—';marker.style.background='var(--gray)';if(icon)icon.style.color='var(--gray)'; if(currentMode==='TTS'&&isPlaying){window.speechSynthesis.cancel();clearTimeout(ttsTimer);clearInterval(countdownInterval);countdownInterval=null;ttsSpeaking=false;setRepLabels(null,null,false,false);} }
+      else { const wasOff=!layerState.tts;layerState.tts=true;valLbl.textContent=`×${v}`;marker.style.background='var(--red)';if(icon)icon.style.color='var(--red)'; if(wasOff&&currentMode==='TTS'&&isPlaying&&!ttsSpeaking){repCount=0;ttsTimer=setTimeout(runTTSLoop,400);} }
     }
-
-    setKnobValue(KNOB_DEFAULT);
-    knobSetters.reps = setKnobValue;
-
-    function onDown(e) {
-      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startVal = loopReps; wrap.classList.add('dragging'); e.preventDefault();
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      setKnobValue(startVal + ((startY - clientY) / DRAG_PX) * (KNOB_MAX - KNOB_MIN)); e.preventDefault();
-    }
-    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
-
-    wrap.addEventListener('mousedown',  onDown);
-    wrap.addEventListener('touchstart', onDown, { passive: false });
-    document.addEventListener('mousemove',  onMove);
-    document.addEventListener('touchmove',  onMove, { passive: false });
-    document.addEventListener('mouseup',    onUp);
-    document.addEventListener('touchend',   onUp);
+    setKnobValue(KNOB_DEFAULT);knobSetters.reps=setKnobValue;
+    function onDown(e){dragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;startVal=loopReps;wrap.classList.add('dragging');e.preventDefault();}
+    function onMove(e){if(!dragging)return;setKnobValue(startVal+((startY-(e.touches?e.touches[0].clientY:e.clientY))/DRAG_PX)*(KNOB_MAX-KNOB_MIN));e.preventDefault();}
+    function onUp(){if(!dragging)return;dragging=false;wrap.classList.remove('dragging');}
+    wrap.addEventListener('mousedown',onDown);wrap.addEventListener('touchstart',onDown,{passive:false});
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);document.addEventListener('touchend',onUp);
   })();
-
-  // ── KNOB RUIDO ─────────────────────────────────────────────────────────────
 
   (function initNoiseKnob() {
-    const ANG_MIN = -135, ANG_MAX = 135, DRAG_PX = 80;
-    const ZONES = [
-      { type: 'off',   label: 'OFF',   color: 'var(--gray)' },
-      { type: 'white', label: 'WHITE', color: '#e0dbd0'     },
-      { type: 'pink',  label: 'PINK',  color: '#e88fa0'     },
-      { type: 'brown', label: 'BROWN', color: '#a0704a'     },
-    ];
-
-    function posToZone(pos) { return ZONES[Math.min(3, Math.floor(pos * 4))]; }
-    function posToAngle(pos) { return ANG_MIN + pos * (ANG_MAX - ANG_MIN); }
-
-    let knobPos  = 0;
-    let dragging = false, startY = 0, startPos = 0;
-
-    const wrap   = document.getElementById('noiseKnob');
-    const marker = document.getElementById('noiseKnobMarker');
-    const valLbl = document.getElementById('noiseKnobVal');
-    const icon   = document.getElementById('noiseKnobIcon');
-
+    const ANG_MIN=-135,ANG_MAX=135,DRAG_PX=80;
+    const ZONES=[{type:'off',label:'OFF',color:'var(--gray)'},{type:'white',label:'WHITE',color:'#e0dbd0'},{type:'pink',label:'PINK',color:'#e88fa0'},{type:'brown',label:'BROWN',color:'#a0704a'}];
+    function posToZone(pos){return ZONES[Math.min(3,Math.floor(pos*4))];} function posToAngle(pos){return ANG_MIN+pos*(ANG_MAX-ANG_MIN);}
+    let knobPos=0,dragging=false,startY=0,startPos=0;
+    const wrap=document.getElementById('noiseKnob'),marker=document.getElementById('noiseKnobMarker'),valLbl=document.getElementById('noiseKnobVal'),icon=document.getElementById('noiseKnobIcon');
     function applyPos(pos) {
-      onUserKnobChange();
-      knobPos  = Math.min(0.9999, Math.max(0, pos));
-      const zone = posToZone(knobPos);
-      noiseType = zone.type;
-      window._noisePos = knobPos;
-
-      marker.style.transform  = `translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;
-      marker.style.background = zone.color;
-      valLbl.textContent      = zone.label;
-      valLbl.style.color      = zone.color;
-      if (icon) icon.style.color = zone.color;
-
-      if (audioCtx && noiseNodes.length) {
-        const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
-        const [gW, gP, gB] = noiseGainForType(noiseType, vol);
-        const t = audioCtx.currentTime;
-        noiseNodes[1].gain.setTargetAtTime(gW, t, 0.08);
-        noiseNodes[3].gain.setTargetAtTime(gP, t, 0.08);
-        noiseNodes[5].gain.setTargetAtTime(gB, t, 0.08);
-      }
+      onUserKnobChange();knobPos=Math.min(0.9999,Math.max(0,pos));const zone=posToZone(knobPos);noiseType=zone.type;window._noisePos=knobPos;
+      marker.style.transform=`translateX(-50%) rotate(${posToAngle(knobPos)}deg)`;marker.style.background=zone.color;valLbl.textContent=zone.label;valLbl.style.color=zone.color;if(icon)icon.style.color=zone.color;
+      if(audioCtx&&noiseNodes.length){const vol=parseFloat(document.getElementById('volume').value??0.8);const[gW,gP,gB]=noiseGainForType(noiseType,vol);const t=audioCtx.currentTime;noiseNodes[1].gain.setTargetAtTime(gW,t,0.08);noiseNodes[3].gain.setTargetAtTime(gP,t,0.08);noiseNodes[5].gain.setTargetAtTime(gB,t,0.08);}
     }
-
-    knobSetters.noise = applyPos;
-    applyPos(0);
-
-    function onDown(e) {
-      dragging = true; startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startPos = knobPos; wrap.classList.add('dragging'); e.preventDefault();
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      applyPos(startPos + (startY - clientY) / DRAG_PX); e.preventDefault();
-    }
-    function onUp() { if (!dragging) return; dragging = false; wrap.classList.remove('dragging'); }
-
-    wrap.addEventListener('mousedown',  onDown);
-    wrap.addEventListener('touchstart', onDown, { passive: false });
-    document.addEventListener('mousemove',  onMove);
-    document.addEventListener('touchmove',  onMove, { passive: false });
-    document.addEventListener('mouseup',    onUp);
-    document.addEventListener('touchend',   onUp);
+    knobSetters.noise=applyPos;applyPos(0);
+    function onDown(e){dragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;startPos=knobPos;wrap.classList.add('dragging');e.preventDefault();}
+    function onMove(e){if(!dragging)return;applyPos(startPos+(startY-(e.touches?e.touches[0].clientY:e.clientY))/DRAG_PX);e.preventDefault();}
+    function onUp(){if(!dragging)return;dragging=false;wrap.classList.remove('dragging');}
+    wrap.addEventListener('mousedown',onDown);wrap.addEventListener('touchstart',onDown,{passive:false});
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);document.addEventListener('touchend',onUp);
   })();
 
-  // ── LANG TOGGLE ────────────────────────────────────────────────────────────
-
+  // ── LANG ───────────────────────────────────────────────────────────────────
   function setLang(lang) {
-    if (lang === currentLang) return;
-    currentLang = lang;
-    deck = [];
-    document.getElementById('langES').classList.toggle('active', lang === 'es');
-    document.getElementById('langEN').classList.toggle('active', lang === 'en');
-    document.getElementById('langES').setAttribute('aria-pressed', lang === 'es');
-    document.getElementById('langEN').setAttribute('aria-pressed', lang === 'en');
-    if (currentMode === 'TTS' && isPlaying) {
-      repCount = 0; currentTrio = [];
-      window.speechSynthesis.cancel();
-      clearTimeout(ttsTimer);
-      clearInterval(countdownInterval);
-      ttsSpeaking = false;
-      ttsTimer = setTimeout(runTTSLoop, 400);
-    }
+    if (lang===currentLang) return; currentLang=lang; deck=[];
+    document.getElementById('langES').classList.toggle('active',lang==='es');
+    document.getElementById('langEN').classList.toggle('active',lang==='en');
+    document.getElementById('langES').setAttribute('aria-pressed',lang==='es');
+    document.getElementById('langEN').setAttribute('aria-pressed',lang==='en');
+    if (currentMode==='TTS'&&isPlaying) { repCount=0;currentTrio=[];window.speechSynthesis.cancel();clearTimeout(ttsTimer);clearInterval(countdownInterval);ttsSpeaking=false;ttsTimer=setTimeout(runTTSLoop,400); }
   }
-
   function updateVolume(v) {
-    const vol = parseFloat(v);
-    if (streamAudio) streamAudio.volume = vol;
-    if (audioCtx && noiseNodes.length) {
-      const [gW, gP, gB] = noiseGainForType(noiseType, vol);
-      noiseNodes[1].gain.value = gW;
-      noiseNodes[3].gain.value = gP;
-      noiseNodes[5].gain.value = gB;
-      noiseNodes[8].gain.value = binauralFreq > 0 ? vol * 0.03 : 0;
-    }
+    const vol=parseFloat(v);
+    if (streamAudio) streamAudio.volume=vol;
+    if (audioCtx&&noiseNodes.length) { const[gW,gP,gB]=noiseGainForType(noiseType,vol);noiseNodes[1].gain.value=gW;noiseNodes[3].gain.value=gP;noiseNodes[5].gain.value=gB;noiseNodes[8].gain.value=binauralFreq>0?vol*0.03:0; }
   }
 
-  // ── CONTADOR DE OYENTES CON HEARTBEAT ─────────────────────────────────────
-  const listenerId = Math.random().toString(36).slice(2) + Date.now().toString(36);
-
-  async function pingWorker(action = null) {
-    try {
-      const base = `${WORKER_URL}?id=${listenerId}`;
-      const url  = action ? `${base}&action=${action}` : base;
-      const res  = await fetch(url, { method: action ? 'POST' : 'GET', cache: 'no-store' });
-      const data = await res.json();
-      document.getElementById('listenersCount').textContent = data.listeners ?? 0;
-      document.getElementById('listenersDisplay').style.opacity = '1';
-    } catch (e) {}
+  // ── OYENTES ────────────────────────────────────────────────────────────────
+  const listenerId=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  async function pingWorker(action=null) {
+    try { const base=`${WORKER_URL}?id=${listenerId}`,url=action?`${base}&action=${action}`:base; const res=await fetch(url,{method:action?'POST':'GET',cache:'no-store'}); const data=await res.json(); document.getElementById('listenersCount').textContent=data.listeners??0; document.getElementById('listenersDisplay').style.opacity='1'; } catch(e){}
   }
-
   let lint;
-  function startListenersCounter() {
-    pingWorker('join');
-    lint = setInterval(() => pingWorker('heartbeat'), 60000);
-  }
-  function stopListenersCounter() {
-    pingWorker('leave');
-    clearInterval(lint);
-  }
+  function startListenersCounter(){pingWorker('join');lint=setInterval(()=>pingWorker('heartbeat'),60000);}
+  function stopListenersCounter(){pingWorker('leave');clearInterval(lint);}
+  window.addEventListener('beforeunload',()=>{if(isPlaying)navigator.sendBeacon(`${WORKER_URL}?action=leave&id=${listenerId}`);});
 
-  window.addEventListener('beforeunload', () => {
-    if (isPlaying) navigator.sendBeacon(`${WORKER_URL}?action=leave&id=${listenerId}`);
-  });
-
-  // ── MARQUEE DINÁMICO ───────────────────────────────────────────────────────
-  const MARQUEE_POLL_MS  = 60000;
-  const MARQUEE_CACHE_KEY = 'arkana_marquee';
-  const MARQUEE_CACHE_TTL = 5 * 60 * 1000;
-  const marqueeEl = document.getElementById('marqueeText');
-
+  // ── MARQUEE ────────────────────────────────────────────────────────────────
+  const MARQUEE_POLL_MS=60000,MARQUEE_CACHE_KEY='arkana_marquee',MARQUEE_CACHE_TTL=5*60*1000;
+  const marqueeEl=document.getElementById('marqueeText');
   async function fetchMarquee() {
     try {
-      const cached = localStorage.getItem(MARQUEE_CACHE_KEY);
-      if (cached) {
-        const { text, ts } = JSON.parse(cached);
-        if (Date.now() - ts < MARQUEE_CACHE_TTL) {
-          applyMarquee(text);
-          return;
-        }
-      }
-      const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
-      const data = await res.json();
-      if (data.text) {
-        localStorage.setItem(MARQUEE_CACHE_KEY, JSON.stringify({ text: data.text, ts: Date.now() }));
-        applyMarquee(data.text);
-      }
-    } catch (e) {}
+      const cached=localStorage.getItem(MARQUEE_CACHE_KEY);
+      if (cached) { const{text,ts}=JSON.parse(cached); if (Date.now()-ts<MARQUEE_CACHE_TTL){applyMarquee(text);return;} }
+      const res=await fetch(`${WORKER_URL}/marquee`,{cache:'no-store'}); const data=await res.json();
+      if (data.text){localStorage.setItem(MARQUEE_CACHE_KEY,JSON.stringify({text:data.text,ts:Date.now()}));applyMarquee(data.text);}
+    } catch(e){}
+  }
+  function applyMarquee(text) {
+    if (text!==marqueeEl.textContent.trim()) { marqueeEl.style.opacity='0'; setTimeout(()=>{marqueeEl.textContent=text+'       ';marqueeEl.style.opacity='1';},400); }
+  }
+  let marqueeInterval=null;
+  function startMarqueePolling(){if(marqueeInterval)return;marqueeInterval=setInterval(fetchMarquee,MARQUEE_POLL_MS);}
+  function stopMarqueePolling(){clearInterval(marqueeInterval);marqueeInterval=null;}
+  fetchMarquee();
+  freshAudio();
+
+  // ── CÁMARA SINCRONICIDAD ───────────────────────────────────────────────────
+  let cameraStream  = null;
+  let camFacingMode = 'environment';
+  let camWaveRafId  = null;
+
+  function formatCameraDateTime() {
+    const now=new Date();
+    return now.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
   }
 
-  function applyMarquee(text) {
-    if (text !== marqueeEl.textContent.trim()) {
-      marqueeEl.style.opacity = '0';
-      setTimeout(() => { marqueeEl.textContent = text + '       '; marqueeEl.style.opacity = '1'; }, 400);
+  function updateCameraHUD() {
+    const cardsEl=document.getElementById('cameraCards');
+    const metaEl =document.getElementById('cameraMeta');
+    cardsEl.textContent = currentTrio&&currentTrio.length===3 ? currentTrio.join('  ·  ') : '— · — · —';
+    metaEl.textContent  = formatCameraDateTime();
+  }
+
+  // Dibuja la waveform en el canvas del HUD en tiempo real
+  function drawCameraWave() {
+    if (!document.getElementById('cameraModal').classList.contains('active')) { camWaveRafId=null; return; }
+    camWaveRafId=requestAnimationFrame(drawCameraWave);
+    const canvas=document.getElementById('cameraWaveCanvas');
+    const ctx=canvas.getContext('2d');
+    const W=canvas.offsetWidth*devicePixelRatio, H=canvas.offsetHeight*devicePixelRatio;
+    if (canvas.width!==W||canvas.height!==H) { canvas.width=W; canvas.height=H; }
+    ctx.clearRect(0,0,W,H);
+    ctx.beginPath(); ctx.strokeStyle='#e63030'; ctx.lineWidth=1.5*devicePixelRatio; ctx.shadowColor='#e63030'; ctx.shadowBlur=5;
+    const step=W/BAR_COUNT;
+    for (let i=0;i<BAR_COUNT;i++) {
+      const val=wfSmooth[i]??0, x=i*step+step/2, barH=Math.max(2,val*H*0.85), y=(H-barH)/2;
+      if (i===0) ctx.moveTo(x,H/2);
+      ctx.lineTo(x,y); ctx.lineTo(x,y+barH); ctx.lineTo(x+step*0.55,H/2);
+    }
+    ctx.stroke();
+  }
+
+  async function openCamera() {
+    if (!currentTrio||currentTrio.length<3) return;
+    const modal=document.getElementById('cameraModal');
+    modal.classList.add('active');
+    updateCameraHUD();
+    if (!camWaveRafId) camWaveRafId=requestAnimationFrame(drawCameraWave);
+    await startCameraStream();
+  }
+
+  async function startCameraStream() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t=>t.stop()); cameraStream=null; }
+    try {
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:camFacingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});
+      document.getElementById('cameraVideo').srcObject=cameraStream;
+    } catch(e) {
+      try { cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); document.getElementById('cameraVideo').srcObject=cameraStream; }
+      catch(err) { closeCamera(); alert('No se pudo acceder a la cámara.'); }
     }
   }
 
-  let marqueeInterval = null;
-
-  function startMarqueePolling() {
-    if (marqueeInterval) return;
-    marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS);
+  function closeCamera() {
+    if (cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+    if (camWaveRafId){cancelAnimationFrame(camWaveRafId);camWaveRafId=null;}
+    document.getElementById('cameraModal').classList.remove('active');
+    document.getElementById('cameraVideo').srcObject=null;
   }
 
-  function stopMarqueePolling() {
-    clearInterval(marqueeInterval);
-    marqueeInterval = null;
+  async function flipCamera() { camFacingMode=camFacingMode==='environment'?'user':'environment'; await startCameraStream(); }
+
+  function shootPhoto() {
+    const video=document.getElementById('cameraVideo');
+    const canvas=document.getElementById('cameraCanvas');
+    const vW=video.videoWidth||1280, vH=video.videoHeight||720;
+    canvas.width=vW; canvas.height=vH;
+    const ctx=canvas.getContext('2d');
+
+    // Frame del video
+    ctx.drawImage(video,0,0,vW,vH);
+
+    const sf=vW/window.innerWidth; // factor de escala respecto al CSS
+
+    // Degradado inferior
+    const gradH=vH*0.40;
+    const grad=ctx.createLinearGradient(0,vH-gradH,0,vH);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(0.3,'rgba(0,0,0,0.65)');
+    grad.addColorStop(1,'rgba(0,0,0,0.93)');
+    ctx.fillStyle=grad; ctx.fillRect(0,vH-gradH,vW,gradH);
+
+    // Watermark superior derecha
+    ctx.font=`${Math.round(10*sf)}px 'Space Mono',monospace`;
+    ctx.fillStyle='rgba(230,48,48,0.85)'; ctx.textAlign='right';
+    ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=6;
+    ctx.fillText('RADIO ARKANA EVENT', vW-Math.round(20*sf), Math.round(30*sf));
+
+    // Waveform
+    const waveH=Math.round(34*sf), waveW=vW-Math.round(48*sf);
+    const waveX=Math.round(24*sf), waveY=vH-Math.round(118*sf)-waveH;
+    const barStep=waveW/BAR_COUNT;
+    ctx.beginPath(); ctx.strokeStyle='#e63030'; ctx.lineWidth=Math.max(1,1.5*sf); ctx.shadowColor='#e63030'; ctx.shadowBlur=7*sf;
+    for (let i=0;i<BAR_COUNT;i++) {
+      const val=wfSmooth[i]??0, x=waveX+i*barStep+barStep/2, barH=Math.max(2,val*waveH*0.88), y=waveY+(waveH-barH)/2;
+      if (i===0) ctx.moveTo(x,waveY+waveH/2);
+      ctx.lineTo(x,y); ctx.lineTo(x,y+barH); ctx.lineTo(x+barStep*0.55,waveY+waveH/2);
+    }
+    ctx.stroke(); ctx.shadowBlur=0;
+
+    // Cartas (Bebas Neue)
+    const cardSize=Math.round(36*sf);
+    ctx.font=`${cardSize}px 'Bebas Neue',sans-serif`; ctx.fillStyle='#f0ece4'; ctx.textAlign='left';
+    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=10;
+    const trio=currentTrio&&currentTrio.length===3?currentTrio:['—','—','—'];
+    ctx.fillText(trio.join('  ·  '), Math.round(24*sf), vH-Math.round(62*sf));
+
+    // Fecha
+    ctx.font=`${Math.round(10*sf)}px 'Space Mono',monospace`; ctx.fillStyle='#e63030'; ctx.shadowBlur=6;
+    ctx.fillText(formatCameraDateTime(), Math.round(24*sf), vH-Math.round(36*sf));
+    ctx.shadowBlur=0;
+
+    // Mostrar preview
+    document.getElementById('previewImg').src=canvas.toDataURL('image/jpeg',0.93);
+    document.getElementById('cameraPreview').classList.add('active');
   }
 
-  // Carga inicial (usa caché si existe, no gasta request)
-  fetchMarquee();
+  function closePreview() { document.getElementById('cameraPreview').classList.remove('active'); }
 
-  freshAudio();
+  function downloadPhoto() {
+    const dataUrl=document.getElementById('cameraCanvas').toDataURL('image/jpeg',0.93);
+    const filename=currentTrio&&currentTrio.length===3?`arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.jpg`:`arkana-event-${Date.now()}.jpg`;
+    const a=document.createElement('a'); a.href=dataUrl; a.download=filename; a.click();
+  }
+
+  async function sharePhoto() {
+    const canvas=document.getElementById('cameraCanvas');
+    const caption=currentTrio&&currentTrio.length===3
+      ?`${currentTrio[0]} · ${currentTrio[1]} · ${currentTrio[2]} — Radio Arkana 7.50 MHz #RadioArkana #TiradaArkana`
+      :'Radio Arkana Event #RadioArkana';
+    if (navigator.share) {
+      canvas.toBlob(async blob => {
+        const file=new File([blob],'arkana-event.jpg',{type:'image/jpeg'});
+        try { await navigator.share({files:[file],title:'Radio Arkana Event',text:caption}); }
+        catch(e) { downloadPhoto(); }
+      },'image/jpeg',0.93);
+    } else { downloadPhoto(); }
+  }
+
+  // Eventos cámara
+  document.getElementById('cameraClose').addEventListener('click', closeCamera);
+  document.getElementById('cameraFlip').addEventListener('click', flipCamera);
+  document.getElementById('cameraShutter').addEventListener('click', shootPhoto);
+  document.getElementById('previewRetry').addEventListener('click', closePreview);
+  document.getElementById('previewDownload').addEventListener('click', downloadPhoto);
+  document.getElementById('previewShare').addEventListener('click', sharePhoto);
+
+  // Actualizar HUD cada segundo (para la hora en tiempo real)
+  setInterval(()=>{ if(document.getElementById('cameraModal').classList.contains('active')) updateCameraHUD(); },1000);
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    window.addEventListener('load',()=>{
       navigator.serviceWorker.register('/sw.js')
-        .then(reg => {
-          console.log('[SW] Registrado:', reg.scope);
-          reg.addEventListener('updatefound', () => {
-            const nw = reg.installing;
-            nw.addEventListener('statechange', () => {
-              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[SW] Nueva versión disponible');
-              }
-            });
-          });
-        })
-        .catch(err => console.warn('[SW] Error de registro:', err));
+        .then(reg=>{ reg.addEventListener('updatefound',()=>{ const nw=reg.installing; nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller) console.log('[SW] Nueva versión disponible'); }); }); })
+        .catch(err=>console.warn('[SW] Error:',err));
     });
   }
 
   // ── CONECTIVIDAD ───────────────────────────────────────────────────────────
-  const offlineBanner = document.getElementById('offlineBanner');
+  const offlineBanner=document.getElementById('offlineBanner');
+  function handleOnline(){offlineBanner.classList.remove('visible');if(isPlaying&&currentMode==='TTS'){clearAllTimers();window.speechSynthesis.cancel();ttsSpeaking=false;tryStream();}}
+  function handleOffline(){offlineBanner.classList.add('visible');if(isPlaying&&currentMode==='STREAM'){clearAllTimers();startTTS();}}
+  window.addEventListener('online',handleOnline);window.addEventListener('offline',handleOffline);
+  if(!navigator.onLine)handleOffline();
 
-  function handleOnline() {
-    offlineBanner.classList.remove('visible');
-    if (isPlaying && currentMode === 'TTS') {
-      console.log('[NET] Conexión restaurada → intentando stream');
-      clearAllTimers();
-      window.speechSynthesis.cancel();
-      ttsSpeaking = false;
-      tryStream();
-    }
-  }
-
-  function handleOffline() {
-    offlineBanner.classList.add('visible');
-    if (isPlaying && currentMode === 'STREAM') {
-      console.log('[NET] Conexión perdida → fallback TTS');
-      clearAllTimers();
-      startTTS();
-    }
-  }
-
-  window.addEventListener('online',  handleOnline);
-  window.addEventListener('offline', handleOffline);
-  if (!navigator.onLine) handleOffline();
-
-  // ── VISIBILITY CHANGE — reanuda TTS y wakelock al volver la pantalla ───────
-  document.addEventListener('visibilitychange', async () => {
-    if (document.hidden) return;
-    if (isPlaying && currentMode === 'TTS') {
-      await requestWakeLock();
-      if (!ttsSpeaking) {
-        window.speechSynthesis.cancel();
-        clearTimeout(ttsTimer);
-        ttsTimer = setTimeout(runTTSLoop, 500);
-      }
-    }
-    if (isPlaying && currentMode === 'STREAM' && streamAudio && streamAudio.paused) {
-      streamAudio.play().catch(() => { clearAllTimers(); startTTS(); });
-    }
+  // ── VISIBILITY CHANGE ──────────────────────────────────────────────────────
+  document.addEventListener('visibilitychange',async()=>{
+    if(document.hidden)return;
+    if(isPlaying&&currentMode==='TTS'){await requestWakeLock();if(!ttsSpeaking){window.speechSynthesis.cancel();clearTimeout(ttsTimer);ttsTimer=setTimeout(runTTSLoop,500);}}
+    if(isPlaying&&currentMode==='STREAM'&&streamAudio&&streamAudio.paused){streamAudio.play().catch(()=>{clearAllTimers();startTTS();});}
   });
 
-  // ── PWA INSTALL PROMPT ─────────────────────────────────────────────────────
-  let deferredInstallPrompt = null;
-  const installBanner  = document.getElementById('installBanner');
-  const installBtn     = document.getElementById('installBtn');
-  const installDismiss = document.getElementById('installDismiss');
-
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    if (!localStorage.getItem('pwa-dismissed')) {
-      setTimeout(() => installBanner.classList.add('visible'), 3000);
-    }
-  });
-
-  installBtn.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) return;
-    installBanner.classList.remove('visible');
-    deferredInstallPrompt.prompt();
-    const { outcome } = await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-  });
-
-  installDismiss.addEventListener('click', () => {
-    installBanner.classList.remove('visible');
-    localStorage.setItem('pwa-dismissed', '1');
-  });
-
-  window.addEventListener('appinstalled', () => {
-    installBanner.classList.remove('visible');
-    deferredInstallPrompt = null;
-  });
-
+  // ── PWA INSTALL ────────────────────────────────────────────────────────────
+  let deferredInstallPrompt=null;
+  const installBanner=document.getElementById('installBanner'),installBtn=document.getElementById('installBtn'),installDismiss=document.getElementById('installDismiss');
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pwa-dismissed'))setTimeout(()=>installBanner.classList.add('visible'),3000);});
+  installBtn.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;installBanner.classList.remove('visible');deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;});
+  installDismiss.addEventListener('click',()=>{installBanner.classList.remove('visible');localStorage.setItem('pwa-dismissed','1');});
+  window.addEventListener('appinstalled',()=>{installBanner.classList.remove('visible');deferredInstallPrompt=null;});
 </script>
 </body>
 </html>
