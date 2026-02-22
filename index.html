@@ -212,6 +212,7 @@
     <button class="preview-btn" id="previewRetry">← Repetir</button>
     <button class="preview-btn primary" id="previewDownload">↓ Guardar</button>
     <button class="preview-btn primary" id="previewShare">↗ Compartir</button>
+    <button class="preview-btn" id="previewExit">✕ Salir</button>
   </div>
 </div>
 
@@ -1086,6 +1087,11 @@
 
   function closePreview() { document.getElementById('cameraPreview').classList.remove('active'); }
 
+  function exitCamera() {
+    document.getElementById('cameraPreview').classList.remove('active');
+    closeCamera();
+  }
+
   function downloadPhoto() {
     const dataUrl=document.getElementById('cameraCanvas').toDataURL('image/jpeg',0.93);
     const filename=currentTrio&&currentTrio.length===3?`arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.jpg`:`arkana-event-${Date.now()}.jpg`;
@@ -1113,6 +1119,7 @@
   document.getElementById('previewRetry').addEventListener('click', closePreview);
   document.getElementById('previewDownload').addEventListener('click', downloadPhoto);
   document.getElementById('previewShare').addEventListener('click', sharePhoto);
+  document.getElementById('previewExit').addEventListener('click', exitCamera);
 
   // Actualizar HUD cada segundo (para la hora en tiempo real)
   setInterval(()=>{ if(document.getElementById('cameraModal').classList.contains('active')) updateCameraHUD(); },1000);
