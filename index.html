@@ -1054,19 +1054,46 @@
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // ── 5. Texto cartas — leer posición real del DOM ──────────────────────────
+    // ── 5. Texto cartas — wrapping idéntico al DOM ────────────────────────────
     const cardsEl   = document.getElementById('cameraCards');
     const cardsRect = cardsEl.getBoundingClientRect();
-    const cardsTop  = cardsRect.top - viewRect.top + cardsRect.height * 0.85; // baseline
     const cardsSize = parseFloat(getComputedStyle(cardsEl).fontSize);
+    const lineHeight = cardsSize * 1.05; // mismo line-height del CSS
+
+    // Ancho máximo: viewport menos los 24px de padding a cada lado
+    const maxTextWidth = vW - 48;
 
     ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
     ctx.fillStyle   = '#f0ece4';
     ctx.textAlign   = 'left';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur  = 10;
+
     const trio = currentTrio && currentTrio.length === 3 ? currentTrio : ['—','—','—'];
-    ctx.fillText(trio.join('  ·  '), 24, cardsTop);
+    const fullText = trio.join('  ·  ');
+
+    // Construir líneas respetando maxTextWidth, igual que el browser
+    const words = fullText.split(' ');
+    const lines = [];
+    let current = '';
+    for (const word of words) {
+      const test = current ? current + ' ' + word : word;
+      if (ctx.measureText(test).width > maxTextWidth && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = test;
+      }
+    }
+    if (current) lines.push(current);
+
+    // Anclar desde la base del elemento DOM, crecer hacia arriba si hay varias líneas
+    const cardsBaseY  = cardsRect.top - viewRect.top + cardsRect.height;
+    const totalTextH  = lines.length * lineHeight;
+    const cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, 24, cardsStartY + i * lineHeight);
+    });
 
     // ── 6. Fecha — leer posición real del DOM ─────────────────────────────────
     const metaEl   = document.getElementById('cameraMeta');
