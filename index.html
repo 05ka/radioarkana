@@ -166,8 +166,8 @@
     #cameraPreview { display: none; position: fixed; inset: 0; z-index: 600; background: #000; flex-direction: column; }
     #cameraPreview.active { display: flex; }
     #previewImg { flex: 1; object-fit: contain; width: 100%; display: block; }
-    #previewControls { background: #0a0a0a; padding: 16px 24px; padding-bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 10px; }
-    .preview-btn { flex: 1; background: transparent; border: 1px solid #2a2a2a; color: #f0ece4; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 8px; cursor: pointer; transition: all 0.2s; }
+    #previewControls { background: #0a0a0a; padding: 16px 24px; padding-bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 8px; box-sizing: border-box; width: 100%; }
+    .preview-btn { flex: 1; min-width: 0; background: transparent; border: 1px solid #2a2a2a; color: #f0ece4; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; padding: 14px 4px; cursor: pointer; transition: all 0.2s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .preview-btn.primary { border-color: #e63030; color: #e63030; }
     .preview-btn:hover { background: rgba(230,48,48,0.08); border-color: #e63030; color: #e63030; }
     @media (max-width: 480px) { .wrap { width: 100%; padding: 8px 4px; } .card { padding: 24px 16px 20px; } .controls-row { flex-wrap: wrap; gap: 12px; } .controls-left { flex-wrap: wrap; justify-content: center; width: 100%; gap: 4px; } .knob-wrap { padding: 10px 0; min-width: 50px; } .lang-toggle { margin-left: 0; } .controls-right { position: static; width: 100%; justify-content: center; gap: 8px; } .layer-btn { padding: 8px 12px; } .knob { width: 22px; height: 22px; } .knob-val { font-size: 7px; } .knob-arrow-up, .knob-arrow-down { font-size: 8px; } } 
@@ -979,60 +979,108 @@
   async function flipCamera() { camFacingMode=camFacingMode==='environment'?'user':'environment'; await startCameraStream(); }
 
   function shootPhoto() {
-    const video=document.getElementById('cameraVideo');
-    const canvas=document.getElementById('cameraCanvas');
+    const video      = document.getElementById('cameraVideo');
+    const canvas     = document.getElementById('cameraCanvas');
+    const viewport   = document.getElementById('cameraViewport');
+    const waveCanvas = document.getElementById('cameraWaveCanvas');
+    const ctx        = canvas.getContext('2d');
 
-    // Canvas con la resolución real del video (ej: 1920×1080)
-    const cW=video.videoWidth||1280, cH=video.videoHeight||720;
-    canvas.width=cW; canvas.height=cH;
-    const ctx=canvas.getContext('2d');
+    // ── Dimensiones del viewport visible (lo que ve el usuario en pantalla) ──
+    const vW = viewport.clientWidth;
+    const vH = viewport.clientHeight;
 
-    // Frame del video — mismo tamaño, sin recorte ni desbordamiento
-    ctx.drawImage(video,0,0,cW,cH);
+    // Escala física para pantallas de alta densidad (retina/OLED)
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = vW * dpr;
+    canvas.height = vH * dpr;
+    ctx.scale(dpr, dpr);   // todo lo que dibujemos usa coordenadas CSS reales
 
-    // Escala proporcional al canvas real (base de referencia: 1000px de ancho)
-    const sf=cW/1000;
+    // ── 1. Frame del video con el mismo recorte que object-fit:cover ──────────
+    const vidW = video.videoWidth  || 1280;
+    const vidH = video.videoHeight || 720;
+    const scale = Math.max(vW / vidW, vH / vidH);          // cover
+    const drawW = vidW * scale;
+    const drawH = vidH * scale;
+    const offX  = (vW - drawW) / 2;
+    const offY  = (vH - drawH) / 2;
+    ctx.drawImage(video, offX, offY, drawW, drawH);
 
-    // Degradado inferior
-    const gradH=cH*0.40;
-    const grad=ctx.createLinearGradient(0,cH-gradH,0,cH);
-    grad.addColorStop(0,'rgba(0,0,0,0)');
-    grad.addColorStop(0.3,'rgba(0,0,0,0.65)');
-    grad.addColorStop(1,'rgba(0,0,0,0.93)');
-    ctx.fillStyle=grad; ctx.fillRect(0,cH-gradH,cW,gradH);
+    // ── 2. Degradado inferior ─────────────────────────────────────────────────
+    const gradH = vH * 0.45;
+    const grad  = ctx.createLinearGradient(0, vH - gradH, 0, vH);
+    grad.addColorStop(0,   'rgba(0,0,0,0)');
+    grad.addColorStop(0.3, 'rgba(0,0,0,0.65)');
+    grad.addColorStop(1,   'rgba(0,0,0,0.93)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, vH - gradH, vW, gradH);
 
-    // Watermark superior derecha
-    ctx.font=`${Math.round(11*sf)}px 'Space Mono',monospace`;
-    ctx.fillStyle='rgba(230,48,48,0.85)'; ctx.textAlign='right';
-    ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=6*sf;
-    ctx.fillText('RADIO ARKANA EVENT', cW-Math.round(20*sf), Math.round(32*sf));
+    // ── 3. Watermark — misma posición que #cameraWatermark (top:20 right:20) ─
+    ctx.font        = '700 10px "Space Mono", monospace';
+    ctx.fillStyle   = 'rgba(230,48,48,0.85)';
+    ctx.textAlign   = 'right';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur  = 6;
+    ctx.fillText('RADIO ARKANA EVENT', vW - 20, 32);
 
-    // Waveform
-    const waveH=Math.round(36*sf), waveW=cW-Math.round(48*sf);
-    const waveX=Math.round(24*sf), waveY=cH-Math.round(120*sf)-waveH;
-    const barStep=waveW/BAR_COUNT;
-    ctx.beginPath(); ctx.strokeStyle='#e63030'; ctx.lineWidth=Math.max(1,1.5*sf); ctx.shadowColor='#e63030'; ctx.shadowBlur=7*sf;
-    for (let i=0;i<BAR_COUNT;i++) {
-      const val=wfSmooth[i]??0, x=waveX+i*barStep+barStep/2, barH=Math.max(2,val*waveH*0.88), y=waveY+(waveH-barH)/2;
-      if (i===0) ctx.moveTo(x,waveY+waveH/2);
-      ctx.lineTo(x,y); ctx.lineTo(x,y+barH); ctx.lineTo(x+barStep*0.55,waveY+waveH/2);
+    // ── 4. Waveform — redibujar desde los datos actuales, mismas proporciones ─
+    ctx.shadowBlur = 0;
+    const overlayRect = document.getElementById('cameraOverlayBar').getBoundingClientRect();
+    const viewRect    = viewport.getBoundingClientRect();
+    // Posición Y del overlayBar relativa al viewport
+    const overlayTop  = overlayRect.top - viewRect.top;
+    const waveTop     = overlayTop + 44;          // mismo padding-top del overlayBar
+    const waveH       = 28;
+    const waveLeft    = 24;
+    const waveRight   = vW - 24;
+    const waveWidth   = waveRight - waveLeft;
+    const barStep     = waveWidth / BAR_COUNT;
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#e63030';
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = '#e63030';
+    ctx.shadowBlur  = 5;
+    for (let i = 0; i < BAR_COUNT; i++) {
+      const val  = wfSmooth[i] ?? 0;
+      const x    = waveLeft + i * barStep + barStep / 2;
+      const barH = Math.max(2, val * waveH * 0.85);
+      const y    = waveTop + (waveH - barH) / 2;
+      if (i === 0) ctx.moveTo(x, waveTop + waveH / 2);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x, y + barH);
+      ctx.lineTo(x + barStep * 0.55, waveTop + waveH / 2);
     }
-    ctx.stroke(); ctx.shadowBlur=0;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Cartas (Bebas Neue)
-    const cardSize=Math.round(17*sf);
-    ctx.font=`${cardSize}px 'Bebas Neue',sans-serif`; ctx.fillStyle='#f0ece4'; ctx.textAlign='left';
-    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=10*sf;
-    const trio=currentTrio&&currentTrio.length===3?currentTrio:['—','—','—'];
-    ctx.fillText(trio.join('  ·  '), Math.round(24*sf), cH-Math.round(52*sf));
+    // ── 5. Texto cartas — leer posición real del DOM ──────────────────────────
+    const cardsEl   = document.getElementById('cameraCards');
+    const cardsRect = cardsEl.getBoundingClientRect();
+    const cardsTop  = cardsRect.top - viewRect.top + cardsRect.height * 0.85; // baseline
+    const cardsSize = parseFloat(getComputedStyle(cardsEl).fontSize);
 
-    // Fecha
-    ctx.font=`${Math.round(11*sf)}px 'Space Mono',monospace`; ctx.fillStyle='#e63030'; ctx.shadowBlur=6*sf;
-    ctx.fillText(formatCameraDateTime(), Math.round(24*sf), cH-Math.round(36*sf));
-    ctx.shadowBlur=0;
+    ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
+    ctx.fillStyle   = '#f0ece4';
+    ctx.textAlign   = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur  = 10;
+    const trio = currentTrio && currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+    ctx.fillText(trio.join('  ·  '), 24, cardsTop);
 
-    // Mostrar preview
-    document.getElementById('previewImg').src=canvas.toDataURL('image/jpeg',0.93);
+    // ── 6. Fecha — leer posición real del DOM ─────────────────────────────────
+    const metaEl   = document.getElementById('cameraMeta');
+    const metaRect = metaEl.getBoundingClientRect();
+    const metaTop  = metaRect.top - viewRect.top + metaRect.height * 0.85;
+    const metaSize = parseFloat(getComputedStyle(metaEl).fontSize);
+
+    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
+    ctx.fillStyle   = '#e63030';
+    ctx.shadowBlur  = 6;
+    ctx.fillText(formatCameraDateTime(), 24, metaTop);
+    ctx.shadowBlur  = 0;
+
+    // ── Mostrar preview ───────────────────────────────────────────────────────
+    document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg', 0.93);
     document.getElementById('cameraPreview').classList.add('active');
   }
 
