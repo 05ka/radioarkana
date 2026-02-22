@@ -725,6 +725,7 @@
     playLabel.textContent = 'Detener';
     playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
     startListenersCounter();
+    startMarqueePolling();
     tryStream();
   }
 
@@ -749,6 +750,7 @@
     setRepLabels(null, null, false, false);
     document.getElementById('controlsRow').classList.remove('visible');
     stopListenersCounter();
+    stopMarqueePolling();
   }
 
   // ── BEEP DE CONEXIÓN ───────────────────────────────────────────────────────
@@ -1549,8 +1551,8 @@
   let lint;
   function startListenersCounter() {
     pingWorker('join');
-    lint = setInterval(() => pingWorker('heartbeat'), 30000); // heartbeat cada 30s (TTL: 90s)
-  }
+    lint = setInterval(() => pingWorker('heartbeat'), 60000); 
+  }  
   function stopListenersCounter() {
     pingWorker('leave');
     clearInterval(lint);
@@ -1581,8 +1583,17 @@
   }
 
   marqueeEl.style.transition = 'opacity 0.4s';
-  fetchMarquee(); // carga inmediata
-  setInterval(fetchMarquee, MARQUEE_POLL_MS);
+  fetchMarquee(); // carga inmediata al cargar la página (usa caché)
+
+  let marqueeInterval = null;
+  function startMarqueePolling() {
+    if (marqueeInterval) return;
+    marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS);
+  }
+  function stopMarqueePolling() {
+    clearInterval(marqueeInterval);
+    marqueeInterval = null;
+  }
 
   freshAudio();
 
