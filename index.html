@@ -22,14 +22,35 @@
       --red: #e63030; --red-dim: #7a1a1a; --white: #f0ece4; --gray: #555;
       --font-head: 'Bebas Neue', sans-serif; --font-body: 'Space Mono', monospace;
     }
+
+    /* ── TEMA CLARO ──────────────────────────────────────────────────────────── */
+    [data-theme="light"] {
+      --bg:      #f0ece4;
+      --surface: #e8e3da;
+      --border:  #c8c0b0;
+      --red:     #c42020;
+      --red-dim: #8a3030;
+      --white:   #1a1612;
+      --gray:    #7a7068;
+    }
+
+    [data-theme="light"] body::before { opacity: 0.15; }
+
+    [data-theme="light"] .playing .bar {
+      background: linear-gradient(to top, #8a0000, #c42020 60%, #e05050);
+    }
+    [data-theme="light"] .playing .bar.tts-mode {
+      background: linear-gradient(to top, #8a3030, #c42020 55%, #d04040);
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--white); font-family: var(--font-body); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; overflow-y: auto; }
+    body { background: var(--bg); color: var(--white); font-family: var(--font-body); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; overflow-y: auto; transition: background 0.3s, color 0.3s; }
     body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 100; opacity: 0.4; }
     .wrap { width: min(460px, 92vw); display: flex; flex-direction: column; padding: 16px 0; }
     .header { background: var(--red); padding: 6px 20px; display: flex; align-items: center; justify-content: space-between; }
     .header-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.6); }
     .freq { font-size: 10px; letter-spacing: 0.15em; color: rgba(0,0,0,0.5); }
-    .card { background: var(--surface); border: 1px solid var(--border); border-top: none; padding: 36px 32px 32px; position: relative; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-top: none; padding: 36px 32px 32px; position: relative; transition: background 0.3s, border-color 0.3s; }
     .station-name { font-family: var(--font-head); font-size: clamp(64px, 16vw, 88px); line-height: 0.88; letter-spacing: 0.02em; color: var(--white); margin-bottom: 4px; }
     .station-name span { color: var(--red); }
     .tagline { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gray); margin-bottom: 36px; }
@@ -99,10 +120,12 @@
     .vol-label { font-size: 9px; text-transform: uppercase; color: var(--gray); width: 24px; }
     input[type=range] { -webkit-appearance: none; flex: 1; height: 2px; background: var(--border); outline: none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: var(--white); border-radius: 50%; cursor: pointer; }
-    .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; padding-bottom: max(12px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; flex-shrink: 0; }
+    .footer { border: 1px solid var(--border); border-top: none; padding: 12px 32px; padding-bottom: max(12px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; flex-shrink: 0; transition: border-color 0.3s; }
     .footer-note { font-size: 9px; text-transform: uppercase; color: #333; }
     .footer-note a { color: #444; text-decoration: none; transition: color 0.2s; }
     .footer-note a:hover { color: var(--red); }
+    [data-theme="light"] .footer-note { color: var(--gray); }
+    [data-theme="light"] .footer-note a { color: var(--gray); }
 
     /* ── LANG TOGGLE ─────────────────────────────────────────────────────────── */
     .lang-row {
@@ -169,6 +192,11 @@
       align-items: center;
       gap: 8px;
     }
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
     .ctrl-sep {
       width: 1px; height: 16px;
       background: var(--border);
@@ -212,6 +240,9 @@
       border-radius: 50%;
       background: var(--red);
     }
+    /* Theme button no dot indicator */
+    #btnTheme.active::after { display: none; }
+    #btnTheme.active { color: var(--gray); }
 
     /* ── KNOB ────────────────────────────────────────────────────────────────── */
     .knob-wrap {
@@ -486,12 +517,27 @@
           <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
         </div>
       </div>
-      <!-- Preset star toggle — anclado al extremo derecho -->
-      <button class="layer-btn" id="btnPreset" onclick="togglePreset()" title="Configuración Arkana" aria-pressed="false">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      </button>
+      <!-- Right side: theme toggle + preset -->
+      <div class="controls-right">
+        <button class="layer-btn" id="btnTheme" onclick="toggleTheme()" title="Tema claro/oscuro" aria-pressed="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1"  x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <button class="layer-btn" id="btnPreset" onclick="togglePreset()" title="Configuración Arkana" aria-pressed="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
   <div class="footer">
@@ -545,10 +591,10 @@
 
   // ── SHORTWAVE FILTER STATE ─────────────────────────────────────────────────
   let shortwaveActive = false;
-  let swNodes         = null;   // { highpass, lowpass, waveShaper }
-  let ttsMediaDest    = null;   // MediaStreamAudioDestinationNode para TTS
-  let ttsMediaSrc     = null;   // MediaElementAudioSourceNode conectado al <audio>
-  let ttsFilterAudio  = null;   // <audio> element que reproduce el stream del TTS
+  let swNodes         = null;
+  let ttsMediaDest    = null;
+  let ttsMediaSrc     = null;
+  let ttsFilterAudio  = null;
 
   const playBtn    = document.getElementById('playBtn');
   const playLabel  = document.getElementById('playLabel');
@@ -600,7 +646,6 @@
     streamSrc.connect(analyser);
   }
 
-  // Release factors por zona: graves lentos, agudos más rápidos
   const RELEASE = [0.78, 0.88, 0.94];
 
   function drawWaveform() {
@@ -615,27 +660,23 @@
     const isSpeaking = isTTS && ttsSpeaking;
     const now        = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
 
-    // Respiración lenta en TTS cuando no está hablando
     const breath = (isTTS && !isSpeaking)
       ? Math.sin(now * 0.8) * 0.07 + 0.93
       : 1.0;
 
     for (let i = 0; i < BAR_COUNT; i++) {
-      // Distribución logarítmica de bins
       const lo  = Math.floor(Math.pow(i / BAR_COUNT, 1.6) * bins);
       const hi  = Math.floor(Math.pow((i + 1) / BAR_COUNT, 1.6) * bins);
       let sum = 0, count = Math.max(1, hi - lo);
       for (let j = lo; j < hi; j++) sum += data[j];
       const raw = sum / count / 255;
 
-      // Suavizado con release variable por zona
       const zone    = i < BAR_COUNT * 0.35 ? 0 : i < BAR_COUNT * 0.7 ? 1 : 2;
       const release = RELEASE[zone];
       wfSmooth[i] = raw > wfSmooth[i]
         ? wfSmooth[i] * 0.25 + raw * 0.75
         : wfSmooth[i] * release + raw * (1 - release);
 
-      // Center boost — pulso central tipo corazón
       const dist        = Math.abs(i - BAR_COUNT / 2);
       const centerBoost = dist < 8 ? 1.0 + (1 - dist / 8) * 0.25 : 1.0;
 
@@ -643,15 +684,12 @@
 
       bars[i].style.height = `${height}%`;
 
-      // Clases de modo y pico
       bars[i].classList.toggle('tts-mode',  isTTS);
       bars[i].classList.toggle('high-peak', height > 55);
 
-      // Micromodulación de fase (ola orgánica)
       const phase    = now * 1.8 + i * 0.09;
       const microMod = Math.sin(phase) * 0.05;
 
-      // Glitch shortwave
       let glitchX = 0, glitchScale = 1, glitchOpacity = 1;
       if (shortwaveActive && isTTS && Math.random() < 0.06) {
         glitchX       = (Math.random() * 0.4 - 0.2) * 4;
@@ -712,6 +750,42 @@
     watchdogTimer = ttsTimer = initialConnectTimer = stallTimer = countdownInterval = null;
   }
 
+  // ── TEMA CLARO/OSCURO ──────────────────────────────────────────────────────
+  function toggleTheme() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const newTheme = isLight ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('arkana-theme', newTheme);
+    const btn = document.getElementById('btnTheme');
+    btn.classList.toggle('active', newTheme === 'light');
+    btn.setAttribute('aria-pressed', newTheme === 'light');
+  }
+
+  // Aplicar tema guardado al cargar
+  const savedTheme = localStorage.getItem('arkana-theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (savedTheme === 'light') {
+      document.getElementById('btnTheme').classList.add('active');
+      document.getElementById('btnTheme').setAttribute('aria-pressed', 'true');
+    }
+  }
+
+  // ── WAKELOCK ───────────────────────────────────────────────────────────────
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) {}
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
+  }
+
   // ── MAIN ───────────────────────────────────────────────────────────────────
 
   function toggleMain() { if (!isPlaying) start(); else stop(); }
@@ -724,6 +798,7 @@
     document.getElementById('controlsRow').classList.add('visible');
     playLabel.textContent = 'Detener';
     playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
+    requestWakeLock();
     startListenersCounter();
     startMarqueePolling();
     tryStream();
@@ -739,6 +814,7 @@
     window.speechSynthesis.cancel();
     if (audioCtx) audioCtx.suspend();
     stopWaveform();
+    releaseWakeLock();
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
     dot.className          = 'dot';
@@ -759,7 +835,6 @@
     try {
       const ctx  = new (window.AudioContext || window.webkitAudioContext)();
       const now  = ctx.currentTime;
-      // Dos pitidos cortos ascendentes estilo señal de radio
       [[440, 0, 0.08], [660, 0.12, 0.08]].forEach(([freq, delay, dur]) => {
         const osc  = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -804,7 +879,6 @@
       statusText.className   = 'live';
       modeLabel.textContent  = 'ON AIR';
       setRepLabels('Señal estable', null, true, false);
-      // Conectar stream al analyser y arrancar visualización
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume();
       connectStreamToAnalyser(audio);
@@ -897,10 +971,7 @@
     modeLabel.textContent  = 'Emisión en Pruebas';
 
     initGenerativeAudio();
-    // Conectar el analyser al grafo generativo y arrancar visualización
     ensureAnalyser();
-    // Los nodos generativos ya conectan a audioCtx.destination;
-    // reconectamos a través del analyser si aún no está en el grafo
     startWaveform();
     runTTSLoop();
     scheduleWatchdog();
@@ -916,50 +987,50 @@
   }
 
   async function runWatchdog(myWatchdog) {
-  if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-  console.log('Watchdog: consultando /status via Worker...');
-  try {
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 5000);
-    const res  = await fetch(`${WORKER_URL}/status`, {
-      cache: 'no-store', signal: ctrl.signal
-    });
-    clearTimeout(tid);
     if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
+    console.log('Watchdog: consultando /status via Worker...');
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 5000);
+      const res  = await fetch(`${WORKER_URL}/status`, {
+        cache: 'no-store', signal: ctrl.signal
+      });
+      clearTimeout(tid);
+      if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
 
-    if (res.ok) {
-      const data = await res.json();
-      const streamVivo = data.live === true;
-      console.log('Watchdog status:', { streamVivo });
+      if (res.ok) {
+        const data = await res.json();
+        const streamVivo = data.live === true;
+        console.log('Watchdog status:', { streamVivo });
 
-      if (streamVivo) {
-        if (ttsSpeaking) {
-          console.log('Watchdog: stream detectado, esperando fin de frase TTS...');
-          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
-          return;
-        }
-        console.log('Watchdog: stream disponible → reconectando.');
-        stopTTSAudio();
-        currentMode = 'NONE';
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume().then(() => tryStream());
+        if (streamVivo) {
+          if (ttsSpeaking) {
+            console.log('Watchdog: stream detectado, esperando fin de frase TTS...');
+            watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
+            return;
+          }
+          console.log('Watchdog: stream disponible → reconectando.');
+          stopTTSAudio();
+          currentMode = 'NONE';
+          if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => tryStream());
+          } else {
+            tryStream();
+          }
         } else {
-          tryStream();
+          console.log('Watchdog: stream offline → manteniendo TTS.');
+          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000);
         }
       } else {
-        console.log('Watchdog: stream offline → manteniendo TTS.');
-        watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000);
+        console.log('Watchdog: Worker no responde HTTP', res.status);
+        watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
       }
-    } else {
-      console.log('Watchdog: Worker no responde HTTP', res.status);
+    } catch (e) {
+      if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
+      console.log('Watchdog: error de red.', e.message);
       watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
     }
-  } catch (e) {
-    if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-    console.log('Watchdog: error de red.', e.message);
-    watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
   }
-}
 
   // ── GENERATIVO ─────────────────────────────────────────────────────────────
 
@@ -1008,9 +1079,8 @@
   function initGenerativeAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.resume();
-    ensureAnalyser(); // garantiza que el analyser existe antes de conectar nodos
+    ensureAnalyser();
     const vol = parseFloat(document.getElementById('volume').value ?? 0.8);
-    // Destino final: analyser → destination (para visualización reactiva)
     const finalDest = analyser ?? audioCtx.destination;
 
     if (noiseNodes.length === 0) {
@@ -1181,6 +1251,7 @@
     };
     window.speechSynthesis.speak(msg);
   }
+
   // ── PRESET ARKANA ──────────────────────────────────────────────────────────
 
   let presetActive    = false;
@@ -1511,7 +1582,7 @@
   function setLang(lang) {
     if (lang === currentLang) return;
     currentLang = lang;
-    deck = []; 
+    deck = [];
     document.getElementById('langES').classList.toggle('active', lang === 'es');
     document.getElementById('langEN').classList.toggle('active', lang === 'en');
     document.getElementById('langES').setAttribute('aria-pressed', lang === 'es');
@@ -1539,7 +1610,6 @@
   }
 
   // ── CONTADOR DE OYENTES CON HEARTBEAT ─────────────────────────────────────
-  // ID único por sesión — cada carga de página es un oyente distinto
   const listenerId = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
   async function pingWorker(action = null) {
@@ -1556,7 +1626,7 @@
   let lint;
   function startListenersCounter() {
     pingWorker('join');
-    lint = setInterval(() => pingWorker('heartbeat'), 60000); // heartbeat cada 30s (TTL: 90s)
+    lint = setInterval(() => pingWorker('heartbeat'), 60000);
   }
   function stopListenersCounter() {
     pingWorker('leave');
@@ -1568,44 +1638,44 @@
   });
 
   // ── MARQUEE DINÁMICO ───────────────────────────────────────────────────────
-  const MARQUEE_POLL_MS = 60000; // refresco cada 30 segundos
+  const MARQUEE_POLL_MS  = 60000;
   const MARQUEE_CACHE_KEY = 'arkana_marquee';
-  const MARQUEE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+  const MARQUEE_CACHE_TTL = 5 * 60 * 1000;
   const marqueeEl = document.getElementById('marqueeText');
 
   async function fetchMarquee() {
     try {
-     const cached = localStorage.getItem(MARQUEE_CACHE_KEY);
-     if (cached) {
-      const { text, ts } = JSON.parse(cached);
-      if (Date.now() - ts < MARQUEE_CACHE_TTL) {
-        applyMarquee(text);
-        return; // no request al Worker
+      const cached = localStorage.getItem(MARQUEE_CACHE_KEY);
+      if (cached) {
+        const { text, ts } = JSON.parse(cached);
+        if (Date.now() - ts < MARQUEE_CACHE_TTL) {
+          applyMarquee(text);
+          return;
+        }
       }
-    }
-    const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
-    const data = await res.json();
-    if (data.text) {
-      localStorage.setItem(MARQUEE_CACHE_KEY, JSON.stringify({ text: data.text, ts: Date.now() }));
-      applyMarquee(data.text);
-    }
+      const res  = await fetch(`${WORKER_URL}/marquee`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.text) {
+        localStorage.setItem(MARQUEE_CACHE_KEY, JSON.stringify({ text: data.text, ts: Date.now() }));
+        applyMarquee(data.text);
+      }
     } catch (e) {}
   }
 
   function applyMarquee(text) {
     if (text !== marqueeEl.textContent.trim()) {
-     marqueeEl.style.opacity = '0';
-     setTimeout(() => { marqueeEl.textContent = text + '       '; marqueeEl.style.opacity = '1'; }, 400);
-   }
-  }   
-  
+      marqueeEl.style.opacity = '0';
+      setTimeout(() => { marqueeEl.textContent = text + '       '; marqueeEl.style.opacity = '1'; }, 400);
+    }
+  }
+
   let marqueeInterval = null;
-  
+
   function startMarqueePolling() {
     if (marqueeInterval) return;
     marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS);
   }
-  
+
   function stopMarqueePolling() {
     clearInterval(marqueeInterval);
     marqueeInterval = null;
@@ -1662,8 +1732,18 @@
   window.addEventListener('offline', handleOffline);
   if (!navigator.onLine) handleOffline();
 
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && isPlaying && currentMode === 'STREAM' && streamAudio && streamAudio.paused) {
+  // ── VISIBILITY CHANGE — reanuda TTS y wakelock al volver la pantalla ───────
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden) return;
+    if (isPlaying && currentMode === 'TTS') {
+      await requestWakeLock();
+      if (!ttsSpeaking) {
+        window.speechSynthesis.cancel();
+        clearTimeout(ttsTimer);
+        ttsTimer = setTimeout(runTTSLoop, 500);
+      }
+    }
+    if (isPlaying && currentMode === 'STREAM' && streamAudio && streamAudio.paused) {
       streamAudio.play().catch(() => { clearAllTimers(); startTTS(); });
     }
   });
