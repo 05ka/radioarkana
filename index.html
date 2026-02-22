@@ -981,32 +981,35 @@
   function shootPhoto() {
     const video=document.getElementById('cameraVideo');
     const canvas=document.getElementById('cameraCanvas');
-    const vW=video.videoWidth||1280, vH=video.videoHeight||720;
-    canvas.width=1080; canvas.height=1080;
+
+    // Canvas con la resolución real del video (ej: 1920×1080)
+    const cW=video.videoWidth||1280, cH=video.videoHeight||720;
+    canvas.width=cW; canvas.height=cH;
     const ctx=canvas.getContext('2d');
 
-    // Frame del video
-    ctx.drawImage(video,0,0,vW,vH);
+    // Frame del video — mismo tamaño, sin recorte ni desbordamiento
+    ctx.drawImage(video,0,0,cW,cH);
 
-    const sf=vW/window.innerWidth; // factor de escala respecto al CSS
+    // Escala proporcional al canvas real (base de referencia: 1000px de ancho)
+    const sf=cW/1000;
 
     // Degradado inferior
-    const gradH=vH*0.40;
-    const grad=ctx.createLinearGradient(0,vH-gradH,0,vH);
+    const gradH=cH*0.40;
+    const grad=ctx.createLinearGradient(0,cH-gradH,0,cH);
     grad.addColorStop(0,'rgba(0,0,0,0)');
     grad.addColorStop(0.3,'rgba(0,0,0,0.65)');
     grad.addColorStop(1,'rgba(0,0,0,0.93)');
-    ctx.fillStyle=grad; ctx.fillRect(0,vH-gradH,vW,gradH);
+    ctx.fillStyle=grad; ctx.fillRect(0,cH-gradH,cW,gradH);
 
     // Watermark superior derecha
-    ctx.font=`${Math.round(10*sf)}px 'Space Mono',monospace`;
+    ctx.font=`${Math.round(11*sf)}px 'Space Mono',monospace`;
     ctx.fillStyle='rgba(230,48,48,0.85)'; ctx.textAlign='right';
-    ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=6;
-    ctx.fillText('RADIO ARKANA EVENT', vW-Math.round(20*sf), Math.round(30*sf));
+    ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=6*sf;
+    ctx.fillText('RADIO ARKANA EVENT', cW-Math.round(20*sf), Math.round(32*sf));
 
     // Waveform
-    const waveH=Math.round(34*sf), waveW=vW-Math.round(48*sf);
-    const waveX=Math.round(24*sf), waveY=vH-Math.round(118*sf)-waveH;
+    const waveH=Math.round(36*sf), waveW=cW-Math.round(48*sf);
+    const waveX=Math.round(24*sf), waveY=cH-Math.round(120*sf)-waveH;
     const barStep=waveW/BAR_COUNT;
     ctx.beginPath(); ctx.strokeStyle='#e63030'; ctx.lineWidth=Math.max(1,1.5*sf); ctx.shadowColor='#e63030'; ctx.shadowBlur=7*sf;
     for (let i=0;i<BAR_COUNT;i++) {
@@ -1017,15 +1020,15 @@
     ctx.stroke(); ctx.shadowBlur=0;
 
     // Cartas (Bebas Neue)
-    const cardSize=Math.round(15*sf);
+    const cardSize=Math.round(17*sf);
     ctx.font=`${cardSize}px 'Bebas Neue',sans-serif`; ctx.fillStyle='#f0ece4'; ctx.textAlign='left';
-    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=10;
+    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=10*sf;
     const trio=currentTrio&&currentTrio.length===3?currentTrio:['—','—','—'];
-    ctx.fillText(trio.join('  ·  '), Math.round(24*sf), vH-Math.round(48*sf));
+    ctx.fillText(trio.join('  ·  '), Math.round(24*sf), cH-Math.round(52*sf));
 
     // Fecha
-    ctx.font=`${Math.round(10*sf)}px 'Space Mono',monospace`; ctx.fillStyle='#e63030'; ctx.shadowBlur=6;
-    ctx.fillText(formatCameraDateTime(), Math.round(24*sf), vH-Math.round(36*sf));
+    ctx.font=`${Math.round(11*sf)}px 'Space Mono',monospace`; ctx.fillStyle='#e63030'; ctx.shadowBlur=6*sf;
+    ctx.fillText(formatCameraDateTime(), Math.round(24*sf), cH-Math.round(36*sf));
     ctx.shadowBlur=0;
 
     // Mostrar preview
