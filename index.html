@@ -171,6 +171,8 @@
     .preview-btn { flex: 1; background: transparent; border: 1px solid #2a2a2a; color: #f0ece4; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 8px; cursor: pointer; transition: all 0.2s; }
     .preview-btn.primary { border-color: #e63030; color: #e63030; }
     .preview-btn:hover { background: rgba(230,48,48,0.08); border-color: #e63030; color: #e63030; }
+    @media (max-width: 480px) { .wrap { width: 100%; padding: 8px 4px; } .card { padding: 24px 16px 20px; } .controls-row { flex-wrap: wrap; gap: 12px; } .controls-left { flex-wrap: wrap; justify-content: center; width: 100%; gap: 4px; } .knob-wrap { padding: 10px 0; min-width: 50px; } .lang-toggle { margin-left: 0; } .controls-right { position: static; width: 100%; justify-content: center; gap: 8px; } .layer-btn { padding: 8px 12px; } .knob { width: 22px; height: 22px; } .knob-val { font-size: 7px; } .knob-arrow-up, .knob-arrow-down { font-size: 8px; } } 
+    @media (max-width: 360px) { .controls-left { gap: 2px; } .knob-wrap { min-width: 44px; } .lang-opt { padding: 4px 6px; font-size: 8px; } }
   </style>
 </head>
 <body>
