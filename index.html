@@ -984,7 +984,7 @@
     const video=document.getElementById('cameraVideo');
     const canvas=document.getElementById('cameraCanvas');
     const vW=video.videoWidth||1280, vH=video.videoHeight||720;
-    canvas.width=vW; canvas.height=vH;
+    canvas.width=1080; canvas.height=1080;
     const ctx=canvas.getContext('2d');
 
     // Frame del video
@@ -1019,11 +1019,11 @@
     ctx.stroke(); ctx.shadowBlur=0;
 
     // Cartas (Bebas Neue)
-    const cardSize=Math.round(36*sf);
+    const cardSize=Math.round(15*sf);
     ctx.font=`${cardSize}px 'Bebas Neue',sans-serif`; ctx.fillStyle='#f0ece4'; ctx.textAlign='left';
     ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=10;
     const trio=currentTrio&&currentTrio.length===3?currentTrio:['—','—','—'];
-    ctx.fillText(trio.join('  ·  '), Math.round(24*sf), vH-Math.round(62*sf));
+    ctx.fillText(trio.join('  ·  '), Math.round(24*sf), vH-Math.round(48*sf));
 
     // Fecha
     ctx.font=`${Math.round(10*sf)}px 'Space Mono',monospace`; ctx.fillStyle='#e63030'; ctx.shadowBlur=6;
