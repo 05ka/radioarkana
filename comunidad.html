@@ -111,22 +111,8 @@
     }
     .profile-bsky-btn:hover { border-color: var(--red); color: var(--red); }
 
-    /* ── TABS ───────────────────────────────────────────────────────────────── */
-    .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
-    .tab-btn {
-      background: transparent; border: none; border-bottom: 2px solid transparent;
-      color: var(--gray); font-family: var(--font-body); font-size: 9px;
-      letter-spacing: 0.2em; text-transform: uppercase;
-      padding: 10px 20px 10px 0; cursor: pointer;
-      transition: all 0.2s; margin-bottom: -1px;
-    }
-    .tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
-    .tab-btn:hover:not(.active) { color: var(--gray-lt); }
-
     /* ── FEED ───────────────────────────────────────────────────────────────── */
-    .feed { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+    .feed { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 28px; }
 
     /* ── POST CARD ──────────────────────────────────────────────────────────── */
     .post-card {
@@ -247,18 +233,8 @@
     </a>
   </div>
 
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab-btn active" id="tabFeed" onclick="switchTab('feed')">
-      Emisiones
-    </button>
-    <button class="tab-btn" id="tabComunidad" onclick="switchTab('comunidad')">
-      #TiradaArkana
-    </button>
-  </div>
-
   <!-- FEED EMISIONES -->
-  <div class="tab-panel active" id="panelFeed">
+  <div id="panelFeed">
     <div class="feed" id="feedEmisiones">
       <!-- skeletons -->
       <div class="skeleton" id="skel1">
@@ -287,21 +263,6 @@
     </div>
   </div>
 
-  <!-- FEED #TIRADAARKANA -->
-  <div class="tab-panel" id="panelComunidad">
-    <div class="feed" id="feedComunidad">
-      <div class="skeleton">
-        <div class="skel-line" style="width:40%;height:10px;"></div>
-        <div class="skel-line" style="width:90%;height:10px;"></div>
-        <div class="skel-line" style="width:65%;height:10px;margin-bottom:0;"></div>
-      </div>
-      <div class="skeleton">
-        <div class="skel-line" style="width:50%;height:10px;"></div>
-        <div class="skel-line" style="width:75%;height:10px;margin-bottom:0;"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- CTA -->
   <div class="share-cta">
     <div class="share-cta-title">Comparte tu tirada</div>
@@ -322,9 +283,7 @@
 
 <script>
   const BSKY_API    = 'https://public.api.bsky.app/xrpc';
-  const BSKY_SEARCH = 'https://bsky.social/xrpc';
   const HANDLE      = 'wum1ng.bsky.social';
-  const SEARCH_TAG  = 'TiradaArkana';
   const POSTS_LIMIT = 12;
 
   let feedCursor   = null;
@@ -496,33 +455,7 @@
 
   function loadMoreFeed() { loadAuthorFeed(true); }
 
-  // ── CARGAR FEED HASHTAG ─────────────────────────────────────────────────────
-  async function loadHashtagFeed() {
-    const container = document.getElementById('feedComunidad');
-    try {
-      const res  = await fetch(`${BSKY_SEARCH}/app.bsky.feed.searchPosts?q=${encodeURIComponent('#' + SEARCH_TAG)}&limit=20&sort=latest`);
-      const data = await res.json();
-
-      if (!res.ok || !data.posts?.length) {
-        container.innerHTML = `<div class="feed-state"><div class="feed-state-icon">🌑</div><div class="feed-state-msg">Todavía no hay tiradas — sé el primero</div></div>`;
-        return;
-      }
-
-      container.innerHTML = data.posts.map(post => buildPostCard(post)).join('');
-    } catch(e) {
-      container.innerHTML = `<div class="feed-state"><div class="feed-state-icon">⚡</div><div class="feed-state-msg">Error al conectar con Bluesky</div></div>`;
-    }
-  }
-
-  // ── TABS ────────────────────────────────────────────────────────────────────
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add('active');
-    document.getElementById(`panel${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add('active');
-  }
-
-  // ── BOTÓN COMPARTIR — genera intent con el trío del localStorage si existe ──
+  // ── BOTÓN COMPARTIR ─────────────────────────────────────────────────────────
   function buildShareUrl() {
     const stored = sessionStorage.getItem('arkana-last-trio');
     let text = '🎴 #TiradaArkana #RadioArkana\n🔗 radioarkana.com';
@@ -540,7 +473,6 @@
   // ── ARRANQUE ────────────────────────────────────────────────────────────────
   loadProfile();
   loadAuthorFeed();
-  loadHashtagFeed();
 </script>
 </body>
 </html>
