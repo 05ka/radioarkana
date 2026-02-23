@@ -1158,8 +1158,8 @@
   const handleHint  = document.getElementById('handleHint');
   const browserLang = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
   handleHint.textContent = browserLang.startsWith('es')
-    ? 'Tu @ aparecerá en las fotos de sincronicidad que compartas'
-    : 'Your @ will appear on the synchronicity photos you share';
+    ? 'Introduce un @ si deseas firmar tus fotos arkanas'
+    : 'Add your @ to sign your Arkana photos';
   handleInput.value = localStorage.getItem('arkana-handle') || '';
   handleInput.addEventListener('input', () => {
     const val = handleInput.value.replace(/[@\s]/g, '').slice(0, 32);
