@@ -179,6 +179,15 @@
     .handle-hint { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); opacity: 0.7; margin-top: 6px; transition: opacity 0.3s; }
     .handle-row.hidden + .handle-hint { opacity: 0; max-height: 0; overflow: hidden; }
 
+    /* ── INSTANT SHOT ────────────────────────────────────────────────────────── */
+    .instant-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; cursor: pointer; max-height: 40px; overflow: hidden; transition: opacity 0.3s, max-height 0.3s, margin 0.3s; }
+    .instant-row.hidden { opacity: 0; max-height: 0; margin-top: 0; pointer-events: none; }
+    .instant-check { appearance: none; -webkit-appearance: none; width: 12px; height: 12px; border: 1px solid var(--border); background: transparent; cursor: pointer; flex-shrink: 0; transition: background 0.2s, border-color 0.2s; position: relative; }
+    .instant-check:checked { background: var(--red); border-color: var(--red); }
+    .instant-check:checked::after { content: ''; position: absolute; top: 1px; left: 3px; width: 4px; height: 7px; border: 2px solid #000; border-top: none; border-left: none; transform: rotate(45deg); }
+    .instant-label { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gray); transition: color 0.2s; user-select: none; }
+    .instant-row:has(.instant-check:checked) .instant-label { color: var(--red); }
+
     @media (max-width: 480px) { .wrap { width: 100%; padding: 8px 4px; } .card { padding: 24px 16px 20px; } .controls-row { flex-wrap: wrap; gap: 12px; } .controls-left { flex-wrap: wrap; justify-content: center; width: 100%; gap: 4px; } .knob-wrap { padding: 10px 0; min-width: 50px; } .lang-toggle { margin-left: 0; } .controls-right { position: static; width: 100%; justify-content: center; gap: 8px; } .layer-btn { padding: 8px 12px; } .knob { width: 22px; height: 22px; } .knob-val { font-size: 7px; } .knob-arrow-up, .knob-arrow-down { font-size: 8px; } } 
     @media (max-width: 360px) { .controls-left { gap: 2px; } .knob-wrap { min-width: 44px; } .lang-opt { padding: 4px 6px; font-size: 8px; } }
   </style>
@@ -268,6 +277,10 @@
              placeholder="tu_usuario" maxlength="32" autocomplete="off" spellcheck="false">
     </div>
     <p class="handle-hint" id="handleHint"></p>
+    <label class="instant-row" id="instantRow">
+      <input type="checkbox" class="instant-check" id="instantCheck">
+      <span class="instant-label" id="instantLabel"></span>
+    </label>
     <div class="volume-row" id="volRow">
       <span class="vol-label">VOL</span>
       <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" oninput="updateVolume(this.value)">
@@ -546,6 +559,7 @@
     startMarqueePolling();
     document.getElementById('handleRow').classList.add('hidden');
     document.getElementById('handleHint').classList.add('hidden');
+    document.getElementById('instantRow').classList.add('hidden');
     tryStream();
   }
 
@@ -574,6 +588,7 @@
     stopMarqueePolling();
     document.getElementById('handleRow').classList.remove('hidden');
     document.getElementById('handleHint').classList.remove('hidden');
+    document.getElementById('instantRow').classList.remove('hidden');
   }
 
   // ── BEEP ───────────────────────────────────────────────────────────────────
@@ -971,6 +986,103 @@
 
   async function openCamera() {
     if (!currentTrio||currentTrio.length<3) return;
+
+    // ── Modo disparo instantáneo ──────────────────────────────────────────────
+    if (instantCheck.checked) {
+      const facingMode = 'environment';
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false
+        });
+      } catch(e) {
+        try { stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); }
+        catch(err) { alert(isES ? 'No se pudo acceder a la cámara.' : 'Camera access denied.'); return; }
+      }
+      // Esperar un frame para que el sensor se estabilice
+      const tmpVideo = document.createElement('video');
+      tmpVideo.srcObject = stream;
+      tmpVideo.muted = true;
+      tmpVideo.playsInline = true;
+      await tmpVideo.play();
+      await new Promise(r => setTimeout(r, 600));
+
+      // Componer canvas igual que shootPhoto pero sin abrir modal
+      const vW = tmpVideo.videoWidth  || 1280;
+      const vH = tmpVideo.videoHeight || 720;
+      const dpr = window.devicePixelRatio || 1;
+      const canvas = document.getElementById('cameraCanvas');
+      canvas.width  = vW * dpr;
+      canvas.height = vH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(tmpVideo, 0, 0, vW, vH);
+
+      // Degradado inferior
+      const gradH = vH * 0.45;
+      const grad  = ctx.createLinearGradient(0, vH - gradH, 0, vH);
+      grad.addColorStop(0,   'rgba(0,0,0,0)');
+      grad.addColorStop(0.3, 'rgba(0,0,0,0.65)');
+      grad.addColorStop(1,   'rgba(0,0,0,0.93)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, vH - gradH, vW, gradH);
+
+      // Watermark
+      ctx.font = '700 10px "Space Mono", monospace';
+      ctx.fillStyle = 'rgba(230,48,48,0.85)';
+      ctx.textAlign = 'right';
+      ctx.shadowColor = 'rgba(0,0,0,0.95)';
+      ctx.shadowBlur  = 6;
+      ctx.fillText('RADIO ARKANA EVENT', vW - 20, 32);
+
+      // Cartas
+      const cardsSize  = Math.round(vH * 0.048);
+      const lineHeight = cardsSize * 1.05;
+      const maxTextWidth = vW - 48;
+      ctx.font      = `${cardsSize}px 'Bebas Neue', sans-serif`;
+      ctx.fillStyle = '#f0ece4';
+      ctx.textAlign = 'left';
+      ctx.shadowColor = 'rgba(0,0,0,0.9)';
+      ctx.shadowBlur  = 10;
+      const trio = currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+      const words = trio.join('  ·  ').split(' ');
+      const lines = []; let current = '';
+      for (const word of words) {
+        const test = current ? current + ' ' + word : word;
+        if (ctx.measureText(test).width > maxTextWidth && current) { lines.push(current); current = word; }
+        else { current = test; }
+      }
+      if (current) lines.push(current);
+      const cardsBaseY  = vH - 48;
+      const totalTextH  = lines.length * lineHeight;
+      const cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
+      lines.forEach((line, i) => ctx.fillText(line, 24, cardsStartY + i * lineHeight));
+
+      // Meta
+      const metaSize = Math.round(vH * 0.014);
+      const metaTop  = vH - 20;
+      ctx.font = `${metaSize}px 'Space Mono', monospace`;
+      ctx.shadowColor = 'rgba(0,0,0,0.9)';
+      ctx.shadowBlur  = 6;
+      const savedHandle = (localStorage.getItem('arkana-handle') || '').trim();
+      ctx.fillStyle = '#e63030'; ctx.textAlign = 'left';
+      ctx.fillText(savedHandle ? '@' + savedHandle : formatCameraDateTime(), 24, metaTop);
+      ctx.textAlign = 'right';
+      ctx.fillText(savedHandle ? 'radioarkana.com · ' + formatCameraDateTime() : 'radioarkana.com', vW - 24, metaTop);
+      ctx.shadowBlur = 0;
+
+      // Detener stream y descargar
+      stream.getTracks().forEach(t => t.stop());
+      const filename = `arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.jpg`;
+      const a = document.createElement('a');
+      a.href     = canvas.toDataURL('image/jpeg', 0.93);
+      a.download = filename;
+      a.click();
+      return;
+    }
+
+    // ── Modo normal ───────────────────────────────────────────────────────────
     const modal=document.getElementById('cameraModal');
     modal.classList.add('active');
     updateCameraHUD();
@@ -1154,18 +1266,34 @@
   setInterval(()=>{ if(document.getElementById('cameraModal').classList.contains('active')) updateCameraHUD(); },1000);
 
   // ── HANDLE DE USUARIO ──────────────────────────────────────────────────────
-  const handleInput = document.getElementById('handleInput');
-  const handleHint  = document.getElementById('handleHint');
-  const browserLang = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
-  handleHint.textContent = browserLang.startsWith('es')
-    ? 'Introduce un @ si deseas firmar tus fotos arkanas'
+  const handleInput  = document.getElementById('handleInput');
+  const handleHint   = document.getElementById('handleHint');
+  const instantCheck = document.getElementById('instantCheck');
+  const instantLabel = document.getElementById('instantLabel');
+  const browserLang  = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
+  const isES = browserLang.startsWith('es');
+  handleHint.textContent   = isES
+    ? 'Introduce un @ si deseas firmar tus fotos'
     : 'Add your @ to sign your Arkana photos';
-  handleInput.value = localStorage.getItem('arkana-handle') || '';
+  instantLabel.textContent = isES
+    ? 'Disparo instantáneo — la foto se guarda sola'
+    : 'Instant shot — photo saves automatically';
+  handleInput.value    = localStorage.getItem('arkana-handle') || '';
+  instantCheck.checked = localStorage.getItem('arkana-instant') === '1';
   handleInput.addEventListener('input', () => {
     const val = handleInput.value.replace(/[@\s]/g, '').slice(0, 32);
     handleInput.value = val;
     localStorage.setItem('arkana-handle', val);
   });
+  instantCheck.addEventListener('change', () => {
+    localStorage.setItem('arkana-instant', instantCheck.checked ? '1' : '0');
+    updateCameraIconState();
+  });
+  function updateCameraIconState() {
+    const btn = document.getElementById('btnCamera');
+    btn.style.color = instantCheck.checked ? 'var(--red)' : '';
+  }
+  updateCameraIconState();
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
