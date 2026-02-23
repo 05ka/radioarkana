@@ -344,6 +344,7 @@
     <span class="footer-note">Radio Arkana © 2026 by @mirage_a_trois</span>
     <span class="footer-note"><a href="https://mirageatrois.substack.com/p/el-fenomeno-de-induccion-imaginativa" target="_blank">wtf?</a></span>
     <span class="footer-note"><a href="/guia-arkana.html" target="_blank">guía</a></span>
+    <span class="footer-note"><a href="/comunidad.html" target="_blank">comunidad</a></span>
   </div>
 </div>
 
@@ -762,7 +763,10 @@
 
   function runTTSLoop() {
     if (currentMode!=='TTS'||!isPlaying||!layerState.tts) return;
-    if (repCount===0) currentTrio=drawTrio();
+    if (repCount===0) {
+      currentTrio=drawTrio();
+      sessionStorage.setItem('arkana-last-trio', JSON.stringify(currentTrio));
+    }
     repCount++;
     setRepLabels(`Rep ${repCount}/${loopReps}`, null, true, false);
     // Mostrar botón cámara en cuanto hay cartas activas
