@@ -170,6 +170,15 @@
     .preview-btn { flex: 1; min-width: 0; background: transparent; border: 1px solid #2a2a2a; color: #f0ece4; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; padding: 14px 4px; cursor: pointer; transition: all 0.2s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .preview-btn.primary { border-color: #e63030; color: #e63030; }
     .preview-btn:hover { background: rgba(230,48,48,0.08); border-color: #e63030; color: #e63030; }
+    /* ── HANDLE ROW ─────────────────────────────────────────────────────────── */
+    .handle-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; border: 1px solid var(--border); padding: 10px 14px; max-height: 60px; overflow: hidden; transition: opacity 0.3s, max-height 0.3s, padding 0.3s, border-color 0.3s; }
+    .handle-row.hidden { opacity: 0; max-height: 0; padding: 0 14px; pointer-events: none; border-color: transparent; }
+    .handle-prefix { font-size: 11px; color: var(--red); letter-spacing: 0.1em; flex-shrink: 0; }
+    .handle-input { background: transparent; border: none; outline: none; color: var(--white); font-family: var(--font-body); font-size: 11px; letter-spacing: 0.15em; width: 100%; }
+    .handle-input::placeholder { color: var(--gray); }
+    .handle-hint { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); opacity: 0.7; margin-top: 6px; transition: opacity 0.3s; }
+    .handle-row.hidden + .handle-hint { opacity: 0; max-height: 0; overflow: hidden; }
+
     @media (max-width: 480px) { .wrap { width: 100%; padding: 8px 4px; } .card { padding: 24px 16px 20px; } .controls-row { flex-wrap: wrap; gap: 12px; } .controls-left { flex-wrap: wrap; justify-content: center; width: 100%; gap: 4px; } .knob-wrap { padding: 10px 0; min-width: 50px; } .lang-toggle { margin-left: 0; } .controls-right { position: static; width: 100%; justify-content: center; gap: 8px; } .layer-btn { padding: 8px 12px; } .knob { width: 22px; height: 22px; } .knob-val { font-size: 7px; } .knob-arrow-up, .knob-arrow-down { font-size: 8px; } } 
     @media (max-width: 360px) { .controls-left { gap: 2px; } .knob-wrap { min-width: 44px; } .lang-opt { padding: 4px 6px; font-size: 8px; } }
   </style>
@@ -190,7 +199,7 @@
     <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas"></canvas>
     <div id="cameraHUD">
-      <div id="cameraWatermark">ARKANA FILE</div>
+      <div id="cameraWatermark">Arkana File</div>
       <div id="cameraOverlayBar">
         <canvas id="cameraWaveCanvas"></canvas>
         <div id="cameraCards">— · — · —</div>
@@ -253,6 +262,12 @@
       <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       <span id="playLabel">Escuchar en directo</span>
     </button>
+    <div class="handle-row" id="handleRow">
+      <span class="handle-prefix">@</span>
+      <input type="text" id="handleInput" class="handle-input"
+             placeholder="tu_usuario" maxlength="32" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="handle-hint" id="handleHint"></p>
     <div class="volume-row" id="volRow">
       <span class="vol-label">VOL</span>
       <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" oninput="updateVolume(this.value)">
@@ -529,6 +544,8 @@
     requestWakeLock();
     startListenersCounter();
     startMarqueePolling();
+    document.getElementById('handleRow').classList.add('hidden');
+    document.getElementById('handleHint').classList.add('hidden');
     tryStream();
   }
 
@@ -555,6 +572,8 @@
     document.getElementById('btnCamera').classList.remove('visible');
     stopListenersCounter();
     stopMarqueePolling();
+    document.getElementById('handleRow').classList.remove('hidden');
+    document.getElementById('handleHint').classList.remove('hidden');
   }
 
   // ── BEEP ───────────────────────────────────────────────────────────────────
@@ -1021,7 +1040,7 @@
     ctx.textAlign   = 'right';
     ctx.shadowColor = 'rgba(0,0,0,0.95)';
     ctx.shadowBlur  = 6;
-    ctx.fillText('ARKANA FILE', vW - 20, 32);
+    ctx.fillText('RADIO ARKANA EVENT', vW - 20, 32);
 
     // ── 4. viewRect (usado por bloques siguientes) ───────────────────────────
     const viewRect = viewport.getBoundingClientRect();
@@ -1077,14 +1096,15 @@
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur  = 6;
 
+    const savedHandle = (localStorage.getItem('arkana-handle') || '').trim();
+
     ctx.fillStyle  = '#e63030';
     ctx.textAlign  = 'left';
-    ctx.fillText(formatCameraDateTime(), 24, metaTop);
-    
-    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
+    ctx.fillText(savedHandle ? '@' + savedHandle : formatCameraDateTime(), 24, metaTop);
+
     ctx.fillStyle  = '#e63030';
     ctx.textAlign  = 'right';
-    ctx.fillText('radioarkana.com', vW - 24, metaTop);
+    ctx.fillText(savedHandle ? 'radioarkana.com · ' + formatCameraDateTime() : 'radioarkana.com', vW - 24, metaTop);
 
     ctx.shadowBlur = 0;
     ctx.textAlign  = 'left';
@@ -1132,6 +1152,20 @@
 
   // Actualizar HUD cada segundo (para la hora en tiempo real)
   setInterval(()=>{ if(document.getElementById('cameraModal').classList.contains('active')) updateCameraHUD(); },1000);
+
+  // ── HANDLE DE USUARIO ──────────────────────────────────────────────────────
+  const handleInput = document.getElementById('handleInput');
+  const handleHint  = document.getElementById('handleHint');
+  const browserLang = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
+  handleHint.textContent = browserLang.startsWith('es')
+    ? 'Tu @ aparecerá en las fotos de sincronicidad que compartas'
+    : 'Your @ will appear on the synchronicity photos you share';
+  handleInput.value = localStorage.getItem('arkana-handle') || '';
+  handleInput.addEventListener('input', () => {
+    const val = handleInput.value.replace(/[@\s]/g, '').slice(0, 32);
+    handleInput.value = val;
+    localStorage.setItem('arkana-handle', val);
+  });
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
