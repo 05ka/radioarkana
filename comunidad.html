@@ -322,6 +322,7 @@
 
 <script>
   const BSKY_API    = 'https://public.api.bsky.app/xrpc';
+  const BSKY_SEARCH = 'https://bsky.social/xrpc';
   const HANDLE      = 'wum1ng.bsky.social';
   const SEARCH_TAG  = 'TiradaArkana';
   const POSTS_LIMIT = 12;
@@ -499,7 +500,7 @@
   async function loadHashtagFeed() {
     const container = document.getElementById('feedComunidad');
     try {
-      const res  = await fetch(`${BSKY_API}/app.bsky.feed.searchPosts?q=${encodeURIComponent('#' + SEARCH_TAG)}&limit=20&sort=latest`);
+      const res  = await fetch(`${BSKY_SEARCH}/app.bsky.feed.searchPosts?q=${encodeURIComponent('#' + SEARCH_TAG)}&limit=20&sort=latest`);
       const data = await res.json();
 
       if (!res.ok || !data.posts?.length) {
@@ -540,13 +541,6 @@
   loadProfile();
   loadAuthorFeed();
   loadHashtagFeed();
-
-  // Refresco cada 90 segundos
-  setInterval(() => {
-    feedCursor = null;
-    loadAuthorFeed();
-    loadHashtagFeed();
-  }, 90000);
 </script>
 </body>
 </html>
