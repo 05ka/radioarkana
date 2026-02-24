@@ -1117,8 +1117,7 @@
 
   async function flipCamera() { camFacingMode=camFacingMode==='environment'?'user':'environment'; await startCameraStream(); }
 
-  function shootPhoto() {
-    // ── FORMAT TOGGLE ─────────────────────────────────────────────────────────
+  // ── FORMAT TOGGLE ─────────────────────────────────────────────────────────
   let squareMode = false;
   document.getElementById('btnFmtFree').addEventListener('click', () => {
     squareMode = false;
@@ -1151,7 +1150,7 @@
     }
     canvas.width  = outW;
     canvas.height = outH;
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset por si acaso
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     // ── 1. Frame del video — crop centrado (cover) ───────────────────────────
     const scale = Math.max(outW / vidW, outH / vidH);
