@@ -698,22 +698,41 @@
     watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000);
   }
 
+  // Borra la función runWatchdog completa y pega esto:
+
   async function runWatchdog(myWatchdog) {
     if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
     try {
+      // Reutilizamos el ping unificado — ya trae el estado del stream
+      // sin coste adicional porque también registra el heartbeat del oyente
       const ctrl = new AbortController();
       const tid  = setTimeout(() => ctrl.abort(), 5000);
-      const res  = await fetch(`${WORKER_URL}/status`, { cache: 'no-store', signal: ctrl.signal });
+      const res  = await fetch(
+        `${WORKER_URL}/ping?id=${listenerId}&action=heartbeat`,
+        { method: 'POST', cache: 'no-store', signal: ctrl.signal }
+      );
       clearTimeout(tid);
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
+
       if (res.ok) {
         const { live } = await res.json();
         if (live === true) {
-          if (ttsSpeaking) { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000); return; }
+          if (ttsSpeaking) {
+            watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
+            return;
+          }
           stopTTSAudio(); currentMode = 'NONE';
-          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().then(() => tryStream()); else tryStream();
-        } else { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000); }
-      } else { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS); }
+          if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => tryStream());
+          } else {
+            tryStream();
+          }
+        } else {
+          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
+        }
+      } else {
+        watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
+      }
     } catch(e) {
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
       watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
@@ -948,35 +967,79 @@
     if (audioCtx&&noiseNodes.length) { const[gW,gP,gB]=noiseGainForType(noiseType,vol);noiseNodes[1].gain.value=gW;noiseNodes[3].gain.value=gP;noiseNodes[5].gain.value=gB;noiseNodes[8].gain.value=binauralFreq>0?vol*0.03:0; }
   }
 
-  // ── OYENTES ────────────────────────────────────────────────────────────────
-  const listenerId=Math.random().toString(36).slice(2)+Date.now().toString(36);
-  async function pingWorker(action=null) {
-    try { const base=`${WORKER_URL}?id=${listenerId}`,url=action?`${base}&action=${action}`:base; const res=await fetch(url,{method:action?'POST':'GET',cache:'no-store'}); const data=await res.json(); document.getElementById('listenersCount').textContent=data.listeners??0; document.getElementById('listenersDisplay').style.opacity='1'; } catch(e){}
-  }
-  let lint;
-  function startListenersCounter(){pingWorker('join');lint=setInterval(()=>pingWorker('heartbeat'),60000);}
-  function stopListenersCounter(){pingWorker('leave');clearInterval(lint);}
-  window.addEventListener('beforeunload',()=>{if(isPlaying)navigator.sendBeacon(`${WORKER_URL}?action=leave&id=${listenerId}`);});
+  // ── PING UNIFICADO (heartbeat + listeners + status) ────────────────────────
+  // Una sola llamada cada 45s reemplaza los tres polling separados.
+  const listenerId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  let pingInterval = null;
 
-  // ── MARQUEE ────────────────────────────────────────────────────────────────
-  const MARQUEE_POLL_MS=60000,MARQUEE_CACHE_KEY='arkana_marquee',MARQUEE_CACHE_TTL=5*60*1000;
-  const marqueeEl=document.getElementById('marqueeText');
+  async function sendPing(action = 'heartbeat') {
+    try {
+      const res  = await fetch(`${WORKER_URL}/ping?id=${listenerId}&action=${action}`, {
+        method: 'POST', cache: 'no-store'
+      });
+      const data = await res.json();
+      document.getElementById('listenersCount').textContent = data.listeners ?? 0;
+      document.getElementById('listenersDisplay').style.opacity = '1';
+      // Devolvemos el estado del stream para que el watchdog lo use
+      return data;
+    } catch(e) { return null; }
+  }
+
+  function startListenersCounter() {
+    sendPing('join');
+    pingInterval = setInterval(() => sendPing('heartbeat'), 45000);
+  }
+  function stopListenersCounter() {
+    sendPing('leave');
+    clearInterval(pingInterval);
+    pingInterval = null;
+  }
+  window.addEventListener('beforeunload', () => {
+    if (isPlaying) navigator.sendBeacon(`${WORKER_URL}/ping?action=leave&id=${listenerId}`);
+  });
+
+  // ── MARQUEE con ETag — poll cada 5 minutos ─────────────────────────────────
+  // Usa If-None-Match: si el ticker no cambió, el worker responde 304 sin body.
+  // 99% de las llamadas serán 304 → consumo de cuota mínimo.
+  const MARQUEE_POLL_MS  = 5 * 60 * 1000;   // 5 minutos
+  const marqueeEl        = document.getElementById('marqueeText');
+  let   marqueeEtag      = null;
+  let   marqueeInterval  = null;
+
   async function fetchMarquee() {
     try {
-      const cached=localStorage.getItem(MARQUEE_CACHE_KEY);
-      if (cached) { const{text,ts}=JSON.parse(cached); if (Date.now()-ts<MARQUEE_CACHE_TTL){applyMarquee(text);return;} }
-      const res=await fetch(`${WORKER_URL}/marquee`,{cache:'no-store'}); const data=await res.json();
-      if (data.text){localStorage.setItem(MARQUEE_CACHE_KEY,JSON.stringify({text:data.text,ts:Date.now()}));applyMarquee(data.text);}
-    } catch(e){}
+      const headers = { 'cache': 'no-store' };
+      if (marqueeEtag) headers['If-None-Match'] = marqueeEtag;
+
+      const res = await fetch(`${WORKER_URL}/marquee`, { headers, cache: 'no-store' });
+
+      // 304 → no cambió nada, no hacer nada
+      if (res.status === 304) return;
+
+      const data = await res.json();
+      if (data.text) {
+        // Guardar el nuevo ETag para la próxima llamada
+        marqueeEtag = res.headers.get('ETag') ?? null;
+        applyMarquee(data.text);
+      }
+    } catch(e) {}
   }
+
   function applyMarquee(text) {
-    if (text!==marqueeEl.textContent.trim()) { marqueeEl.style.opacity='0'; setTimeout(()=>{marqueeEl.textContent=text+'       ';marqueeEl.style.opacity='1';},400); }
+    if (text !== marqueeEl.textContent.trim()) {
+      marqueeEl.style.opacity = '0';
+      setTimeout(() => { marqueeEl.textContent = text + '       '; marqueeEl.style.opacity = '1'; }, 400);
+    }
   }
-  let marqueeInterval=null;
-  function startMarqueePolling(){if(marqueeInterval)return;marqueeInterval=setInterval(fetchMarquee,MARQUEE_POLL_MS);}
-  function stopMarqueePolling(){clearInterval(marqueeInterval);marqueeInterval=null;}
-  fetchMarquee();
-  freshAudio();
+
+  function startMarqueePolling() {
+    if (marqueeInterval) return;
+    marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS);
+  }
+  function stopMarqueePolling() {
+    clearInterval(marqueeInterval);
+    marqueeInterval = null;
+  }
 
   // ── CÁMARA SINCRONICIDAD ───────────────────────────────────────────────────
   let cameraStream  = null;
