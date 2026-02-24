@@ -161,6 +161,11 @@
     #cameraShutter { width: 68px; height: 68px; border-radius: 50%; background: #f0ece4; border: 4px solid #444; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
     #cameraShutter:hover { border-color: #e63030; transform: scale(1.04); }
     #cameraShutter:active { transform: scale(0.93); background: #e63030; }
+    #cameraFormatBar { background: #0a0a0a; border-top: 1px solid #1a1a1a; display: flex; justify-content: center; gap: 0; }
+    .fmt-btn { background: transparent; border: none; border-right: 1px solid #1a1a1a; color: #555; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 20px; cursor: pointer; transition: all 0.2s; }
+    .fmt-btn:last-child { border-right: none; }
+    .fmt-btn.active { color: #e63030; }
+    .fmt-btn:not(.active):hover { color: #f0ece4; }
 
     /* ── PREVIEW ─────────────────────────────────────────────────────────────── */
     #cameraPreview { display: none; position: fixed; inset: 0; z-index: 600; background: #000; flex-direction: column; }
@@ -217,6 +222,10 @@
     <button class="cam-side-btn" id="cameraClose">✕ Cerrar</button>
     <button id="cameraShutter" aria-label="Disparar"></button>
     <button class="cam-side-btn" id="cameraFlip">⇄ Girar</button>
+  </div>
+  <div id="cameraFormatBar">
+    <button class="fmt-btn active" id="btnFmtFree">libre</button>
+    <button class="fmt-btn" id="btnFmt1080">1080 × 1080</button>
   </div>
 </div>
 
@@ -1016,12 +1025,13 @@
       ctx.scale(dpr, dpr);
       ctx.drawImage(tmpVideo, 0, 0, vW, vH);
 
-      // Degradado inferior
-      const gradH = vH * 0.45;
+      
+      // Degradado inferior — solo franja del texto
+      const gradH = vH * 0.28;
       const grad  = ctx.createLinearGradient(0, vH - gradH, 0, vH);
       grad.addColorStop(0,   'rgba(0,0,0,0)');
-      grad.addColorStop(0.3, 'rgba(0,0,0,0.65)');
-      grad.addColorStop(1,   'rgba(0,0,0,0.93)');
+      grad.addColorStop(0.4, 'rgba(0,0,0,0.55)');
+      grad.addColorStop(1,   'rgba(0,0,0,0.82)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, vH - gradH, vW, gradH);
 
@@ -1108,112 +1118,110 @@
   async function flipCamera() { camFacingMode=camFacingMode==='environment'?'user':'environment'; await startCameraStream(); }
 
   function shootPhoto() {
+    // ── FORMAT TOGGLE ─────────────────────────────────────────────────────────
+  let squareMode = false;
+  document.getElementById('btnFmtFree').addEventListener('click', () => {
+    squareMode = false;
+    document.getElementById('btnFmtFree').classList.add('active');
+    document.getElementById('btnFmt1080').classList.remove('active');
+  });
+  document.getElementById('btnFmt1080').addEventListener('click', () => {
+    squareMode = true;
+    document.getElementById('btnFmt1080').classList.add('active');
+    document.getElementById('btnFmtFree').classList.remove('active');
+  });
+
+  function shootPhoto() {
     const video      = document.getElementById('cameraVideo');
     const canvas     = document.getElementById('cameraCanvas');
     const viewport   = document.getElementById('cameraViewport');
-    const waveCanvas = document.getElementById('cameraWaveCanvas');
     const ctx        = canvas.getContext('2d');
 
-    // ── Dimensiones del viewport visible (lo que ve el usuario en pantalla) ──
-    const vW = viewport.clientWidth;
-    const vH = viewport.clientHeight;
-
-    // Escala física para pantallas de alta densidad (retina/OLED)
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width  = vW * dpr;
-    canvas.height = vH * dpr;
-    ctx.scale(dpr, dpr);   // todo lo que dibujemos usa coordenadas CSS reales
-
-    // ── 1. Frame del video con el mismo recorte que object-fit:cover ──────────
     const vidW = video.videoWidth  || 1280;
     const vidH = video.videoHeight || 720;
-    const scale = Math.max(vW / vidW, vH / vidH);          // cover
+
+    // ── Dimensiones de salida según modo ────────────────────────────────────
+    let outW, outH;
+    if (squareMode) {
+      outW = 1080; outH = 1080;
+    } else {
+      const dpr = window.devicePixelRatio || 1;
+      outW = viewport.clientWidth  * dpr;
+      outH = viewport.clientHeight * dpr;
+    }
+    canvas.width  = outW;
+    canvas.height = outH;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset por si acaso
+
+    // ── 1. Frame del video — crop centrado (cover) ───────────────────────────
+    const scale = Math.max(outW / vidW, outH / vidH);
     const drawW = vidW * scale;
     const drawH = vidH * scale;
-    const offX  = (vW - drawW) / 2;
-    const offY  = (vH - drawH) / 2;
+    const offX  = (outW - drawW) / 2;
+    const offY  = (outH - drawH) / 2;
     ctx.drawImage(video, offX, offY, drawW, drawH);
 
-    // ── 2. Degradado inferior ─────────────────────────────────────────────────
-    const gradH = vH * 0.45;
-    const grad  = ctx.createLinearGradient(0, vH - gradH, 0, vH);
+    // ── 2. Degradado inferior — solo la franja del texto ────────────────────
+    const gradH = outH * 0.28;
+    const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
     grad.addColorStop(0,   'rgba(0,0,0,0)');
-    grad.addColorStop(0.3, 'rgba(0,0,0,0.65)');
-    grad.addColorStop(1,   'rgba(0,0,0,0.93)');
+    grad.addColorStop(0.4, 'rgba(0,0,0,0.55)');
+    grad.addColorStop(1,   'rgba(0,0,0,0.82)');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, vH - gradH, vW, gradH);
+    ctx.fillRect(0, outH - gradH, outW, gradH);
 
-    // ── 3. Watermark — misma posición que #cameraWatermark (top:20 right:20) ─
-    ctx.font        = '700 10px "Space Mono", monospace';
+    // ── 3. Watermark ─────────────────────────────────────────────────────────
+    const wmSize = Math.round(outW * 0.018);
+    ctx.font        = `700 ${wmSize}px "Space Mono", monospace`;
     ctx.fillStyle   = 'rgba(230,48,48,0.85)';
     ctx.textAlign   = 'right';
     ctx.shadowColor = 'rgba(0,0,0,0.95)';
-    ctx.shadowBlur  = 6;
-    ctx.fillText('RADIO ARKANA EVENT', vW - 20, 32);
+    ctx.shadowBlur  = squareMode ? 8 : 6;
+    ctx.fillText('RADIO ARKANA EVENT', outW - Math.round(outW * 0.02), Math.round(outW * 0.05));
 
-    // ── 4. viewRect (usado por bloques siguientes) ───────────────────────────
-    const viewRect = viewport.getBoundingClientRect();
-
-    // ── 5. Texto cartas — wrapping idéntico al DOM ────────────────────────────
-    const cardsEl   = document.getElementById('cameraCards');
-    const cardsRect = cardsEl.getBoundingClientRect();
-    const cardsSize = parseFloat(getComputedStyle(cardsEl).fontSize);
-    const lineHeight = cardsSize * 1.05; // mismo line-height del CSS
-
-    // Ancho máximo: viewport menos los 24px de padding a cada lado
-    const maxTextWidth = vW - 48;
+    // ── 4. Texto cartas ───────────────────────────────────────────────────────
+    const cardsSize  = Math.round(outH * 0.055);
+    const lineHeight = cardsSize * 1.05;
+    const padX       = Math.round(outW * 0.022);
+    const maxTextW   = outW - padX * 2;
 
     ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
     ctx.fillStyle   = '#f0ece4';
     ctx.textAlign   = 'left';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur  = 10;
+    ctx.shadowBlur  = squareMode ? 14 : 10;
 
-    const trio = currentTrio && currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+    const trio     = currentTrio && currentTrio.length === 3 ? currentTrio : ['—','—','—'];
     const fullText = trio.join('  ·  ');
-
-    // Construir líneas respetando maxTextWidth, igual que el browser
-    const words = fullText.split(' ');
-    const lines = [];
-    let current = '';
+    const words    = fullText.split(' ');
+    const lines    = [];
+    let current    = '';
     for (const word of words) {
       const test = current ? current + ' ' + word : word;
-      if (ctx.measureText(test).width > maxTextWidth && current) {
-        lines.push(current);
-        current = word;
-      } else {
-        current = test;
-      }
+      if (ctx.measureText(test).width > maxTextW && current) {
+        lines.push(current); current = word;
+      } else { current = test; }
     }
     if (current) lines.push(current);
 
-    // Anclar desde la base del elemento DOM, crecer hacia arriba si hay varias líneas
-    const cardsBaseY  = cardsRect.top - viewRect.top + cardsRect.height;
+    const cardsBaseY  = outH - Math.round(outH * 0.072);
     const totalTextH  = lines.length * lineHeight;
     const cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
-    lines.forEach((line, i) => {
-      ctx.fillText(line, 24, cardsStartY + i * lineHeight);
-    });
+    lines.forEach((line, i) => ctx.fillText(line, padX, cardsStartY + i * lineHeight));
 
-    // ── 6. Fecha (izquierda) + URL (derecha) — misma línea base ─────────────
-    const metaEl   = document.getElementById('cameraMeta');
-    const metaRect = metaEl.getBoundingClientRect();
-    const metaTop  = metaRect.top - viewRect.top + metaRect.height * 0.85;
-    const metaSize = parseFloat(getComputedStyle(metaEl).fontSize);
-
+    // ── 5. Meta (fecha / handle / url) ──────────────────────────────────────
+    const metaSize = Math.round(outH * 0.018);
+    const metaTop  = outH - Math.round(outH * 0.028);
     ctx.font        = `${metaSize}px 'Space Mono', monospace`;
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur  = 6;
+    ctx.shadowBlur  = squareMode ? 8 : 6;
 
     const savedHandle = (localStorage.getItem('arkana-handle') || '').trim();
-
-    ctx.fillStyle  = '#e63030';
-    ctx.textAlign  = 'left';
-    ctx.fillText(savedHandle ? '@' + savedHandle : formatCameraDateTime(), 24, metaTop);
-
-    ctx.fillStyle  = '#e63030';
-    ctx.textAlign  = 'right';
-    ctx.fillText(savedHandle ? 'radioarkana.com · ' + formatCameraDateTime() : 'radioarkana.com', vW - 24, metaTop);
+    ctx.fillStyle = '#e63030';
+    ctx.textAlign = 'left';
+    ctx.fillText(savedHandle ? '@' + savedHandle : formatCameraDateTime(), padX, metaTop);
+    ctx.textAlign = 'right';
+    ctx.fillText(savedHandle ? 'radioarkana.com · ' + formatCameraDateTime() : 'radioarkana.com', outW - padX, metaTop);
 
     ctx.shadowBlur = 0;
     ctx.textAlign  = 'left';
