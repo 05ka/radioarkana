@@ -161,6 +161,18 @@
     #cameraShutter { width: 68px; height: 68px; border-radius: 50%; background: #f0ece4; border: 4px solid #444; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
     #cameraShutter:hover { border-color: #e63030; transform: scale(1.04); }
     #cameraShutter:active { transform: scale(0.93); background: #e63030; }
+    /* ── SQUARE GUIDE OVERLAY ───────────────────────────────────────────────── */
+    .sq-mask { position: absolute; background: rgba(0,0,0,0.55); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    #squareGuide { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    #squareGuide.visible { opacity: 1; }
+    #squareGuide .sq-border { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.2); }
+    #squareGuide .sq-corner { position: absolute; width: 18px; height: 18px; border-color: #e63030; border-style: solid; }
+    #squareGuide .sq-corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    #squareGuide .sq-corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+    #squareGuide .sq-corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+    #squareGuide .sq-corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+    #squareGuide .sq-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; color: #e63030; white-space: nowrap; }
+
     #cameraFormatBar { background: #0a0a0a; border-top: 1px solid #1a1a1a; display: flex; justify-content: center; gap: 0; }
     .fmt-btn { background: transparent; border: none; border-right: 1px solid #1a1a1a; color: #555; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 20px; cursor: pointer; transition: all 0.2s; }
     .fmt-btn:last-child { border-right: none; }
@@ -210,6 +222,18 @@
     <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas"></canvas>
     <div id="cameraHUD">
+      <div class="sq-mask" id="sqMaskTop"></div>
+      <div class="sq-mask" id="sqMaskBottom"></div>
+      <div class="sq-mask" id="sqMaskLeft"></div>
+      <div class="sq-mask" id="sqMaskRight"></div>
+      <div id="squareGuide">
+        <div class="sq-border"></div>
+        <div class="sq-corner tl"></div>
+        <div class="sq-corner tr"></div>
+        <div class="sq-corner bl"></div>
+        <div class="sq-corner br"></div>
+        <div class="sq-label">1080 × 1080</div>
+      </div>
       <div id="cameraWatermark">Arkana File</div>
       <div id="cameraOverlayBar">
         <canvas id="cameraWaveCanvas"></canvas>
@@ -1093,6 +1117,7 @@
     const modal=document.getElementById('cameraModal');
     modal.classList.add('active');
     updateCameraHUD();
+    updateSquareGuide();
     if (!camWaveRafId) camWaveRafId=requestAnimationFrame(drawCameraWave);
     await startCameraStream();
   }
@@ -1113,33 +1138,64 @@
     if (camWaveRafId){cancelAnimationFrame(camWaveRafId);camWaveRafId=null;}
     document.getElementById('cameraModal').classList.remove('active');
     document.getElementById('cameraVideo').srcObject=null;
+    document.getElementById('squareGuide').classList.remove('visible');
+    ['sqMaskTop','sqMaskBottom','sqMaskLeft','sqMaskRight'].forEach(id=>{document.getElementById(id).style.opacity='0';});
   }
 
   async function flipCamera() { camFacingMode=camFacingMode==='environment'?'user':'environment'; await startCameraStream(); }
 
-  // ── FORMAT TOGGLE ─────────────────────────────────────────────────────────
+  // ── FORMAT TOGGLE + SQUARE GUIDE ──────────────────────────────────────────
   let squareMode = false;
+
+  function updateSquareGuide() {
+    const vp      = document.getElementById('cameraViewport');
+    const guide   = document.getElementById('squareGuide');
+    const mTop    = document.getElementById('sqMaskTop');
+    const mBottom = document.getElementById('sqMaskBottom');
+    const mLeft   = document.getElementById('sqMaskLeft');
+    const mRight  = document.getElementById('sqMaskRight');
+    if (!squareMode) {
+      guide.classList.remove('visible');
+      [mTop, mBottom, mLeft, mRight].forEach(m => { m.style.opacity = '0'; });
+      return;
+    }
+    const vpW = vp.clientWidth;
+    const vpH = vp.clientHeight;
+    const size   = Math.min(vpW, vpH);
+    const offsetX = (vpW - size) / 2;
+    const offsetY = (vpH - size) / 2;
+    guide.style.width  = size + 'px';
+    guide.style.height = size + 'px';
+    guide.classList.add('visible');
+    mTop.style.cssText    = `top:0;left:0;right:0;height:${offsetY}px;opacity:1;`;
+    mBottom.style.cssText = `bottom:0;left:0;right:0;height:${offsetY}px;opacity:1;`;
+    mLeft.style.cssText   = `top:${offsetY}px;bottom:${offsetY}px;left:0;width:${offsetX}px;opacity:1;`;
+    mRight.style.cssText  = `top:${offsetY}px;bottom:${offsetY}px;right:0;width:${offsetX}px;opacity:1;`;
+  }
+
   document.getElementById('btnFmtFree').addEventListener('click', () => {
     squareMode = false;
     document.getElementById('btnFmtFree').classList.add('active');
     document.getElementById('btnFmt1080').classList.remove('active');
+    updateSquareGuide();
   });
   document.getElementById('btnFmt1080').addEventListener('click', () => {
     squareMode = true;
     document.getElementById('btnFmt1080').classList.add('active');
     document.getElementById('btnFmtFree').classList.remove('active');
+    updateSquareGuide();
   });
 
   function shootPhoto() {
-    const video      = document.getElementById('cameraVideo');
-    const canvas     = document.getElementById('cameraCanvas');
-    const viewport   = document.getElementById('cameraViewport');
-    const ctx        = canvas.getContext('2d');
+    const video    = document.getElementById('cameraVideo');
+    const canvas   = document.getElementById('cameraCanvas');
+    const viewport = document.getElementById('cameraViewport');
+    const ctx      = canvas.getContext('2d');
 
     const vidW = video.videoWidth  || 1280;
     const vidH = video.videoHeight || 720;
 
-    // ── Dimensiones de salida según modo ────────────────────────────────────
+    // ── Dimensiones de salida según modo ──────────────────────────────────
     let outW, outH;
     if (squareMode) {
       outW = 1080; outH = 1080;
@@ -1152,7 +1208,7 @@
     canvas.height = outH;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    // ── 1. Frame del video — crop centrado (cover) ───────────────────────────
+    // ── 1. Frame del video — crop centrado (cover) ─────────────────────────
     const scale = Math.max(outW / vidW, outH / vidH);
     const drawW = vidW * scale;
     const drawH = vidH * scale;
@@ -1160,7 +1216,7 @@
     const offY  = (outH - drawH) / 2;
     ctx.drawImage(video, offX, offY, drawW, drawH);
 
-    // ── 2. Degradado inferior — solo la franja del texto ────────────────────
+    // ── 2. Degradado inferior — solo la franja del texto ──────────────────
     const gradH = outH * 0.28;
     const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
     grad.addColorStop(0,   'rgba(0,0,0,0)');
@@ -1169,7 +1225,7 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, outH - gradH, outW, gradH);
 
-    // ── 3. Watermark ─────────────────────────────────────────────────────────
+    // ── 3. Watermark ───────────────────────────────────────────────────────
     const wmSize = Math.round(outW * 0.018);
     ctx.font        = `700 ${wmSize}px "Space Mono", monospace`;
     ctx.fillStyle   = 'rgba(230,48,48,0.85)';
@@ -1178,7 +1234,7 @@
     ctx.shadowBlur  = squareMode ? 8 : 6;
     ctx.fillText('RADIO ARKANA EVENT', outW - Math.round(outW * 0.02), Math.round(outW * 0.05));
 
-    // ── 4. Texto cartas ───────────────────────────────────────────────────────
+    // ── 4. Texto cartas ────────────────────────────────────────────────────
     const cardsSize  = Math.round(outH * 0.055);
     const lineHeight = cardsSize * 1.05;
     const padX       = Math.round(outW * 0.022);
@@ -1208,7 +1264,7 @@
     const cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
     lines.forEach((line, i) => ctx.fillText(line, padX, cardsStartY + i * lineHeight));
 
-    // ── 5. Meta (fecha / handle / url) ──────────────────────────────────────
+    // ── 5. Meta (fecha / handle / url) ────────────────────────────────────
     const metaSize = Math.round(outH * 0.018);
     const metaTop  = outH - Math.round(outH * 0.028);
     ctx.font        = `${metaSize}px 'Space Mono', monospace`;
@@ -1225,7 +1281,7 @@
     ctx.shadowBlur = 0;
     ctx.textAlign  = 'left';
 
-    // ── Mostrar preview ───────────────────────────────────────────────────────
+    // ── Mostrar preview ────────────────────────────────────────────────────
     document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg', 0.93);
     document.getElementById('cameraPreview').classList.add('active');
   }
