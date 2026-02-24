@@ -472,9 +472,12 @@
   function connectStreamToAnalyser(audioEl) {
     if (!audioCtx) return;
     ensureAnalyser();
-    if (streamSrc) { try { streamSrc.disconnect(); } catch(e){} }
-    streamSrc = audioCtx.createMediaElementSource(audioEl);
-    streamSrc.connect(analyser);
+    // streamSrc se crea UNA sola vez por AudioContext y elemento <audio>.
+    // Si ya existe, no lo recreamos — evita nodos zombie en móvil.
+    if (!streamSrc) {
+      streamSrc = audioCtx.createMediaElementSource(audioEl);
+      streamSrc.connect(analyser);
+    }
   }
 
   const RELEASE = [0.78, 0.88, 0.94];
@@ -525,20 +528,37 @@
   }
 
   // ── AUDIO ELEMENT ──────────────────────────────────────────────────────────
+  // Reutilizamos siempre el mismo <audio> — createMediaElementSource() vincula
+  // un elemento al AudioContext de forma permanente. Recrear el elemento en cada
+  // ciclo acumula nodos zombie que en móvil bloquean el audio en el 3er intento.
   function freshAudio() {
-    const container = document.getElementById('audioContainer');
-    if (streamAudio) {
-      streamAudio.onplaying = streamAudio.onpause = streamAudio.onended =
-      streamAudio.onwaiting = streamAudio.onstalled = streamAudio.onerror = null;
-      streamAudio.pause(); streamAudio.removeAttribute('src'); streamAudio.load();
-      container.removeChild(streamAudio);
+    if (!streamAudio) {
+      streamAudio = document.createElement('audio');
+      streamAudio.preload     = 'none';
+      streamAudio.crossOrigin = 'anonymous';
+      document.getElementById('audioContainer').appendChild(streamAudio);
     }
-    streamAudio = document.createElement('audio');
-    streamAudio.preload     = 'none';
-    streamAudio.crossOrigin = 'anonymous';
-    streamAudio.volume      = parseFloat(document.getElementById('volume').value ?? 0.8);
-    container.appendChild(streamAudio);
+    streamAudio.onplaying = streamAudio.onpause = streamAudio.onended =
+    streamAudio.onwaiting = streamAudio.onstalled = streamAudio.onerror = null;
+    streamAudio.pause();
+    streamAudio.removeAttribute('src');
+    streamAudio.load();
+    streamAudio.volume = parseFloat(document.getElementById('volume').value ?? 0.8);
     return streamAudio;
+  }
+
+  // Destruye el AudioContext y todos sus nodos — se llama en stop() para que
+  // el siguiente start() parta de un contexto limpio sin nodos acumulados.
+  async function teardownAudioContext() {
+    stopWaveform();
+    if (noiseNodes.length) {
+      noiseNodes.forEach(n => { try { n.disconnect(); } catch(e) {} });
+      noiseNodes = [];
+    }
+    disableShortwaveFilter();
+    if (streamSrc) { try { streamSrc.disconnect(); } catch(e) {} streamSrc = null; }
+    if (analyser)  { try { analyser.disconnect();  } catch(e) {} analyser  = null; }
+    if (audioCtx)  { try { await audioCtx.close(); } catch(e) {} audioCtx  = null; }
   }
 
   function clearAllTimers() {
@@ -595,11 +615,10 @@
     isPlaying   = false;
     currentMode = 'NONE';
     attemptId++; watchdogId++;
-    freshAudio();
     clearAllTimers();
     window.speechSynthesis.cancel();
-    if (audioCtx) audioCtx.suspend();
-    stopWaveform();
+    freshAudio();
+    teardownAudioContext(); // destruye el contexto completo — el próximo start() arranca limpio
     releaseWakeLock();
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
@@ -616,6 +635,8 @@
     stopMarqueePolling();
     document.getElementById('handleRow').classList.remove('hidden');
     document.getElementById('handleHint').classList.remove('hidden');
+    // Activar SW pendiente si lo había
+    if (window._pendingSWUpdate) { activateNewSW(window._pendingSWUpdate); window._pendingSWUpdate = null; }
   }
 
   // ── BEEP ───────────────────────────────────────────────────────────────────
@@ -722,6 +743,7 @@
             return;
           }
           stopTTSAudio(); currentMode = 'NONE';
+          // audioCtx puede ser null si teardownAudioContext() lo cerró — tryStream lo recreará
           if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume().then(() => tryStream());
           } else {
