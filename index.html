@@ -1384,11 +1384,46 @@
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load',()=>{
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg=>{ reg.addEventListener('updatefound',()=>{ const nw=reg.installing; nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller) console.log('[SW] Nueva versión disponible'); }); }); })
-        .catch(err=>console.warn('[SW] Error:',err));
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+
+        // Comprobar actualizaciones cada vez que el usuario vuelve a la pestaña
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) reg.update();
+        });
+
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              // Hay una versión nueva lista. Si no está sonando, actualizamos ya.
+              // Si está sonando, esperamos a que el usuario pare.
+              if (!isPlaying) {
+                activateNewSW(reg);
+              } else {
+                // Guardamos la referencia y actualizamos al parar
+                window._pendingSWUpdate = reg;
+              }
+            }
+          });
+        });
+
+      }).catch(err => console.warn('[SW] Error:', err));
+
+      // Cuando el SW nuevo toma control, recargamos para servir archivos frescos
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     });
+  }
+
+  function activateNewSW(reg) {
+    const sw = reg.waiting;
+    if (sw) sw.postMessage('skipWaiting');
   }
 
   // ── CONECTIVIDAD ───────────────────────────────────────────────────────────
