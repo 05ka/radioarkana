@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Arkana Cam</title>
+
+  <!-- PWA — manifest propio -->
+  <link rel="manifest" href="/camera-manifest.json">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Arkana Cam">
+  <link rel="apple-touch-icon" href="/icon-cam-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --red: #e63030;
+      --red-dim: #7a1a1a;
+      --white: #f0ece4;
+      --gray: #555;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: var(--font-mono);
+      color: var(--white);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    /* ── VIEWPORT CÁMARA ─────────────────────────────────────────────────── */
+    #viewport {
+      position: fixed;
+      inset: 0;
+      bottom: calc(env(safe-area-inset-bottom) + 140px);
+      background: #000;
+      overflow: hidden;
+    }
+
+    #video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── HUD sobre el vídeo ──────────────────────────────────────────────── */
+    #hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    /* Watermark */
+    #watermark {
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top) + 12px);
+      right: 20px;
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(230,48,48,0.85);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+    }
+
+    /* Overlay inferior con cartas */
+    #overlayBar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 52px 24px 20px;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.88) 0%,
+        rgba(0,0,0,0.6) 55%,
+        transparent 100%
+      );
+    }
+
+    #cardsDisplay {
+      font-family: var(--font-head);
+      font-size: clamp(24px, 7vw, 42px);
+      letter-spacing: 0.04em;
+      color: var(--white);
+      line-height: 1.05;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+    }
+
+    #metaDisplay {
+      margin-top: 6px;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    /* ── SQUARE GUIDE ────────────────────────────────────────────────────── */
+    .sq-mask {
+      position: absolute;
+      background: rgba(0,0,0,0.5);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #squareGuide {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #squareGuide.visible { opacity: 1; }
+    .sq-border { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.15); }
+    .sq-corner { position: absolute; width: 18px; height: 18px; border-color: var(--red); border-style: solid; }
+    .sq-corner.tl { top: 0; left: 0;   border-width: 2px 0 0 2px; }
+    .sq-corner.tr { top: 0; right: 0;  border-width: 2px 2px 0 0; }
+    .sq-corner.bl { bottom: 0; left: 0;  border-width: 0 0 2px 2px; }
+    .sq-corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+    .sq-label {
+      position: absolute;
+      bottom: -20px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: var(--red);
+      white-space: nowrap;
+    }
+
+    /* ── PANEL INFERIOR ──────────────────────────────────────────────────── */
+    #controls {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(140px + env(safe-area-inset-bottom));
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Fila formato */
+    #formatBar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .fmt-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--gray);
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 8px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .fmt-btn:last-child { border-right: none; }
+    .fmt-btn.active { color: var(--red); }
+    .fmt-btn:not(.active):hover { color: var(--white); }
+
+    /* Fila botones principales */
+    #mainRow {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    /* Botón lateral */
+    .side-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--gray);
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 72px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .side-btn:hover { border-color: var(--gray); color: var(--white); }
+    .side-btn svg { display: block; }
+
+    /* Disparador */
+    #shutter {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 4px solid #444;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    #shutter:hover { border-color: var(--red); transform: scale(1.04); }
+    #shutter:active { transform: scale(0.92); background: var(--red); }
+
+    /* ── TIRADA: zona interactiva ─────────────────────────────────────────── */
+    #trioZone {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top) + 8px);
+      left: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    /* Badge de cada carta */
+    .card-badge {
+      font-family: var(--font-head);
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      color: var(--white);
+      background: rgba(0,0,0,0.65);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 4px 9px;
+      border-radius: 2px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      white-space: nowrap;
+      transition: opacity 0.3s;
+    }
+
+    .card-sep {
+      font-size: 10px;
+      color: var(--red);
+      opacity: 0.7;
+    }
+
+    /* Botón refresh de tirada */
+    #refreshTrio {
+      background: rgba(0,0,0,0.65);
+      border: 1px solid rgba(230,48,48,0.4);
+      color: var(--red);
+      border-radius: 2px;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      flex-shrink: 0;
+    }
+    #refreshTrio:hover { background: rgba(230,48,48,0.18); border-color: var(--red); }
+    #refreshTrio.spinning svg { animation: spin 0.45s ease-out; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* ── IDIOMA toggle ────────────────────────────────────────────────────── */
+    #langToggle {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top) + 8px);
+      right: 16px;
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .lang-opt {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 5px 9px;
+      background: rgba(0,0,0,0.65);
+      color: var(--gray);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .lang-opt.active { background: var(--red); color: var(--white); }
+    .lang-opt:not(.active):hover { color: var(--white); }
+
+    /* ── PREVIEW ─────────────────────────────────────────────────────────── */
+    #preview {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #000;
+      flex-direction: column;
+    }
+    #preview.active { display: flex; }
+
+    #previewImg {
+      flex: 1;
+      object-fit: contain;
+      width: 100%;
+      display: block;
+    }
+
+    #previewActions {
+      background: var(--bg);
+      padding: 16px 20px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      gap: 8px;
+    }
+
+    .prev-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 14px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .prev-btn.primary { border-color: var(--red); color: var(--red); }
+    .prev-btn:hover { background: rgba(230,48,48,0.08); border-color: var(--red); color: var(--red); }
+
+    /* ── SPLASH / PERMISO ────────────────────────────────────────────────── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      z-index: 300;
+      padding: 40px 32px;
+      text-align: center;
+    }
+    #splash.hidden { display: none; }
+
+    .splash-logo {
+      font-family: var(--font-head);
+      font-size: clamp(52px, 18vw, 80px);
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+    }
+    .splash-logo span { color: var(--red); }
+
+    .splash-sub {
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    .splash-btn {
+      background: transparent;
+      border: 1px solid var(--red);
+      color: var(--red);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .splash-btn:hover { background: rgba(230,48,48,0.1); }
+
+    .splash-note {
+      font-size: 9px;
+      color: var(--gray);
+      letter-spacing: 0.12em;
+      line-height: 1.7;
+      max-width: 280px;
+    }
+
+    /* ── HANDLE INPUT ────────────────────────────────────────────────────── */
+    #handleWrap {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      gap: 6px;
+      border-top: none;
+    }
+    .handle-at { font-size: 11px; color: var(--red); flex-shrink: 0; }
+    #handleInput {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      width: 100%;
+    }
+    #handleInput::placeholder { color: var(--gray); }
+
+    /* noise texture */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 400;
+      opacity: 0.35;
+    }
+
+    /* flash al disparar */
+    #flashOverlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 500;
+      transition: opacity 0.05s;
+    }
+    #flashOverlay.flash { opacity: 0.7; }
+  </style>
+</head>
+<body>
+
+<!-- Flash al disparar -->
+<div id="flashOverlay"></div>
+
+<!-- SPLASH / pedir permiso cámara -->
+<div id="splash">
+  <div>
+    <div class="splash-logo">ARKANA<br><span>CAM</span></div>
+  </div>
+  <p class="splash-sub">Sincronicidad visual · Radio Arkana</p>
+  <button class="splash-btn" id="splashBtn" onclick="initCamera()">
+    Activar cámara
+  </button>
+  <p class="splash-note">
+    La app necesita acceso a tu cámara para capturar el momento de sincronicidad.
+    Tu imagen nunca se sube a ningún servidor.
+  </p>
+</div>
+
+<!-- IDIOMA -->
+<div id="langToggle">
+  <button class="lang-opt active" id="langES" onclick="setLang('es')">ES</button>
+  <button class="lang-opt"        id="langEN" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- TIRADA ACTIVA + REFRESH -->
+<div id="trioZone">
+  <div id="badge0" class="card-badge">—</div>
+  <span class="card-sep">·</span>
+  <div id="badge1" class="card-badge">—</div>
+  <span class="card-sep">·</span>
+  <div id="badge2" class="card-badge">—</div>
+  <button id="refreshTrio" onclick="newTrio()" title="Nueva tirada">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/>
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+    </svg>
+  </button>
+</div>
+
+<!-- VIEWPORT DE CÁMARA -->
+<div id="viewport">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas" style="display:none"></canvas>
+
+  <div id="hud">
+    <!-- Masks cuadrado -->
+    <div class="sq-mask" id="sqTop"></div>
+    <div class="sq-mask" id="sqBottom"></div>
+    <div class="sq-mask" id="sqLeft"></div>
+    <div class="sq-mask" id="sqRight"></div>
+
+    <div id="squareGuide">
+      <div class="sq-border"></div>
+      <div class="sq-corner tl"></div>
+      <div class="sq-corner tr"></div>
+      <div class="sq-corner bl"></div>
+      <div class="sq-corner br"></div>
+      <div class="sq-label">1080 × 1080</div>
+    </div>
+
+    <div id="watermark">Arkana File</div>
+
+    <div id="overlayBar">
+      <div id="cardsDisplay">— · — · —</div>
+      <div id="metaDisplay">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL INFERIOR -->
+<div id="controls">
+  <div id="handleWrap">
+    <span class="handle-at">@</span>
+    <input type="text" id="handleInput" placeholder="tu_usuario" maxlength="32"
+           autocomplete="off" spellcheck="false">
+  </div>
+  <div id="formatBar">
+    <button class="fmt-btn active" id="btnFree"   onclick="setFormat('free')">libre</button>
+    <button class="fmt-btn"        id="btnSquare" onclick="setFormat('square')">1080 × 1080</button>
+  </div>
+  <div id="mainRow">
+    <button class="side-btn" id="btnFlip" onclick="flipCamera()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 4v6h6M23 20v-6h-6"/>
+        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+      </svg>
+      girar
+    </button>
+
+    <button id="shutter" aria-label="Disparar" onclick="shoot()"></button>
+
+    <button class="side-btn" id="btnBack" onclick="window.location.href='/'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      radio
+    </button>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div id="preview">
+  <img id="previewImg" alt="Sincronicidad capturada">
+  <div id="previewActions">
+    <button class="prev-btn" onclick="closePreview()">← Repetir</button>
+    <button class="prev-btn primary" onclick="downloadPhoto()">↓ Guardar</button>
+    <button class="prev-btn primary" onclick="sharePhoto()">↗ Compartir</button>
+  </div>
+</div>
+
+<script>
+  // ── CONSTANTES ─────────────────────────────────────────────────────────────
+  const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
+
+  const CARDS = {
+    es: ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa",
+         "El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna",
+         "La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre",
+         "La Estrella","La Luna","El Sol","El Juicio","El Mundo"],
+    en: ["The Fool","The Magician","The High Priestess","The Empress","The Emperor",
+         "The Hierophant","The Lovers","The Chariot","Strength","The Hermit",
+         "The Wheel of Fortune","The Justice","The Hanged Man","Death","The Temperance",
+         "The Devil","The Tower","The Star","The Moon","The Sun","The Judgement","The World"]
+  };
+
+  const LANG_CONFIG = {
+    es: { lang: 'es-ES' },
+    en: { lang: 'en-US' }
+  };
+
+  // ── ESTADO ─────────────────────────────────────────────────────────────────
+  let currentLang   = localStorage.getItem('arkana-lang') || 'es';
+  let currentTrio   = [];
+  let cameraStream  = null;
+  let facingMode    = 'environment';
+  let squareMode    = false;
+  let quantumPool   = [];
+  let qrngLoading   = false;
+
+  // ── INIT ───────────────────────────────────────────────────────────────────
+  // Al abrir la app: pedir cámara directamente si ya se concedió antes,
+  // si no mostrar el splash primero.
+  (async function boot() {
+    applyLang(currentLang);
+    restoreHandle();
+
+    // Intentar arrancar cámara sin pedir permiso explícito
+    // Si el permiso ya fue concedido, el splash no aparecerá
+    try {
+      const perm = await navigator.permissions.query({ name: 'camera' });
+      if (perm.state === 'granted') {
+        document.getElementById('splash').classList.add('hidden');
+        await startStream();
+        newTrio();
+        fillQuantumPool();
+        return;
+      }
+    } catch(e) {}
+
+    // Mostrar splash para solicitar permiso
+    document.getElementById('splash').classList.remove('hidden');
+    fillQuantumPool();
+  })();
+
+  async function initCamera() {
+    document.getElementById('splash').classList.add('hidden');
+    await startStream();
+    newTrio();
+  }
+
+  // ── STREAM ─────────────────────────────────────────────────────────────────
+  async function startStream() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+    } catch(e) {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch(err) {
+        document.getElementById('splash').classList.remove('hidden');
+        document.getElementById('splashBtn').textContent = 'Reintentar';
+        return;
+      }
+    }
+    document.getElementById('video').srcObject = cameraStream;
+  }
+
+  function flipCamera() {
+    facingMode = facingMode === 'environment' ? 'user' : 'environment';
+    startStream();
+  }
+
+  // ── QRNG ───────────────────────────────────────────────────────────────────
+  async function fillQuantumPool() {
+    if (qrngLoading) return;
+    qrngLoading = true;
+    try {
+      const res  = await fetch(`${WORKER_URL}/qrng?length=256`, { cache: 'no-store' });
+      const data = await res.json();
+      if (res.ok && data.numbers?.length > 0) quantumPool = data.numbers;
+    } catch(e) {}
+    finally { qrngLoading = false; }
+  }
+
+  function getQuantumByte() {
+    if (quantumPool.length < 20 && !qrngLoading) fillQuantumPool();
+    if (quantumPool.length > 0) return quantumPool.pop();
+    return Math.floor(Math.random() * 256);
+  }
+
+  // ── TIRADA — fija hasta nuevo refresh ──────────────────────────────────────
+  function drawTrio() {
+    const cards = CARDS[currentLang];
+    let i0, i1, i2;
+    do {
+      i0 = getQuantumByte() % 22;
+      i1 = getQuantumByte() % 22;
+      i2 = getQuantumByte() % 22;
+    } while (i0 === i1 || i0 === i2 || i1 === i2);
+    return [cards[i0], cards[i1], cards[i2]];
+  }
+
+  function newTrio(animate = false) {
+    currentTrio = drawTrio();
+    updateTrioBadges(animate);
+    updateHUD();
+  }
+
+  function updateTrioBadges(animate = false) {
+    ['badge0','badge1','badge2'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (animate) {
+        el.style.opacity = '0';
+        setTimeout(() => { el.textContent = currentTrio[i]; el.style.opacity = '1'; el.style.transition = 'opacity 0.3s'; }, i * 80);
+      } else {
+        el.textContent = currentTrio[i] || '—';
+      }
+    });
+
+    // Animar botón refresh
+    if (animate) {
+      const btn = document.getElementById('refreshTrio');
+      btn.classList.add('spinning');
+      setTimeout(() => btn.classList.remove('spinning'), 500);
+    }
+  }
+
+  // Botón refresh — nueva tirada con animación
+  document.getElementById('refreshTrio').addEventListener('click', () => {
+    newTrio(true);
+  });
+
+  // ── HUD ────────────────────────────────────────────────────────────────────
+  function formatDateTime() {
+    const now = new Date();
+    return now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      + ' · '
+      + now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function updateHUD() {
+    document.getElementById('cardsDisplay').textContent =
+      currentTrio.length === 3 ? currentTrio.join('  ·  ') : '— · — · —';
+    document.getElementById('metaDisplay').textContent = formatDateTime();
+  }
+
+  // Actualizar hora en el HUD cada minuto
+  setInterval(() => {
+    document.getElementById('metaDisplay').textContent = formatDateTime();
+  }, 60000);
+
+  // ── IDIOMA ─────────────────────────────────────────────────────────────────
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('arkana-lang', lang);
+    applyLang(lang);
+    // Redibujar tirada en el idioma nuevo
+    if (currentTrio.length === 3) { newTrio(true); }
+  }
+
+  function applyLang(lang) {
+    document.getElementById('langES').classList.toggle('active', lang === 'es');
+    document.getElementById('langEN').classList.toggle('active', lang === 'en');
+  }
+
+  // ── FORMATO ────────────────────────────────────────────────────────────────
+  function setFormat(mode) {
+    squareMode = mode === 'square';
+    document.getElementById('btnFree').classList.toggle('active',   !squareMode);
+    document.getElementById('btnSquare').classList.toggle('active',  squareMode);
+    updateSquareGuide();
+  }
+
+  function updateSquareGuide() {
+    const vp     = document.getElementById('viewport');
+    const guide  = document.getElementById('squareGuide');
+    const mTop   = document.getElementById('sqTop');
+    const mBot   = document.getElementById('sqBottom');
+    const mLeft  = document.getElementById('sqLeft');
+    const mRight = document.getElementById('sqRight');
+
+    if (!squareMode) {
+      guide.classList.remove('visible');
+      [mTop, mBot, mLeft, mRight].forEach(m => m.style.opacity = '0');
+      return;
+    }
+
+    const vpW  = vp.clientWidth;
+    const vpH  = vp.clientHeight;
+    const size = Math.min(vpW, vpH);
+    const ox   = (vpW - size) / 2;
+    const oy   = (vpH - size) / 2;
+
+    guide.style.width  = size + 'px';
+    guide.style.height = size + 'px';
+    guide.classList.add('visible');
+
+    mTop.style.cssText   = `top:0;left:0;right:0;height:${oy}px;opacity:1;`;
+    mBot.style.cssText   = `bottom:0;left:0;right:0;height:${oy}px;opacity:1;`;
+    mLeft.style.cssText  = `top:${oy}px;bottom:${oy}px;left:0;width:${ox}px;opacity:1;`;
+    mRight.style.cssText = `top:${oy}px;bottom:${oy}px;right:0;width:${ox}px;opacity:1;`;
+  }
+
+  // ── DISPARO ────────────────────────────────────────────────────────────────
+  function shoot() {
+    const video   = document.getElementById('video');
+    const canvas  = document.getElementById('canvas');
+    const vp      = document.getElementById('viewport');
+    const ctx     = canvas.getContext('2d');
+    const vidW    = video.videoWidth  || 1280;
+    const vidH    = video.videoHeight || 720;
+
+    // Flash
+    const flash = document.getElementById('flashOverlay');
+    flash.classList.add('flash');
+    setTimeout(() => flash.classList.remove('flash'), 180);
+
+    // Dimensiones de salida
+    let outW, outH;
+    if (squareMode) { outW = 1080; outH = 1080; }
+    else {
+      const dpr = window.devicePixelRatio || 1;
+      outW = vp.clientWidth  * dpr;
+      outH = vp.clientHeight * dpr;
+    }
+    canvas.width  = outW;
+    canvas.height = outH;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // 1. Frame — crop centrado
+    const scale = Math.max(outW / vidW, outH / vidH);
+    const drawW = vidW * scale, drawH = vidH * scale;
+    const offX  = (outW - drawW) / 2, offY = (outH - drawH) / 2;
+    ctx.drawImage(video, offX, offY, drawW, drawH);
+
+    // 2. Gradiente inferior
+    const gradH = outH * 0.30;
+    const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
+    grad.addColorStop(0,   'rgba(0,0,0,0)');
+    grad.addColorStop(0.4, 'rgba(0,0,0,0.58)');
+    grad.addColorStop(1,   'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, outH - gradH, outW, gradH);
+
+    // 3. Watermark
+    const wmSize = Math.round(outW * 0.018);
+    ctx.font        = `700 ${wmSize}px "Space Mono", monospace`;
+    ctx.fillStyle   = 'rgba(230,48,48,0.85)';
+    ctx.textAlign   = 'right';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur  = 6;
+    ctx.fillText('ARKANA CAM', outW - Math.round(outW * 0.02), Math.round(outH * 0.05));
+
+    // 4. Cartas — word wrap
+    const cardsSize  = Math.round(outH * 0.055);
+    const lineHeight = cardsSize * 1.08;
+    const padX       = Math.round(outW * 0.022);
+    const maxTextW   = outW - padX * 2;
+    ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
+    ctx.fillStyle   = '#f0ece4';
+    ctx.textAlign   = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur  = 12;
+
+    const trio     = currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+    const words    = trio.join('  ·  ').split(' ');
+    const lines    = []; let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > maxTextW && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+
+    const baseY   = outH - Math.round(outH * 0.07);
+    const totalH  = lines.length * lineHeight;
+    const startY  = baseY - totalH + lineHeight * 0.85;
+    lines.forEach((l, i) => ctx.fillText(l, padX, startY + i * lineHeight));
+
+    // 5. Meta
+    const metaSize = Math.round(outH * 0.017);
+    const metaY    = outH - Math.round(outH * 0.026);
+    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
+    ctx.shadowBlur  = 5;
+    const handle = (localStorage.getItem('arkana-handle') || '').trim();
+    ctx.fillStyle   = '#e63030';
+    ctx.textAlign   = 'left';
+    ctx.fillText(handle ? '@' + handle : formatDateTime(), padX, metaY);
+    ctx.textAlign   = 'right';
+    ctx.fillText(handle ? 'radioarkana.com · ' + formatDateTime() : 'radioarkana.com', outW - padX, metaY);
+    ctx.shadowBlur  = 0;
+    ctx.textAlign   = 'left';
+
+    // Mostrar preview
+    document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg', 0.93);
+    document.getElementById('preview').classList.add('active');
+  }
+
+  function closePreview() {
+    document.getElementById('preview').classList.remove('active');
+  }
+
+  function downloadPhoto() {
+    const dataUrl  = document.getElementById('canvas').toDataURL('image/jpeg', 0.93);
+    const filename = currentTrio.length === 3
+      ? `arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.jpg`
+      : `arkana-cam-${Date.now()}.jpg`;
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = filename; a.click();
+  }
+
+  async function sharePhoto() {
+    const caption = currentTrio.length === 3
+      ? `${currentTrio[0]} · ${currentTrio[1]} · ${currentTrio[2]} — Radio Arkana #RadioArkana #ArkanaCAM`
+      : 'Radio Arkana · Arkana CAM #RadioArkana';
+
+    if (navigator.share) {
+      document.getElementById('canvas').toBlob(async blob => {
+        const file = new File([blob], 'arkana-cam.jpg', { type: 'image/jpeg' });
+        try { await navigator.share({ files: [file], title: 'Arkana CAM', text: caption }); }
+        catch(e) { downloadPhoto(); }
+      }, 'image/jpeg', 0.93);
+    } else {
+      downloadPhoto();
+    }
+  }
+
+  // ── HANDLE ─────────────────────────────────────────────────────────────────
+  function restoreHandle() {
+    document.getElementById('handleInput').value = localStorage.getItem('arkana-handle') || '';
+  }
+  document.getElementById('handleInput').addEventListener('input', e => {
+    const val = e.target.value.replace(/[@\s]/g, '').slice(0, 32);
+    e.target.value = val;
+    localStorage.setItem('arkana-handle', val);
+  });
+
+  // ── SERVICE WORKER ─────────────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+
+  // ── RESIZE: recalcular guide ────────────────────────────────────────────────
+  window.addEventListener('resize', updateSquareGuide);
+</script>
+</body>
+</html>
