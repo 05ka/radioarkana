@@ -210,9 +210,21 @@
 
 <div id="offlineBanner">⚡ Sin conexión · Modo local activo · El streaming se reanudará al reconectar</div>
 
+
 <div id="installBanner">
-  <p><strong>Radio Arkana</strong> — Instalar como app</p>
-  <button class="install-btn" id="installBtn">Instalar</button>
+  <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
+    <p><strong>Radio Arkana</strong> — Instalar como app</p>
+    <p id="camInstallLine" style="display:none;font-size:8px;color:var(--gray);letter-spacing:0.12em;">
+      También disponible: <strong style="color:var(--white)">Arkana CAM</strong> — app de cámara standalone
+    </p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+    <button class="install-btn" id="installBtn">Instalar Radio</button>
+    <button class="install-btn" id="installCamBtn"
+            style="display:none;border-color:var(--gray);color:var(--gray);">
+      Instalar Cam
+    </button>
+  </div>
   <button class="install-dismiss" id="installDismiss" aria-label="Cerrar">✕</button>
 </div>
 
@@ -1601,12 +1613,63 @@
   });
 
   // ── PWA INSTALL ────────────────────────────────────────────────────────────
-  let deferredInstallPrompt=null;
-  const installBanner=document.getElementById('installBanner'),installBtn=document.getElementById('installBtn'),installDismiss=document.getElementById('installDismiss');
-  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!localStorage.getItem('pwa-dismissed'))setTimeout(()=>installBanner.classList.add('visible'),3000);});
-  installBtn.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;installBanner.classList.remove('visible');deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;});
-  installDismiss.addEventListener('click',()=>{installBanner.classList.remove('visible');localStorage.setItem('pwa-dismissed','1');});
-  window.addEventListener('appinstalled',()=>{installBanner.classList.remove('visible');deferredInstallPrompt=null;});
+  let deferredInstallPrompt    = null;
+  let deferredCamInstallPrompt = null;
+
+  const installBanner   = document.getElementById('installBanner');
+  const installBtn      = document.getElementById('installBtn');
+  const installCamBtn   = document.getElementById('installCamBtn');
+  const camInstallLine  = document.getElementById('camInstallLine');
+  const installDismiss  = document.getElementById('installDismiss');
+
+  // El navegador puede emitir beforeinstallprompt para la app principal
+  // y, si camera.html tiene su propio manifest, también para ella cuando
+  // el usuario la visita. Aquí capturamos ambos.
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+
+    // Distinguimos por start_url del manifest que el navegador evaluó
+    // En la práctica, en index.html solo llega el prompt de la app principal.
+    // El de Arkana CAM llega cuando el usuario abre camera.html.
+    // Por seguridad guardamos el primero como "radio" y ofrecemos el enlace a cam.
+    if (!deferredInstallPrompt) {
+      deferredInstallPrompt = e;
+    }
+
+    if (!localStorage.getItem('pwa-dismissed')) {
+      setTimeout(() => {
+        installBanner.classList.add('visible');
+        // Mostrar línea + botón de Arkana CAM como opción adicional
+        camInstallLine.style.display  = 'block';
+        installCamBtn.style.display   = 'block';
+      }, 3000);
+    }
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    installBanner.classList.remove('visible');
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  });
+
+  // Arkana CAM: llevamos al usuario a camera.html en una nueva pestaña.
+  // El navegador lanzará el prompt de instalación de esa app cuando abra la página.
+  installCamBtn.addEventListener('click', () => {
+    installBanner.classList.remove('visible');
+    window.open('/camera.html', '_blank');
+  });
+
+  installDismiss.addEventListener('click', () => {
+    installBanner.classList.remove('visible');
+    localStorage.setItem('pwa-dismissed', '1');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBanner.classList.remove('visible');
+    deferredInstallPrompt = null;
+  });
   fetchMarquee();
 </script>
 </body>
