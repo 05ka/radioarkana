@@ -2,6 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta property="og:title"       content="Radio Arkana · Tarot Underground · Málaga">
+  <meta property="og:description" content="Emisión binaural en directo. Letanía Arkana con aleatoriedad cuántica.">
+  <meta property="og:image"       content="https://radioarkana.com/og-image.jpg">
+  <meta property="og:url"         content="https://radioarkana.com">
+  <meta property="og:type"        content="website">
+  <meta name="twitter:card"       content="summary_large_image">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Radio Arkana Transmitiendo</title>
 
@@ -279,7 +285,7 @@
 <div class="wrap">
   <div class="header">
     <span class="header-label" id="modeLabel">offline</span>
-    <span class="freq">EMISIÓN EN PRUEBAS</span>
+    <span class="freq">TRANSMITIENDO</span>
     <span style="display:flex;align-items:center;gap:2px;">
       <span id="qrngIndicator"
             title="Aleatoriedad local · Math.random()"
@@ -736,7 +742,7 @@
     currentMode = 'TTS'; attemptId++; watchdogId++;
     clearAllTimers(); freshAudio();
     dot.className = 'dot tts'; statusText.textContent = 'Letanía Arkana'; statusText.className = '';
-    modeLabel.textContent = 'Emisión en Pruebas';
+    modeLabel.textContent = 'on air';
     initGenerativeAudio(); ensureAnalyser(); startWaveform(); runTTSLoop(); scheduleWatchdog();
   }
 
