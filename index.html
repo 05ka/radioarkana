@@ -2,17 +2,25 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta property="og:title"       content="Radio Arkana · Tarot Underground · Málaga">
-  <meta property="og:description" content="Emisión binaural en directo. Letanía Arkana con aleatoriedad cuántica.">
-  <meta property="og:image"       content="https://radioarkana.com/og-image.jpg">
-  <meta property="og:url"         content="https://radioarkana.com">
-  <meta property="og:type"        content="website">
-  <meta name="twitter:card"       content="summary_large_image">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Radio Arkana Transmitiendo</title>
+  <title>Radio Arkana · Tarot Underground · Málaga</title>
+  <meta name="description" content="Emisión binaural en directo. Letanía Arkana generada con aleatoriedad cuántica. Tarot Underground desde Málaga.">
+
+  <!-- Open Graph / Social -->
+  <meta property="og:title"        content="Radio Arkana · Tarot Underground · Málaga">
+  <meta property="og:description"  content="Emisión binaural en directo. Letanía Arkana generada con aleatoriedad cuántica.">
+  <meta property="og:image"        content="https://radioarkana.com/og-image.jpg">
+  <meta property="og:url"          content="https://radioarkana.com">
+  <meta property="og:type"         content="website">
+  <meta property="og:locale"       content="es_ES">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Radio Arkana · Tarot Underground">
+  <meta name="twitter:description" content="Emisión binaural en directo con aleatoriedad cuántica. Málaga.">
+  <meta name="twitter:image"       content="https://radioarkana.com/og-image.jpg">
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192.png" type="image/png">
   <meta name="theme-color" content="#e63030">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -210,6 +218,9 @@
 
     @media (max-width: 480px) { .wrap { width: 100%; padding: 8px 4px; } .card { padding: 24px 16px 20px; } .controls-row { flex-wrap: wrap; gap: 12px; } .controls-left { flex-wrap: wrap; justify-content: center; width: 100%; gap: 4px; } .knob-wrap { padding: 10px 0; min-width: 50px; } .lang-toggle { margin-left: 0; } .controls-right { position: static; width: 100%; justify-content: center; gap: 8px; } .layer-btn { padding: 8px 12px; } .knob { width: 22px; height: 22px; } .knob-val { font-size: 7px; } .knob-arrow-up, .knob-arrow-down { font-size: 8px; } } 
     @media (max-width: 360px) { .controls-left { gap: 2px; } .knob-wrap { min-width: 44px; } .lang-opt { padding: 4px 6px; font-size: 8px; } }
+    /* ── CAM TOAST ─────────────────────────────────────────────────────────────── */
+    #camToast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 100px); left: 50%; transform: translateX(-50%) translateY(12px); background: #1a0a0a; border: 1px solid #7a1a1a; color: #e63030; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; padding: 10px 20px; z-index: 700; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; white-space: nowrap; }
+    #camToast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -285,7 +296,7 @@
 <div class="wrap">
   <div class="header">
     <span class="header-label" id="modeLabel">offline</span>
-    <span class="freq">TRANSMITIENDO</span>
+    <span class="freq">7.50 MHz · Málaga</span>
     <span style="display:flex;align-items:center;gap:2px;">
       <span id="qrngIndicator"
             title="Aleatoriedad local · Math.random()"
@@ -308,7 +319,7 @@
     <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
     <p class="tagline">Tarot Underground · Málaga</p>
     <div class="marquee-wrap">
-      <span class="marquee-text" id="marqueeText">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"        ***** EMISION EN PRUEBAS *****       </span>
+      <span class="marquee-text" id="marqueeText">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"       </span>
     </div>
     <div class="waveform" id="waveform"></div>
     <div class="status-row">
@@ -409,6 +420,7 @@
   </div>
 </div>
 
+<div id="camToast"></div>
 <div id="audioContainer"></div>
 
 <script>
@@ -427,6 +439,7 @@
   const _savedLang = localStorage.getItem('arkana-lang');
   const _syslang   = (navigator.language || navigator.languages?.[0] || 'es').toLowerCase();
   let currentLang  = _savedLang ?? (_syslang.startsWith('es') ? 'es' : 'en');
+
   const INITIAL_CONNECT_MS = 10000;
   const WATCHDOG_MS        = 12000;
   const STALL_MS           = 8000;
@@ -631,6 +644,7 @@
     document.getElementById('controlsRow').classList.add('visible');
     playLabel.textContent = 'Detener';
     playIcon.innerHTML    = '<path d="M6 6h12v12H6z"/>';
+    document.title = '🔴 En directo · Radio Arkana';
     requestWakeLock();
     startListenersCounter();
     startMarqueePolling();
@@ -659,6 +673,7 @@
     modeLabel.textContent  = 'Sistema offline';
     playLabel.textContent  = 'Escuchar en directo';
     playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
+    document.title = 'Radio Arkana · Tarot Underground · Málaga';
     setRepLabels(null, null, false, false);
     document.getElementById('controlsRow').classList.remove('visible');
     document.getElementById('btnCamera').classList.remove('visible');
@@ -742,7 +757,7 @@
     currentMode = 'TTS'; attemptId++; watchdogId++;
     clearAllTimers(); freshAudio();
     dot.className = 'dot tts'; statusText.textContent = 'Letanía Arkana'; statusText.className = '';
-    modeLabel.textContent = 'on air';
+    modeLabel.textContent = 'Emisión en Pruebas';
     initGenerativeAudio(); ensureAnalyser(); startWaveform(); runTTSLoop(); scheduleWatchdog();
   }
 
@@ -1068,23 +1083,40 @@
   })();
 
   // ── LANG ───────────────────────────────────────────────────────────────────
+  // ── CAM TOAST ─────────────────────────────────────────────────────────────────
+  let _camToastTimer = null;
+  function showCamToast(msg) {
+    const el = document.getElementById('camToast');
+    el.textContent = msg;
+    el.classList.add('visible');
+    clearTimeout(_camToastTimer);
+    _camToastTimer = setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  // ── LANG ───────────────────────────────────────────────────────────────────
   function setLang(lang) {
     if (lang===currentLang) return; currentLang=lang;
     localStorage.setItem('arkana-lang', lang);
+    document.documentElement.lang = lang === 'es' ? 'es' : 'en';
     document.getElementById('langES').classList.toggle('active',lang==='es');
     document.getElementById('langEN').classList.toggle('active',lang==='en');
     document.getElementById('langES').setAttribute('aria-pressed',lang==='es');
     document.getElementById('langEN').setAttribute('aria-pressed',lang==='en');
+    // Update handle hint language
+    const hint = document.getElementById('handleHint');
+    if (hint) hint.textContent = lang === 'es'
+      ? 'Introduce un @ si deseas firmar tus fotos'
+      : 'Add your @ to sign your Arkana photos';
     if (currentMode==='TTS'&&isPlaying) { repCount=0;currentTrio=[];window.speechSynthesis.cancel();clearTimeout(ttsTimer);clearInterval(countdownInterval);ttsSpeaking=false;ttsTimer=setTimeout(runTTSLoop,400); }
   }
-  // Aplicar idioma detectado al cargar (sincroniza el toggle visual)
+  // Aplicar idioma detectado al cargar (sincroniza el toggle visual y html[lang])
   (function initLangToggle() {
+    document.documentElement.lang = currentLang === 'es' ? 'es' : 'en';
     document.getElementById('langES').classList.toggle('active', currentLang==='es');
     document.getElementById('langEN').classList.toggle('active', currentLang==='en');
     document.getElementById('langES').setAttribute('aria-pressed', currentLang==='es');
     document.getElementById('langEN').setAttribute('aria-pressed', currentLang==='en');
   })();
-  
   function updateVolume(v) {
     const vol=parseFloat(v);
     if (streamAudio) streamAudio.volume=vol;
@@ -1174,7 +1206,8 @@
 
   function formatCameraDateTime() {
     const now=new Date();
-    return now.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    const locale = currentLang === 'es' ? 'es-ES' : 'en-US';
+    return now.toLocaleDateString(locale,{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
   }
 
   function updateCameraHUD() {
@@ -1217,7 +1250,7 @@
         });
       } catch(e) {
         try { stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); }
-        catch(err) { alert(isES ? 'No se pudo acceder a la cámara.' : 'Camera access denied.'); return; }
+        catch(err) { showCamToast(currentLang === 'es' ? 'Sin acceso a la cámara' : 'Camera access denied'); return; }
       }
       // Esperar un frame para que el sensor se estabilice
       const tmpVideo = document.createElement('video');
@@ -1318,7 +1351,7 @@
       document.getElementById('cameraVideo').srcObject=cameraStream;
     } catch(e) {
       try { cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); document.getElementById('cameraVideo').srcObject=cameraStream; }
-      catch(err) { closeCamera(); alert('No se pudo acceder a la cámara.'); }
+      catch(err) { closeCamera(); showCamToast(currentLang === 'es' ? 'Sin acceso a la cámara' : 'Camera access denied'); }
     }
   }
 
@@ -1517,9 +1550,8 @@
   // ── HANDLE DE USUARIO ──────────────────────────────────────────────────────
   const handleInput  = document.getElementById('handleInput');
   const handleHint   = document.getElementById('handleHint');
-  const browserLang  = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
-  const isES = browserLang.startsWith('es');
-  handleHint.textContent = isES
+  // isES derived from currentLang (already detected from system + localStorage)
+  handleHint.textContent = currentLang === 'es'
     ? 'Introduce un @ si deseas firmar tus fotos'
     : 'Add your @ to sign your Arkana photos';
   handleInput.value = localStorage.getItem('arkana-handle') || '';
