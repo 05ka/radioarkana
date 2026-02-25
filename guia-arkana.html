@@ -122,6 +122,20 @@
     .recipe-key { color: var(--gray); }
     .recipe-val { color: var(--white); font-weight: 700; }
 
+    /* ── QRNG BLOCK ── */
+    .qrng-block { border: 1px solid #1a2a1a; background: rgba(34,197,94,0.03); padding: 24px 28px; margin: 28px 0; position: relative; }
+    .qrng-block::before { content: 'ψ'; position: absolute; top: -13px; left: 24px; background: var(--bg); padding: 0 8px; color: #22c55e; font-size: 20px; font-family: serif; line-height: 1; }
+    .qrng-block-title { font-family: var(--font-head); font-size: 20px; letter-spacing: 0.05em; color: var(--white); margin-bottom: 10px; }
+    .qrng-block p { font-size: 11px; color: #8a8278; line-height: 1.9; margin-bottom: 10px; }
+    .qrng-block p:last-child { margin-bottom: 0; }
+    .qrng-block p strong { color: var(--white); }
+    .qrng-indicators { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 20px 0; }
+    .qrng-ind { background: var(--surface); padding: 18px 24px; flex: 1; display: flex; align-items: center; gap: 16px; }
+    .qrng-symbol { font-size: 24px; font-family: serif; flex-shrink: 0; line-height: 1; width: 28px; text-align: center; }
+    .qrng-ind-name { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--white); margin-bottom: 4px; }
+    .qrng-ind-desc { font-size: 10px; color: var(--gray); line-height: 1.6; }
+    @media (max-width: 520px) { .qrng-indicators { flex-direction: column; } }
+
     /* ── FOOTER ── */
     .site-footer { border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: #333; margin-top: 48px; }
 
@@ -155,15 +169,17 @@
   <div class="hero fade-in">
     <p class="hero-kicker" data-es="Manual de operación" data-en="Operation Manual">Manual de operación</p>
     <h1 class="hero-title" data-es="CÓMO<br>ESCUCHAR<br><span>ARKANA</span>" data-en="HOW TO<br>LISTEN TO<br><span>ARKANA</span>">CÓMO<br>ESCUCHAR<br><span>ARKANA</span></h1>
-    <p class="hero-sub" data-es="Una guía para sacar el máximo partido a los controles de la emisora. Ruido, frecuencias binaurales, letanías, el preset Arkana y la cámara de sincronicidad." data-en="A guide to getting the most out of the station's controls. Noise, binaural frequencies, litanies, the Arkana preset and the synchronicity camera.">Una guía para sacar el máximo partido a los controles de la emisora. Ruido, frecuencias binaurales, letanías, el preset Arkana y la cámara de sincronicidad.</p>
+    <p class="hero-sub"
+       data-es="Una guía para sacar el máximo partido a los controles de la emisora. Ruido, frecuencias binaurales, letanías, el preset Arkana, la cámara de sincronicidad y el generador cuántico de tiradas."
+       data-en="A guide to getting the most out of the station's controls. Noise, binaural frequencies, litanies, the Arkana preset, the synchronicity camera and the quantum draw generator.">Una guía para sacar el máximo partido a los controles de la emisora. Ruido, frecuencias binaurales, letanías, el preset Arkana, la cámara de sincronicidad y el generador cuántico de tiradas.</p>
   </div>
 
   <!-- ── §01 QUÉ ESCUCHAS ── -->
   <section class="section fade-in">
     <p class="section-label" data-es="01 · Introducción" data-en="01 · Introduction">01 · Introducción</p>
     <h2 class="section-title" data-es="QUÉ ESCUCHAS" data-en="WHAT YOU HEAR">QUÉ ESCUCHAS</h2>
-    <p data-es="Radio Arkana tiene dos modos de emisión que conviven y se alternan de forma automática. Cuando la señal en directo está disponible, escuchas el <strong>stream en vivo</strong>. Cuando la señal cae o no hay cobertura, la radio entra en modo <strong>Letanía Arkana</strong>: una voz sintetizada que recita combinaciones de arcanos del Tarot en bucle, generadas en tiempo real en tu dispositivo."
-       data-en="Radio Arkana has two broadcast modes that coexist and alternate automatically. When the live signal is available, you hear the <strong>live stream</strong>. When the signal drops or there is no coverage, the radio enters <strong>Arkana Litany</strong> mode: a synthesised voice that recites combinations of Tarot arcana in a loop, generated in real time on your device.">Radio Arkana tiene dos modos de emisión que conviven y se alternan de forma automática. Cuando la señal en directo está disponible, escuchas el <strong>stream en vivo</strong>. Cuando la señal cae o no hay cobertura, la radio entra en modo <strong>Letanía Arkana</strong>: una voz sintetizada que recita combinaciones de arcanos del Tarot en bucle, generadas en tiempo real en tu dispositivo.</p>
+    <p data-es="Radio Arkana tiene dos modos de emisión que conviven y se alternan de forma automática. Cuando la señal en directo está disponible, escuchas el <strong>stream en vivo</strong>. Cuando la señal cae o no hay cobertura, la radio entra en modo <strong>Letanía Arkana</strong>: una voz sintetizada que recita combinaciones de arcanos del Tarot en bucle, generadas en tiempo real en tu dispositivo usando aleatoriedad cuántica real."
+       data-en="Radio Arkana has two broadcast modes that coexist and alternate automatically. When the live signal is available, you hear the <strong>live stream</strong>. When the signal drops or there is no coverage, the radio enters <strong>Arkana Litany</strong> mode: a synthesised voice that recites combinations of Tarot arcana in a loop, generated in real time on your device using genuine quantum randomness.">Radio Arkana tiene dos modos de emisión que conviven y se alternan de forma automática. Cuando la señal en directo está disponible, escuchas el <strong>stream en vivo</strong>. Cuando la señal cae o no hay cobertura, la radio entra en modo <strong>Letanía Arkana</strong>: una voz sintetizada que recita combinaciones de arcanos del Tarot en bucle, generadas en tiempo real en tu dispositivo usando aleatoriedad cuántica real.</p>
     <p data-es="Sobre cualquiera de los dos modos puedes superponer capas de ruido generativo y tonos binaurales, que se mezclan localmente en tu navegador. Nada de esto va al servidor: es tu propio espacio sonoro."
        data-en="Over either mode you can layer generative noise and binaural tones, mixed locally in your browser. None of this goes to the server: it is your own sonic space.">Sobre cualquiera de los dos modos puedes superponer capas de ruido generativo y tonos binaurales, que se mezclan localmente en tu navegador. Nada de esto va al servidor: es tu propio espacio sonoro.</p>
 
@@ -436,9 +452,59 @@
 
   <hr class="divider">
 
-  <!-- ── §05 RECETAS ── -->
+  <!-- ── §06 QRNG ── -->
   <section class="section fade-in">
-    <p class="section-label" data-es="06 · Configuraciones recomendadas" data-en="06 · Recommended configurations">06 · Configuraciones recomendadas</p>
+    <p class="section-label" data-es="06 · Aleatoriedad cuántica" data-en="06 · Quantum randomness">06 · Aleatoriedad cuántica</p>
+    <h2 class="section-title" data-es="EL VACÍO<br>CUÁNTICO" data-en="THE QUANTUM<br>VACUUM">EL VACÍO<br>CUÁNTICO</h2>
+
+    <p data-es="Cada trío de arcanos que escuchas en la Letanía no es producto de un algoritmo. Las tiradas de Radio Arkana están generadas por <strong>fluctuaciones cuánticas del vacío electromagnético</strong>, medidas en tiempo real por el laboratorio QRNG de la Australian National University (ANU)."
+       data-en="Each trio of arcana you hear in the Litany is not the product of an algorithm. Radio Arkana draws are generated by <strong>quantum fluctuations of the electromagnetic vacuum</strong>, measured in real time by the ANU QRNG laboratory at the Australian National University.">Cada trío de arcanos que escuchas en la Letanía no es producto de un algoritmo. Las tiradas de Radio Arkana están generadas por <strong>fluctuaciones cuánticas del vacío electromagnético</strong>, medidas en tiempo real por el laboratorio QRNG de la Australian National University (ANU).</p>
+
+    <p data-es="El vacío cuántico no está vacío: partículas virtuales aparecen y desaparecen constantemente, generando ruido cuántico medible e impredecible incluso en principio. A diferencia de cualquier dado, cualquier algoritmo o cualquier proceso clásico, esto es <strong>aleatoriedad verdadera</strong> — no simulada."
+       data-en="The quantum vacuum is not empty: virtual particles appear and disappear constantly, generating measurable and in-principle unpredictable quantum noise. Unlike any dice, any algorithm or any classical process, this is <strong>true randomness</strong> — not simulated.">El vacío cuántico no está vacío: partículas virtuales aparecen y desaparecen constantemente, generando ruido cuántico medible e impredecible incluso en principio. A diferencia de cualquier dado, cualquier algoritmo o cualquier proceso clásico, esto es <strong>aleatoriedad verdadera</strong> — no simulada.</p>
+
+    <div class="qrng-block">
+      <div class="qrng-block-title" data-es="Cómo funciona" data-en="How it works">Cómo funciona</div>
+      <p data-es="Al pulsar play, la app solicita un lote de <strong>256 números cuánticos</strong> al servidor de Radio Arkana, que los obtiene en tiempo real del generador QRNG de la ANU. Cada número es un byte (0–255) producido por la medición de fluctuaciones del vacío electromagnético."
+         data-en="When you press play, the app requests a batch of <strong>256 quantum numbers</strong> from the Radio Arkana server, which obtains them in real time from the ANU QRNG generator. Each number is a byte (0–255) produced by measuring electromagnetic vacuum fluctuations.">Al pulsar play, la app solicita un lote de <strong>256 números cuánticos</strong> al servidor de Radio Arkana, que los obtiene en tiempo real del generador QRNG de la ANU. Cada número es un byte (0–255) producido por la medición de fluctuaciones del vacío electromagnético.</p>
+      <p data-es="Cada tirada consume 3 bytes — uno por carta. El byte se convierte en índice de arcano mediante módulo 22. Cuando el lote se agota, la app solicita uno nuevo en segundo plano de forma transparente. Cada tirada es un evento <strong>físicamente irrepetible</strong>."
+         data-en="Each draw consumes 3 bytes — one per card. The byte is converted into an arcana index via modulo 22. When the batch runs out, the app requests a new one silently in the background. Each draw is a <strong>physically unrepeatable</strong> event.">Cada tirada consume 3 bytes — uno por carta. El byte se convierte en índice de arcano mediante módulo 22. Cuando el lote se agota, la app solicita uno nuevo en segundo plano de forma transparente. Cada tirada es un evento <strong>físicamente irrepetible</strong>.</p>
+      <p data-es="No hay mazo barajado ni memoria entre tiradas: la misma carta puede aparecer varias veces seguidas, exactamente como ocurre en la naturaleza cuántica. El orden emerge del caos real, no de una permutación calculada."
+         data-en="There is no shuffled deck or memory between draws: the same card can appear several times in a row, exactly as happens in quantum nature. Order emerges from real chaos, not from a calculated permutation.">No hay mazo barajado ni memoria entre tiradas: la misma carta puede aparecer varias veces seguidas, exactamente como ocurre en la naturaleza cuántica. El orden emerge del caos real, no de una permutación calculada.</p>
+    </div>
+
+    <p data-es="El indicador en la esquina superior derecha del reproductor muestra en todo momento el origen de la aleatoriedad activa:"
+       data-en="The indicator in the top right corner of the player shows at all times the origin of the active randomness:">El indicador en la esquina superior derecha del reproductor muestra en todo momento el origen de la aleatoriedad activa:</p>
+
+    <div class="qrng-indicators">
+      <div class="qrng-ind">
+        <div class="qrng-symbol" style="color:#22c55e;">ψ</div>
+        <div>
+          <div class="qrng-ind-name" data-es="Cuántico activo" data-en="Quantum active">Cuántico activo</div>
+          <div class="qrng-ind-desc" data-es="Pool cargado. Las tiradas provienen del vacío cuántico de la ANU." data-en="Pool loaded. Draws come from the ANU quantum vacuum.">Pool cargado. Las tiradas provienen del vacío cuántico de la ANU.</div>
+        </div>
+      </div>
+      <div class="qrng-ind">
+        <div class="qrng-symbol" style="color:var(--gray);">⟳</div>
+        <div>
+          <div class="qrng-ind-name" data-es="Modo local" data-en="Local mode">Modo local</div>
+          <div class="qrng-ind-desc" data-es="Sin conexión o ANU no disponible. Fallback al generador pseudoaleatorio del dispositivo." data-en="No connection or ANU unavailable. Fallback to the device's pseudorandom generator.">Sin conexión o ANU no disponible. Fallback al generador pseudoaleatorio del dispositivo.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tip-label" data-es="Modo sin conexión" data-en="Offline mode">Modo sin conexión</div>
+      <p data-es="Si usas la app sin acceso a internet, el indicador permanece en <strong>⟳</strong> y las tiradas usan el generador pseudoaleatorio del dispositivo como fallback automático. La experiencia es idéntica — solo cambia la fuente de la aleatoriedad."
+         data-en="If you use the app without internet access, the indicator stays at <strong>⟳</strong> and draws use the device pseudorandom generator as automatic fallback. The experience is identical — only the source of randomness changes.">Si usas la app sin acceso a internet, el indicador permanece en <strong>⟳</strong> y las tiradas usan el generador pseudoaleatorio del dispositivo como fallback automático. La experiencia es idéntica — solo cambia la fuente de la aleatoriedad.</p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── §07 RECETAS ── -->
+  <section class="section fade-in">
+    <p class="section-label" data-es="07 · Configuraciones recomendadas" data-en="07 · Recommended configurations">07 · Configuraciones recomendadas</p>
     <h2 class="section-title" data-es="RECETAS" data-en="RECIPES">RECETAS</h2>
     <p data-es="Algunas combinaciones probadas para distintos contextos de escucha."
        data-en="Some proven combinations for different listening contexts.">Algunas combinaciones probadas para distintos contextos de escucha.</p>
@@ -495,9 +561,9 @@
 
   <hr class="divider">
 
-  <!-- ── §06 OFFLINE ── -->
+  <!-- ── §08 OFFLINE ── -->
   <section class="section fade-in">
-    <p class="section-label" data-es="07 · Modo offline" data-en="07 · Offline mode">07 · Modo offline</p>
+    <p class="section-label" data-es="08 · Modo offline" data-en="08 · Offline mode">08 · Modo offline</p>
     <h2 class="section-title" data-es="SIN CONEXIÓN" data-en="NO CONNECTION">SIN CONEXIÓN</h2>
     <p data-es="Si pierdes conexión mientras escuchas, la radio lo detecta automáticamente y aparece un aviso en la parte superior de la pantalla. El modo cambia a Letanía Arkana, que funciona completamente sin internet porque la voz se genera en tu propio dispositivo."
        data-en="If you lose connection while listening, the radio detects it automatically and a notice appears at the top of the screen. The mode switches to Arkana Litany, which works completely without internet because the voice is generated on your own device.">Si pierdes conexión mientras escuchas, la radio lo detecta automáticamente y aparece un aviso en la parte superior de la pantalla. El modo cambia a Letanía Arkana, que funciona completamente sin internet porque la voz se genera en tu propio dispositivo.</p>
@@ -507,9 +573,9 @@
        data-en="Noise and binaural work in any mode, with or without connection.">El ruido y el binaural funcionan en cualquier modo, con o sin conexión.</p>
   </section>
 
-  <!-- ── §07 COMUNIDAD ── -->
+  <!-- ── §09 COMUNIDAD ── -->
   <section class="section fade-in">
-    <p class="section-label" data-es="08 · Comunidad imaginal" data-en="08 · Imaginal community">08 · Comunidad imaginal</p>
+    <p class="section-label" data-es="09 · Comunidad imaginal" data-en="09 · Imaginal community">09 · Comunidad imaginal</p>
     <h2 class="section-title" data-es="LOS QUE<br>ESCUCHAN" data-en="THOSE WHO<br>LISTEN">LOS QUE<br>ESCUCHAN</h2>
     <p data-es="En la esquina derecha de la fila de estado verás un pequeño icono de persona junto a un número. Es el <strong>contador de oyentes activos</strong>: cuántas personas están escuchando Radio Arkana en este mismo momento."
        data-en="In the right corner of the status row you will see a small person icon next to a number. It is the <strong>active listener counter</strong>: how many people are listening to Radio Arkana at this very moment.">En la esquina derecha de la fila de estado verás un pequeño icono de persona junto a un número. Es el <strong>contador de oyentes activos</strong>: cuántas personas están escuchando Radio Arkana en este mismo momento.</p>
@@ -543,9 +609,9 @@
 
   <hr class="divider">
 
-  <!-- ── §08b BLUESKY ── -->
+  <!-- ── §09b BLUESKY ── -->
   <section class="section fade-in">
-    <p class="section-label" data-es="08b · Bluesky" data-en="08b · Bluesky">08b · Bluesky</p>
+    <p class="section-label" data-es="09b · Bluesky" data-en="09b · Bluesky">09b · Bluesky</p>
     <h2 class="section-title" data-es="SEÑALES<br>DEL <span style='color:var(--red)'>ÉTER</span>" data-en="SIGNALS<br>FROM THE <span style='color:var(--red)'>ETHER</span>">SEÑALES<br>DEL <span style="color:var(--red)">ÉTER</span></h2>
     <p data-es="Radio Arkana tiene presencia en <strong>Bluesky</strong> — una red social construida sobre un protocolo abierto que permite integrar su contenido directamente en la app sin intermediarios ni algoritmos opacos."
        data-en="Radio Arkana has a presence on <strong>Bluesky</strong> — a social network built on an open protocol that allows its content to be integrated directly into the app without intermediaries or opaque algorithms.">Radio Arkana tiene presencia en <strong>Bluesky</strong> — una red social construida sobre un protocolo abierto que permite integrar su contenido directamente en la app sin intermediarios ni algoritmos opacos.</p>
@@ -586,9 +652,9 @@
 
   <hr class="divider">
 
-  <!-- ── §09 PWA ── -->
+  <!-- ── §10 PWA ── -->
   <section class="section fade-in">
-    <p class="section-label" data-es="09 · Instalación" data-en="09 · Installation">09 · Instalación</p>
+    <p class="section-label" data-es="10 · Instalación" data-en="10 · Installation">10 · Instalación</p>
     <h2 class="section-title" data-es="INSTALAR<br>LA APP" data-en="INSTALL<br>THE APP">INSTALAR<br>LA APP</h2>
     <p data-es="Radio Arkana puede instalarse como aplicación en tu dispositivo, sin pasar por ninguna tienda. En Chrome y Edge verás un aviso en la parte inferior de la pantalla al cabo de unos segundos de escucha. En iOS, usa el botón de compartir de Safari y selecciona <strong>Añadir a pantalla de inicio</strong>."
        data-en="Radio Arkana can be installed as an application on your device, without going through any store. In Chrome and Edge you will see a prompt at the bottom of the screen after a few seconds of listening. On iOS, use the Safari share button and select <strong>Add to Home Screen</strong>.">Radio Arkana puede instalarse como aplicación en tu dispositivo, sin pasar por ninguna tienda. En Chrome y Edge verás un aviso en la parte inferior de la pantalla al cabo de unos segundos de escucha. En iOS, usa el botón de compartir de Safari y selecciona <strong>Añadir a pantalla de inicio</strong>.</p>
@@ -632,9 +698,9 @@
 
   <hr class="divider">
 
-  <!-- ── §09 FUNDAMENTOS ── -->
+  <!-- ── §11 FUNDAMENTOS ── -->
   <section class="section fade-in">
-    <p class="section-label" data-es="10 · Para saber más" data-en="10 · To learn more">10 · Para saber más</p>
+    <p class="section-label" data-es="11 · Para saber más" data-en="11 · To learn more">11 · Para saber más</p>
     <h2 class="section-title" data-es="FUNDAMENTOS" data-en="FOUNDATIONS">FUNDAMENTOS</h2>
     <p data-es="Si quieres entender qué hay detrás de Radio Arkana — por qué los arcanos, por qué la repetición, por qué el estado liminal — existe un texto que explica los fundamentos teóricos del proyecto."
        data-en="If you want to understand what lies behind Radio Arkana — why the arcana, why the repetition, why the liminal state — there is a text that explains the theoretical foundations of the project.">Si quieres entender qué hay detrás de Radio Arkana — por qué los arcanos, por qué la repetición, por qué el estado liminal — existe un texto que explica los fundamentos teóricos del proyecto.</p>
