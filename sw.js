@@ -6,24 +6,36 @@ const CACHE_VERSION = 'arkana-v8';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
+  '/camera.html',
   '/manifest.json',
+  '/camera-manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  // Fuentes de Google — se cachean en runtime la primera vez
+  '/icon-cam-192.png',
+  '/icon-cam-512.png',
 ];
 
-// Dominios externos que nunca se cachean (streaming en vivo, worker)
+// Dominios externos que nunca se cachean (streaming en vivo, worker, qrng)
 const NEVER_CACHE = [
   'stream.radioarkana.com',
   'oscardevalle.workers.dev',
-  'fonts.googleapis.com',   // la API de Google Fonts sí puede cambiar
+  'qrng.anu.edu.au',
+  'fonts.googleapis.com',
 ];
 
 // ── INSTALL: pre-cachear el shell ──────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_VERSION).then(cache => {
-      return cache.addAll(PRECACHE_ASSETS);
+      // addAll falla si algún recurso no existe — usamos add individual
+      // con catch para que iconos opcionales no rompan la instalación
+      return Promise.allSettled(
+        PRECACHE_ASSETS.map(url =>
+          cache.add(url).catch(err =>
+            console.warn(`[SW] No se pudo cachear ${url}:`, err)
+          )
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
@@ -45,16 +57,16 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // 1. Nunca interceptar: stream, worker counter, chrome-extension, etc.
+  // 1. Nunca interceptar: stream, worker, qrng, chrome-extension, no-GET
   if (
     NEVER_CACHE.some(domain => url.hostname.includes(domain)) ||
     event.request.url.startsWith('chrome-extension') ||
     event.request.method !== 'GET'
   ) {
-    return; // deja pasar sin interceptar
+    return;
   }
 
-  // 2. Fuentes de Google: cache-first (muy estables)
+  // 2. Fuentes de Google (gstatic): cache-first — muy estables
   if (url.hostname.includes('fonts.gstatic.com')) {
     event.respondWith(
       caches.open(CACHE_VERSION).then(cache =>
@@ -70,30 +82,32 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 3. Todo lo demás (index.html, assets propios): Network-first con fallback a caché
+  // 3. Todo lo demás (index.html, camera.html, assets propios):
+  //    Network-first con fallback a caché
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Si la respuesta es válida, actualizamos la caché
         if (response && response.status === 200 && response.type !== 'opaque') {
-          const responseClone = response.clone();
-          caches.open(CACHE_VERSION).then(cache => {
-            cache.put(event.request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_VERSION).then(cache => cache.put(event.request, clone));
         }
         return response;
       })
-      .catch(() => {
-        // Sin conexión → servir desde caché
-        return caches.match(event.request).then(cached => {
+      .catch(() =>
+        caches.match(event.request).then(cached => {
           if (cached) return cached;
-          // Fallback final: siempre servir index.html para rutas de navegación
+          // Fallback de navegación:
+          // — si la ruta es camera.html o empieza por /camera → servir camera.html
+          // — cualquier otra navegación → index.html
           if (event.request.mode === 'navigate') {
+            if (url.pathname.startsWith('/camera')) {
+              return caches.match('/camera.html');
+            }
             return caches.match('/index.html');
           }
           return new Response('Sin conexión', { status: 503 });
-        });
-      })
+        })
+      )
   );
 });
 
