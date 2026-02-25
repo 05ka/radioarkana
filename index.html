@@ -1089,6 +1089,7 @@
   }
   window.addEventListener('beforeunload', () => {
     if (isPlaying) navigator.sendBeacon(`${WORKER_URL}/ping?action=leave&id=${listenerId}`);
+    
   });
 
   // ── MARQUEE con ETag — poll cada 5 minutos ─────────────────────────────────
@@ -1101,17 +1102,18 @@
 
   async function fetchMarquee() {
     try {
-      const headers = { 'cache': 'no-store' };
-      if (marqueeEtag) headers['If-None-Match'] = marqueeEtag;
+      const fetchHeaders = {};
+      if (marqueeEtag) fetchHeaders['If-None-Match'] = marqueeEtag;
 
-      const res = await fetch(`${WORKER_URL}/marquee`, { headers, cache: 'no-store' });
+      const res = await fetch(`${WORKER_URL}/marquee`, {
+        headers: fetchHeaders,
+        cache: 'no-store'           // ← aquí, como opción del fetch, NO dentro de headers
+      });
 
-      // 304 → no cambió nada, no hacer nada
       if (res.status === 304) return;
 
       const data = await res.json();
       if (data.text) {
-        // Guardar el nuevo ETag para la próxima llamada
         marqueeEtag = res.headers.get('ETag') ?? null;
         applyMarquee(data.text);
       }
@@ -1603,6 +1605,7 @@
   installBtn.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;installBanner.classList.remove('visible');deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;});
   installDismiss.addEventListener('click',()=>{installBanner.classList.remove('visible');localStorage.setItem('pwa-dismissed','1');});
   window.addEventListener('appinstalled',()=>{installBanner.classList.remove('visible');deferredInstallPrompt=null;});
+  fetchMarquee();
 </script>
 </body>
 </html>
