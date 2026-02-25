@@ -900,12 +900,14 @@
   let repCount=0, currentTrio=[];
 
   function drawTrio() {
-    const cards = CARDS[currentLang]; // 22 cartas
-    const b0 = getQuantumByte();
-    const b1 = getQuantumByte();
-    const b2 = getQuantumByte();
-    // byte % 22 — cada tirada es independiente, sin memoria de anteriores
-    return [ cards[b0 % 22], cards[b1 % 22], cards[b2 % 22] ];
+    const cards = CARDS[currentLang];
+    let i0, i1, i2;
+    do {
+      i0 = getQuantumByte() % 22;
+      i1 = getQuantumByte() % 22;
+      i2 = getQuantumByte() % 22;
+    } while (i0 === i1 || i0 === i2 || i1 === i2);
+    return [ cards[i0], cards[i1], cards[i2] ];
   }
 
   function runTTSLoop() {
