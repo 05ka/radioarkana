@@ -219,48 +219,28 @@
     #shutter:hover { border-color: var(--red); transform: scale(1.04); }
     #shutter:active { transform: scale(0.92); background: var(--red); }
 
-    /* ── TIRADA: zona interactiva ─────────────────────────────────────────── */
-    #trioZone {
+    /* ── BARRA SUPERIOR ──────────────────────────────────────────────────── */
+    #topBar {
       position: fixed;
-      top: max(16px, env(safe-area-inset-top) + 8px);
-      left: 16px;
+      top: 0; left: 0; right: 0;
+      top: env(safe-area-inset-top, 0);
+      padding: max(12px, env(safe-area-inset-top) + 6px) 14px 10px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      pointer-events: auto;
+      justify-content: space-between;
+      gap: 10px;
       z-index: 10;
-    }
-
-    /* Badge de cada carta */
-    .card-badge {
-      font-family: var(--font-head);
-      font-size: 13px;
-      letter-spacing: 0.06em;
-      color: var(--white);
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(255,255,255,0.12);
-      padding: 4px 9px;
-      border-radius: 2px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      white-space: nowrap;
-      transition: opacity 0.3s;
-    }
-
-    .card-sep {
-      font-size: 10px;
-      color: var(--red);
-      opacity: 0.7;
+      pointer-events: auto;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%);
     }
 
     /* Botón refresh de tirada */
     #refreshTrio {
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.55);
       border: 1px solid rgba(230,48,48,0.4);
       color: var(--red);
       border-radius: 2px;
-      width: 28px; height: 28px;
+      width: 30px; height: 30px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       transition: all 0.2s;
@@ -274,22 +254,18 @@
 
     /* ── IDIOMA toggle ────────────────────────────────────────────────────── */
     #langToggle {
-      position: fixed;
-      top: max(16px, env(safe-area-inset-top) + 8px);
-      right: 16px;
       display: flex;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 2px;
       overflow: hidden;
-      z-index: 10;
     }
     .lang-opt {
       font-family: var(--font-mono);
       font-size: 8px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      padding: 5px 9px;
-      background: rgba(0,0,0,0.65);
+      padding: 5px 10px;
+      background: rgba(0,0,0,0.55);
       color: var(--gray);
       border: none;
       cursor: pointer;
@@ -462,26 +438,19 @@
   </p>
 </div>
 
-<!-- IDIOMA -->
-<div id="langToggle">
-  <button class="lang-opt active" id="langES" onclick="setLang('es')">ES</button>
-  <button class="lang-opt"        id="langEN" onclick="setLang('en')">EN</button>
-</div>
-
-<!-- TIRADA ACTIVA + REFRESH -->
-<div id="trioZone">
-  <div id="badge0" class="card-badge">—</div>
-  <span class="card-sep">·</span>
-  <div id="badge1" class="card-badge">—</div>
-  <span class="card-sep">·</span>
-  <div id="badge2" class="card-badge">—</div>
-  <button id="refreshTrio" onclick="newTrio()" title="Nueva tirada">
+<!-- BARRA SUPERIOR: refresh + idioma -->
+<div id="topBar">
+  <button id="refreshTrio" onclick="newTrio(true)" title="Nueva tirada">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="23 4 23 10 17 10"/>
       <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
     </svg>
   </button>
+  <div id="langToggle">
+    <button class="lang-opt active" id="langES" onclick="setLang('es')">ES</button>
+    <button class="lang-opt"        id="langEN" onclick="setLang('en')">EN</button>
+  </div>
 </div>
 
 <!-- VIEWPORT DE CÁMARA -->
@@ -680,16 +649,6 @@
   }
 
   function updateTrioBadges(animate = false) {
-    ['badge0','badge1','badge2'].forEach((id, i) => {
-      const el = document.getElementById(id);
-      if (animate) {
-        el.style.opacity = '0';
-        setTimeout(() => { el.textContent = currentTrio[i]; el.style.opacity = '1'; el.style.transition = 'opacity 0.3s'; }, i * 80);
-      } else {
-        el.textContent = currentTrio[i] || '—';
-      }
-    });
-
     // Animar botón refresh
     if (animate) {
       const btn = document.getElementById('refreshTrio');
@@ -697,11 +656,6 @@
       setTimeout(() => btn.classList.remove('spinning'), 500);
     }
   }
-
-  // Botón refresh — nueva tirada con animación
-  document.getElementById('refreshTrio').addEventListener('click', () => {
-    newTrio(true);
-  });
 
   // ── HUD ────────────────────────────────────────────────────────────────────
   function formatDateTime() {
