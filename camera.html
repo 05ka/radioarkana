@@ -49,12 +49,18 @@
       bottom: calc(env(safe-area-inset-bottom) + 140px);
       background: #000;
       overflow: hidden;
+      /* Bloquear zoom del navegador sobre el viewport */
+      touch-action: none;
     }
 
     #video {
       width: 100%; height: 100%;
       object-fit: cover;
       display: block;
+      /* El zoom se aplica aquí via transform — el HUD queda encima y no escala */
+      transform-origin: center center;
+      transition: transform 0.05s linear;
+      will-change: transform;
     }
 
     /* ── HUD sobre el vídeo ──────────────────────────────────────────────── */
@@ -106,6 +112,58 @@
       color: var(--red);
       text-shadow: 0 1px 6px rgba(0,0,0,0.9);
     }
+
+    /* ── ZOOM INDICATOR ──────────────────────────────────────────────────── */
+    #zoomIndicator {
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top) + 12px);
+      left: 20px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: rgba(240,236,228,0.9);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+      background: rgba(0,0,0,0.45);
+      padding: 4px 8px;
+      border: 1px solid rgba(230,48,48,0.3);
+      border-radius: 2px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    #zoomIndicator.visible { opacity: 1; }
+
+    /* ── ZOOM RESET BTN ──────────────────────────────────────────────────── */
+    #zoomResetBtn {
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top) + 12px);
+      left: 20px;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--red);
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(230,48,48,0.4);
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 2px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    #zoomResetBtn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #zoomResetBtn:active { background: rgba(230,48,48,0.2); }
 
     /* ── SQUARE GUIDE ────────────────────────────────────────────────────── */
     .sq-mask {
@@ -476,6 +534,18 @@
 
     <div id="watermark">Arkana File</div>
 
+    <!-- Zoom indicator (top-left, debajo del topBar) -->
+    <div id="zoomIndicator">1.0×</div>
+
+    <!-- Zoom reset button (aparece cuando zoom > 1) -->
+    <div id="zoomResetBtn" onclick="resetZoom()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+      </svg>
+      1×
+    </div>
+
     <div id="overlayBar">
       <div id="cardsDisplay">— · — · —</div>
       <div id="metaDisplay">—</div>
@@ -556,15 +626,19 @@
   let quantumPool   = [];
   let qrngLoading   = false;
 
+  // ── ZOOM STATE ─────────────────────────────────────────────────────────────
+  let currentZoom     = 1.0;
+  let minZoom         = 1.0;
+  let maxZoom         = 5.0;   // fallback; se actualiza con las capacidades reales
+  let nativeZoomSupported = false;
+  let zoomHideTimer   = null;
+
   // ── INIT ───────────────────────────────────────────────────────────────────
-  // Al abrir la app: pedir cámara directamente si ya se concedió antes,
-  // si no mostrar el splash primero.
   (async function boot() {
     applyLang(currentLang);
     restoreHandle();
+    initPinchZoom();
 
-    // Intentar arrancar cámara sin pedir permiso explícito
-    // Si el permiso ya fue concedido, el splash no aparecerá
     try {
       const perm = await navigator.permissions.query({ name: 'camera' });
       if (perm.state === 'granted') {
@@ -576,7 +650,6 @@
       }
     } catch(e) {}
 
-    // Mostrar splash para solicitar permiso
     document.getElementById('splash').classList.remove('hidden');
     fillQuantumPool();
   })();
@@ -605,11 +678,144 @@
       }
     }
     document.getElementById('video').srcObject = cameraStream;
+
+    // Detectar soporte de zoom nativo (Android Chrome)
+    await detectNativeZoom();
+
+    // Reset zoom al cambiar de cámara
+    currentZoom = 1.0;
+    applyZoom(1.0, false);
   }
 
   function flipCamera() {
     facingMode = facingMode === 'environment' ? 'user' : 'environment';
     startStream();
+  }
+
+  // ── ZOOM — DETECCIÓN NATIVA ────────────────────────────────────────────────
+  async function detectNativeZoom() {
+    nativeZoomSupported = false;
+    if (!cameraStream) return;
+    const track = cameraStream.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      const caps = track.getCapabilities();
+      if (caps.zoom) {
+        nativeZoomSupported = true;
+        minZoom = caps.zoom.min ?? 1.0;
+        maxZoom = caps.zoom.max ?? 5.0;
+      }
+    } catch(e) {}
+  }
+
+  // ── ZOOM — APLICAR ─────────────────────────────────────────────────────────
+  async function applyZoom(zoom, showUI = true) {
+    zoom = Math.min(maxZoom, Math.max(minZoom, zoom));
+    currentZoom = zoom;
+
+    const video = document.getElementById('video');
+    const indicator = document.getElementById('zoomIndicator');
+    const resetBtn  = document.getElementById('zoomResetBtn');
+
+    // 1. Zoom óptico nativo (Android Chrome) — calidad máxima
+    if (nativeZoomSupported && cameraStream) {
+      const track = cameraStream.getVideoTracks()[0];
+      if (track) {
+        try {
+          await track.applyConstraints({ advanced: [{ zoom }] });
+        } catch(e) {
+          // Si falla el nativo, caemos al CSS
+          video.style.transform = `scale(${zoom})`;
+        }
+      }
+    } else {
+      // 2. Zoom CSS — funciona en iOS Safari y resto de browsers
+      video.style.transform = `scale(${zoom})`;
+    }
+
+    // Actualizar UI
+    const zoomText = zoom.toFixed(1) + '×';
+    indicator.textContent = zoomText;
+    resetBtn.querySelector('span') && (resetBtn.querySelector('span').textContent = zoomText);
+    resetBtn.childNodes[resetBtn.childNodes.length - 1].textContent = ' ' + zoomText;
+
+    const isZoomed = zoom > 1.05;
+    resetBtn.classList.toggle('visible', isZoomed);
+
+    if (showUI) {
+      indicator.classList.add('visible');
+      clearTimeout(zoomHideTimer);
+      zoomHideTimer = setTimeout(() => {
+        // Ocultar indicador si no está haciendo pinch
+        if (!isPinching) indicator.classList.remove('visible');
+      }, 2000);
+    }
+  }
+
+  function resetZoom() {
+    applyZoom(1.0);
+  }
+
+  // ── ZOOM — PINCH TO ZOOM ───────────────────────────────────────────────────
+  let isPinching      = false;
+  let pinchStartDist  = 0;
+  let pinchStartZoom  = 1.0;
+
+  function getDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  function initPinchZoom() {
+    const viewport = document.getElementById('viewport');
+
+    viewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        pinchStartDist = getDistance(e.touches);
+        pinchStartZoom = currentZoom;
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    viewport.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && isPinching) {
+        const dist  = getDistance(e.touches);
+        const ratio = dist / pinchStartDist;
+        applyZoom(pinchStartZoom * ratio);
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    viewport.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        isPinching = false;
+        // Ocultar indicador tras 1.5s de soltar
+        clearTimeout(zoomHideTimer);
+        zoomHideTimer = setTimeout(() => {
+          document.getElementById('zoomIndicator').classList.remove('visible');
+        }, 1500);
+      }
+    }, { passive: true });
+
+    // Doble tap para reset zoom
+    let lastTap = 0;
+    viewport.addEventListener('touchend', (e) => {
+      if (e.touches.length > 0) return;
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        resetZoom();
+      }
+      lastTap = now;
+    }, { passive: true });
+
+    // Mouse wheel (desktop / trackpad)
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY * -0.005;
+      applyZoom(currentZoom + delta);
+    }, { passive: false });
   }
 
   // ── QRNG ───────────────────────────────────────────────────────────────────
@@ -630,7 +836,7 @@
     return Math.floor(Math.random() * 256);
   }
 
-  // ── TIRADA — fija hasta nuevo refresh ──────────────────────────────────────
+  // ── TIRADA ─────────────────────────────────────────────────────────────────
   function drawTrio() {
     const cards = CARDS[currentLang];
     let i0, i1, i2;
@@ -649,7 +855,6 @@
   }
 
   function updateTrioBadges(animate = false) {
-    // Animar botón refresh
     if (animate) {
       const btn = document.getElementById('refreshTrio');
       btn.classList.add('spinning');
@@ -671,7 +876,6 @@
     document.getElementById('metaDisplay').textContent = formatDateTime();
   }
 
-  // Actualizar hora en el HUD cada minuto
   setInterval(() => {
     document.getElementById('metaDisplay').textContent = formatDateTime();
   }, 60000);
@@ -681,7 +885,6 @@
     currentLang = lang;
     localStorage.setItem('arkana-lang', lang);
     applyLang(lang);
-    // Redibujar tirada en el idioma nuevo
     if (currentTrio.length === 3) { newTrio(true); }
   }
 
@@ -754,10 +957,16 @@
     canvas.height = outH;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    // 1. Frame — crop centrado
-    const scale = Math.max(outW / vidW, outH / vidH);
-    const drawW = vidW * scale, drawH = vidH * scale;
-    const offX  = (outW - drawW) / 2, offY = (outH - drawH) / 2;
+    // ── 1. Frame con zoom aplicado ─────────────────────────────────────────
+    // Si el zoom es nativo, el stream ya viene "zoomeado" → crop normal.
+    // Si el zoom es CSS, hay que recortar el centro del frame según el factor.
+    const effectiveZoom = nativeZoomSupported ? 1.0 : currentZoom;
+
+    const scale  = Math.max(outW / vidW, outH / vidH) * effectiveZoom;
+    const drawW  = vidW * scale;
+    const drawH  = vidH * scale;
+    const offX   = (outW - drawW) / 2;
+    const offY   = (outH - drawH) / 2;
     ctx.drawImage(video, offX, offY, drawW, drawH);
 
     // 2. Gradiente inferior

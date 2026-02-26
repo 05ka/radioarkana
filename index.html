@@ -160,8 +160,23 @@
     /* ── CÁMARA SINCRONICIDAD ────────────────────────────────────────────────── */
     #cameraModal { display: none; position: fixed; inset: 0; z-index: 500; background: #000; flex-direction: column; }
     #cameraModal.active { display: flex; }
-    #cameraViewport { position: relative; flex: 1; overflow: hidden; background: #000; }
-    #cameraVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #cameraViewport {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background: #000;
+      /* Bloquear zoom del navegador sobre el viewport de cámara */
+      touch-action: none;
+    }
+    #cameraVideo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      /* transform se aplica aquí via JS; el HUD queda encima y no escala */
+      transform-origin: center center;
+      transition: transform 0.05s linear;
+      will-change: transform;
+    }
     #cameraCanvas { display: none; }
     #cameraHUD { position: absolute; inset: 0; pointer-events: none; }
     #cameraWatermark { position: absolute; top: 20px; right: 20px; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(230,48,48,0.85); text-shadow: 0 1px 6px rgba(0,0,0,0.95); }
@@ -175,6 +190,59 @@
     #cameraShutter { width: 68px; height: 68px; border-radius: 50%; background: #f0ece4; border: 4px solid #444; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
     #cameraShutter:hover { border-color: #e63030; transform: scale(1.04); }
     #cameraShutter:active { transform: scale(0.93); background: #e63030; }
+
+    /* ── ZOOM INDICATOR (modal cámara) ──────────────────────────────────────── */
+    #camZoomIndicator {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: rgba(240,236,228,0.92);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+      background: rgba(0,0,0,0.45);
+      padding: 4px 8px;
+      border: 1px solid rgba(230,48,48,0.3);
+      border-radius: 2px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    #camZoomIndicator.visible { opacity: 1; }
+
+    /* ── ZOOM RESET (modal cámara) ──────────────────────────────────────────── */
+    #camZoomResetBtn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #e63030;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(230,48,48,0.4);
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 2px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    #camZoomResetBtn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #camZoomResetBtn:active { background: rgba(230,48,48,0.2); }
+
     /* ── SQUARE GUIDE OVERLAY ───────────────────────────────────────────────── */
     .sq-mask { position: absolute; background: rgba(0,0,0,0.55); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
     #squareGuide { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
@@ -264,6 +332,15 @@
         <div class="sq-label">1080 × 1080</div>
       </div>
       <div id="cameraWatermark">Arkana File</div>
+      <!-- Zoom indicator y botón reset -->
+      <div id="camZoomIndicator">1.0×</div>
+      <div id="camZoomResetBtn">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+        </svg>
+        1×
+      </div>
       <div id="cameraOverlayBar">
         <canvas id="cameraWaveCanvas"></canvas>
         <div id="cameraCards">— · — · —</div>
@@ -395,7 +472,6 @@
           <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
         </div>
         <span class="ctrl-sep"></span>
-        <!-- Botón cámara — aparece cuando hay cartas activas -->
         <button class="layer-btn" id="btnCamera" onclick="openCamera()" title="Capturar sincronicidad" aria-label="Capturar sincronicidad">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -435,7 +511,6 @@
     es: { lang: 'es-ES', conj: 'con', and: 'y' },
     en: { lang: 'en-US', conj: 'and', and: 'with' }
   };
-  // Detectar idioma: 1º preferencia guardada, 2º idioma del sistema, 3º español por defecto
   const _savedLang = localStorage.getItem('arkana-lang');
   const _syslang   = (navigator.language || navigator.languages?.[0] || 'es').toLowerCase();
   let currentLang  = _savedLang ?? (_syslang.startsWith('es') ? 'es' : 'en');
@@ -513,8 +588,6 @@
   function connectStreamToAnalyser(audioEl) {
     if (!audioCtx) return;
     ensureAnalyser();
-    // streamSrc se crea UNA sola vez por AudioContext y elemento <audio>.
-    // Si ya existe, no lo recreamos — evita nodos zombie en móvil.
     if (!streamSrc) {
       streamSrc = audioCtx.createMediaElementSource(audioEl);
       streamSrc.connect(analyser);
@@ -568,10 +641,6 @@
     wfSmooth.fill(0);
   }
 
-  // ── AUDIO ELEMENT ──────────────────────────────────────────────────────────
-  // Reutilizamos siempre el mismo <audio> — createMediaElementSource() vincula
-  // un elemento al AudioContext de forma permanente. Recrear el elemento en cada
-  // ciclo acumula nodos zombie que en móvil bloquean el audio en el 3er intento.
   function freshAudio() {
     if (!streamAudio) {
       streamAudio = document.createElement('audio');
@@ -588,8 +657,6 @@
     return streamAudio;
   }
 
-  // Destruye el AudioContext y todos sus nodos — se llama en stop() para que
-  // el siguiente start() parta de un contexto limpio sin nodos acumulados.
   async function teardownAudioContext() {
     stopWaveform();
     if (noiseNodes.length) {
@@ -650,8 +717,6 @@
     startMarqueePolling();
     document.getElementById('handleRow').classList.add('hidden');
     document.getElementById('handleHint').classList.add('hidden');
-    // Cargar pool cuántico en paralelo con el arranque — la latencia de ANU
-    // queda enmascarada por el tiempo de conexión al stream
     fillQuantumPool();
     tryStream();
   }
@@ -663,7 +728,7 @@
     clearAllTimers();
     window.speechSynthesis.cancel();
     freshAudio();
-    teardownAudioContext(); // destruye el contexto completo — el próximo start() arranca limpio
+    teardownAudioContext();
     releaseWakeLock();
     playBtn.classList.remove('active');
     wf.classList.remove('playing');
@@ -681,9 +746,7 @@
     stopMarqueePolling();
     document.getElementById('handleRow').classList.remove('hidden');
     document.getElementById('handleHint').classList.remove('hidden');
-    // Activar SW pendiente si lo había
     if (window._pendingSWUpdate) { activateNewSW(window._pendingSWUpdate); window._pendingSWUpdate = null; }
-    // Resetear pool cuántico e indicador
     quantumPool = [];
     setQrngIndicator('local');
   }
@@ -768,13 +831,9 @@
     watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 8000);
   }
 
-  // Borra la función runWatchdog completa y pega esto:
-
   async function runWatchdog(myWatchdog) {
     if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
     try {
-      // Reutilizamos el ping unificado — ya trae el estado del stream
-      // sin coste adicional porque también registra el heartbeat del oyente
       const ctrl = new AbortController();
       const tid  = setTimeout(() => ctrl.abort(), 5000);
       const res  = await fetch(
@@ -783,27 +842,15 @@
       );
       clearTimeout(tid);
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
-
       if (res.ok) {
         const { live } = await res.json();
         if (live === true) {
-          if (ttsSpeaking) {
-            watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000);
-            return;
-          }
+          if (ttsSpeaking) { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), 3000); return; }
           stopTTSAudio(); currentMode = 'NONE';
-          // audioCtx puede ser null si teardownAudioContext() lo cerró — tryStream lo recreará
-          if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().then(() => tryStream());
-          } else {
-            tryStream();
-          }
-        } else {
-          watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
-        }
-      } else {
-        watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
-      }
+          if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume().then(() => tryStream()); }
+          else { tryStream(); }
+        } else { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS); }
+      } else { watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS); }
     } catch(e) {
       if (!isPlaying || currentMode !== 'TTS' || myWatchdog !== watchdogId) return;
       watchdogTimer = setTimeout(() => runWatchdog(myWatchdog), WATCHDOG_MS);
@@ -877,10 +924,7 @@
     if (audioCtx&&noiseNodes.length) { noiseNodes[1].gain.value=noiseNodes[3].gain.value=noiseNodes[5].gain.value=noiseNodes[8].gain.value=0; }
   }
 
-  // ── QRNG — Generador cuántico de aleatoriedad ──────────────────────────────
-  // Fuente: Australian National University · vacío cuántico electromagnético
-  // Pool de 256 bytes cargado al pulsar play. Fallback a Math.random() offline.
-
+  // ── QRNG ───────────────────────────────────────────────────────────────────
   let quantumPool            = [];
   let qrngSource             = 'local';
   let qrngLoading            = false;
@@ -911,22 +955,15 @@
       if (res.ok && data.numbers && data.numbers.length > 0) {
         quantumPool = data.numbers;
         setQrngIndicator('quantum');
-      } else {
-        throw new Error('empty');
-      }
+      } else { throw new Error('empty'); }
     } catch(e) {
       if (!silent) setQrngIndicator('local');
-    } finally {
-      qrngLoading = false;
-    }
+    } finally { qrngLoading = false; }
   }
 
   function getQuantumByte() {
-    if (quantumPool.length < QRNG_REFILL_THRESHOLD && !qrngLoading) {
-      fillQuantumPool(true); // recarga silenciosa en background
-    }
+    if (quantumPool.length < QRNG_REFILL_THRESHOLD && !qrngLoading) fillQuantumPool(true);
     if (quantumPool.length > 0) return quantumPool.pop();
-    // Fallback pseudoaleatorio
     setQrngIndicator('local');
     return Math.floor(Math.random() * 256);
   }
@@ -953,7 +990,6 @@
     }
     repCount++;
     setRepLabels(`Rep ${repCount}/${loopReps}`, null, true, false);
-    // Mostrar botón cámara en cuanto hay cartas activas
     document.getElementById('btnCamera').classList.add('visible');
 
     const cfg = LANG_CONFIG[currentLang];
@@ -1082,7 +1118,6 @@
     document.addEventListener('mouseup',onUp);document.addEventListener('touchend',onUp);
   })();
 
-  // ── LANG ───────────────────────────────────────────────────────────────────
   // ── CAM TOAST ─────────────────────────────────────────────────────────────────
   let _camToastTimer = null;
   function showCamToast(msg) {
@@ -1102,14 +1137,12 @@
     document.getElementById('langEN').classList.toggle('active',lang==='en');
     document.getElementById('langES').setAttribute('aria-pressed',lang==='es');
     document.getElementById('langEN').setAttribute('aria-pressed',lang==='en');
-    // Update handle hint language
     const hint = document.getElementById('handleHint');
     if (hint) hint.textContent = lang === 'es'
       ? 'Introduce un @ si deseas firmar tus fotos'
       : 'Add your @ to sign your Arkana photos';
     if (currentMode==='TTS'&&isPlaying) { repCount=0;currentTrio=[];window.speechSynthesis.cancel();clearTimeout(ttsTimer);clearInterval(countdownInterval);ttsSpeaking=false;ttsTimer=setTimeout(runTTSLoop,400); }
   }
-  // Aplicar idioma detectado al cargar (sincroniza el toggle visual y html[lang])
   (function initLangToggle() {
     document.documentElement.lang = currentLang === 'es' ? 'es' : 'en';
     document.getElementById('langES').classList.toggle('active', currentLang==='es');
@@ -1117,48 +1150,35 @@
     document.getElementById('langES').setAttribute('aria-pressed', currentLang==='es');
     document.getElementById('langEN').setAttribute('aria-pressed', currentLang==='en');
   })();
+
   function updateVolume(v) {
     const vol=parseFloat(v);
     if (streamAudio) streamAudio.volume=vol;
     if (audioCtx&&noiseNodes.length) { const[gW,gP,gB]=noiseGainForType(noiseType,vol);noiseNodes[1].gain.value=gW;noiseNodes[3].gain.value=gP;noiseNodes[5].gain.value=gB;noiseNodes[8].gain.value=binauralFreq>0?vol*0.03:0; }
   }
 
-  // ── PING UNIFICADO (heartbeat + listeners + status) ────────────────────────
-  // Una sola llamada cada 45s reemplaza los tres polling separados.
+  // ── PING ───────────────────────────────────────────────────────────────────
   const listenerId = Math.random().toString(36).slice(2) + Date.now().toString(36);
   let pingInterval = null;
 
   async function sendPing(action = 'heartbeat') {
     try {
-      const res  = await fetch(`${WORKER_URL}/ping?id=${listenerId}&action=${action}`, {
-        method: 'POST', cache: 'no-store'
-      });
+      const res  = await fetch(`${WORKER_URL}/ping?id=${listenerId}&action=${action}`, { method: 'POST', cache: 'no-store' });
       const data = await res.json();
       document.getElementById('listenersCount').textContent = data.listeners ?? 0;
       document.getElementById('listenersDisplay').style.opacity = '1';
-      // Devolvemos el estado del stream para que el watchdog lo use
       return data;
     } catch(e) { return null; }
   }
 
-  function startListenersCounter() {
-    sendPing('join');
-    pingInterval = setInterval(() => sendPing('heartbeat'), 45000);
-  }
-  function stopListenersCounter() {
-    sendPing('leave');
-    clearInterval(pingInterval);
-    pingInterval = null;
-  }
+  function startListenersCounter() { sendPing('join'); pingInterval = setInterval(() => sendPing('heartbeat'), 45000); }
+  function stopListenersCounter() { sendPing('leave'); clearInterval(pingInterval); pingInterval = null; }
   window.addEventListener('beforeunload', () => {
     if (isPlaying) navigator.sendBeacon(`${WORKER_URL}/ping?action=leave&id=${listenerId}`);
-    
   });
 
-  // ── MARQUEE con ETag — poll cada 5 minutos ─────────────────────────────────
-  // Usa If-None-Match: si el ticker no cambió, el worker responde 304 sin body.
-  // 99% de las llamadas serán 304 → consumo de cuota mínimo.
-  const MARQUEE_POLL_MS  = 5 * 60 * 1000;   // 5 minutos
+  // ── MARQUEE ────────────────────────────────────────────────────────────────
+  const MARQUEE_POLL_MS  = 5 * 60 * 1000;
   const marqueeEl        = document.getElementById('marqueeText');
   let   marqueeEtag      = null;
   let   marqueeInterval  = null;
@@ -1167,19 +1187,10 @@
     try {
       const fetchHeaders = {};
       if (marqueeEtag) fetchHeaders['If-None-Match'] = marqueeEtag;
-
-      const res = await fetch(`${WORKER_URL}/marquee`, {
-        headers: fetchHeaders,
-        cache: 'no-store'           // ← aquí, como opción del fetch, NO dentro de headers
-      });
-
+      const res = await fetch(`${WORKER_URL}/marquee`, { headers: fetchHeaders, cache: 'no-store' });
       if (res.status === 304) return;
-
       const data = await res.json();
-      if (data.text) {
-        marqueeEtag = res.headers.get('ETag') ?? null;
-        applyMarquee(data.text);
-      }
+      if (data.text) { marqueeEtag = res.headers.get('ETag') ?? null; applyMarquee(data.text); }
     } catch(e) {}
   }
 
@@ -1190,16 +1201,144 @@
     }
   }
 
-  function startMarqueePolling() {
-    if (marqueeInterval) return;
-    marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS);
-  }
-  function stopMarqueePolling() {
-    clearInterval(marqueeInterval);
-    marqueeInterval = null;
+  function startMarqueePolling() { if (marqueeInterval) return; marqueeInterval = setInterval(fetchMarquee, MARQUEE_POLL_MS); }
+  function stopMarqueePolling() { clearInterval(marqueeInterval); marqueeInterval = null; }
+
+  // ── CÁMARA — ZOOM STATE ────────────────────────────────────────────────────
+  let camCurrentZoom       = 1.0;
+  let camMinZoom           = 1.0;
+  let camMaxZoom           = 5.0;
+  let camNativeZoom        = false;
+  let camZoomHideTimer     = null;
+  let camIsPinching        = false;
+  let camPinchStartDist    = 0;
+  let camPinchStartZoom    = 1.0;
+
+  function getCamPinchDist(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
   }
 
-  // ── CÁMARA SINCRONICIDAD ───────────────────────────────────────────────────
+  async function detectCamNativeZoom() {
+    camNativeZoom = false;
+    if (!cameraStream) return;
+    const track = cameraStream.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      const caps = track.getCapabilities();
+      if (caps && caps.zoom) {
+        camNativeZoom = true;
+        camMinZoom = caps.zoom.min ?? 1.0;
+        camMaxZoom = caps.zoom.max ?? 5.0;
+      }
+    } catch(e) {}
+  }
+
+  async function applyCamZoom(zoom, showUI = true) {
+    zoom = Math.min(camMaxZoom, Math.max(camMinZoom, zoom));
+    camCurrentZoom = zoom;
+
+    const video    = document.getElementById('cameraVideo');
+    const indicator = document.getElementById('camZoomIndicator');
+    const resetBtn  = document.getElementById('camZoomResetBtn');
+
+    // 1. Zoom óptico nativo si disponible (Android Chrome)
+    if (camNativeZoom && cameraStream) {
+      const track = cameraStream.getVideoTracks()[0];
+      if (track) {
+        try {
+          await track.applyConstraints({ advanced: [{ zoom }] });
+        } catch(e) {
+          // Fallback CSS
+          video.style.transform = `scale(${zoom})`;
+        }
+      }
+    } else {
+      // 2. Zoom CSS — iOS Safari y resto
+      video.style.transform = `scale(${zoom})`;
+    }
+
+    // Actualizar UI
+    const zoomText = zoom.toFixed(1) + '×';
+    indicator.textContent = zoomText;
+    // Actualizar texto del botón reset (mantener el SVG)
+    const lastNode = resetBtn.lastChild;
+    if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
+      lastNode.textContent = ' ' + zoomText;
+    }
+
+    const isZoomed = zoom > 1.05;
+    resetBtn.classList.toggle('visible', isZoomed);
+
+    if (showUI) {
+      indicator.classList.add('visible');
+      clearTimeout(camZoomHideTimer);
+      camZoomHideTimer = setTimeout(() => {
+        if (!camIsPinching) indicator.classList.remove('visible');
+      }, 2000);
+    }
+  }
+
+  function resetCamZoom() {
+    applyCamZoom(1.0);
+  }
+
+  function initCamPinchZoom() {
+    const vp = document.getElementById('cameraViewport');
+
+    vp.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        camIsPinching = true;
+        camPinchStartDist = getCamPinchDist(e.touches);
+        camPinchStartZoom = camCurrentZoom;
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    vp.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && camIsPinching) {
+        const dist  = getCamPinchDist(e.touches);
+        const ratio = dist / camPinchStartDist;
+        applyCamZoom(camPinchStartZoom * ratio);
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    vp.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        camIsPinching = false;
+        clearTimeout(camZoomHideTimer);
+        camZoomHideTimer = setTimeout(() => {
+          document.getElementById('camZoomIndicator').classList.remove('visible');
+        }, 1500);
+      }
+    }, { passive: true });
+
+    // Doble tap para reset zoom
+    let lastCamTap = 0;
+    vp.addEventListener('touchend', (e) => {
+      if (e.touches.length > 0) return;
+      const now = Date.now();
+      if (now - lastCamTap < 300) resetCamZoom();
+      lastCamTap = now;
+    }, { passive: true });
+
+    // Mouse wheel (desktop / trackpad)
+    vp.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY * -0.005;
+      applyCamZoom(camCurrentZoom + delta);
+    }, { passive: false });
+  }
+
+  // Inicializar pinch zoom del modal al cargar
+  initCamPinchZoom();
+
+  // Enlazar botón reset
+  document.getElementById('camZoomResetBtn').addEventListener('click', resetCamZoom);
+
+  // ── CÁMARA ─────────────────────────────────────────────────────────────────
   let cameraStream  = null;
   let camFacingMode = 'environment';
   let camWaveRafId  = null;
@@ -1217,7 +1356,6 @@
     metaEl.textContent  = formatCameraDateTime();
   }
 
-  // Dibuja la waveform en el canvas del HUD en tiempo real
   function drawCameraWave() {
     if (!document.getElementById('cameraModal').classList.contains('active')) { camWaveRafId=null; return; }
     camWaveRafId=requestAnimationFrame(drawCameraWave);
@@ -1239,85 +1377,53 @@
   async function openCamera() {
     if (!currentTrio||currentTrio.length<3) return;
 
-    // ── Modo disparo instantáneo ──────────────────────────────────────────────
+    // ── Modo instantáneo ──────────────────────────────────────────────────────
     if (instantMode) {
-      const facingMode = 'environment';
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false
         });
       } catch(e) {
         try { stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); }
         catch(err) { showCamToast(currentLang === 'es' ? 'Sin acceso a la cámara' : 'Camera access denied'); return; }
       }
-      // Esperar un frame para que el sensor se estabilice
       const tmpVideo = document.createElement('video');
-      tmpVideo.srcObject = stream;
-      tmpVideo.muted = true;
-      tmpVideo.playsInline = true;
+      tmpVideo.srcObject = stream; tmpVideo.muted = true; tmpVideo.playsInline = true;
       await tmpVideo.play();
       await new Promise(r => setTimeout(r, 600));
 
-      // Componer canvas igual que shootPhoto pero sin abrir modal
-      const vW = tmpVideo.videoWidth  || 1280;
-      const vH = tmpVideo.videoHeight || 720;
+      const vW = tmpVideo.videoWidth || 1280, vH = tmpVideo.videoHeight || 720;
       const dpr = window.devicePixelRatio || 1;
       const canvas = document.getElementById('cameraCanvas');
-      canvas.width  = vW * dpr;
-      canvas.height = vH * dpr;
+      canvas.width = vW * dpr; canvas.height = vH * dpr;
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
       ctx.drawImage(tmpVideo, 0, 0, vW, vH);
 
-      
-      // Degradado inferior — solo franja del texto
       const gradH = vH * 0.28;
       const grad  = ctx.createLinearGradient(0, vH - gradH, 0, vH);
-      grad.addColorStop(0,   'rgba(0,0,0,0)');
-      grad.addColorStop(0.4, 'rgba(0,0,0,0.55)');
-      grad.addColorStop(1,   'rgba(0,0,0,0.82)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, vH - gradH, vW, gradH);
+      grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(0.4, 'rgba(0,0,0,0.55)'); grad.addColorStop(1, 'rgba(0,0,0,0.82)');
+      ctx.fillStyle = grad; ctx.fillRect(0, vH - gradH, vW, gradH);
 
-      // Watermark
-      ctx.font = '700 10px "Space Mono", monospace';
-      ctx.fillStyle = 'rgba(230,48,48,0.85)';
-      ctx.textAlign = 'right';
-      ctx.shadowColor = 'rgba(0,0,0,0.95)';
-      ctx.shadowBlur  = 6;
+      ctx.font = '700 10px "Space Mono", monospace'; ctx.fillStyle = 'rgba(230,48,48,0.85)';
+      ctx.textAlign = 'right'; ctx.shadowColor = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 6;
       ctx.fillText('RADIO ARKANA EVENT', vW - 20, 32);
 
-      // Cartas
-      const cardsSize  = Math.round(vH * 0.048);
-      const lineHeight = cardsSize * 1.05;
-      const maxTextWidth = vW - 48;
-      ctx.font      = `${cardsSize}px 'Bebas Neue', sans-serif`;
-      ctx.fillStyle = '#f0ece4';
-      ctx.textAlign = 'left';
-      ctx.shadowColor = 'rgba(0,0,0,0.9)';
-      ctx.shadowBlur  = 10;
+      const cardsSize = Math.round(vH * 0.048), lineHeight = cardsSize * 1.05, maxTextWidth = vW - 48;
+      ctx.font = `${cardsSize}px 'Bebas Neue', sans-serif`; ctx.fillStyle = '#f0ece4'; ctx.textAlign = 'left';
+      ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 10;
       const trio = currentTrio.length === 3 ? currentTrio : ['—','—','—'];
       const words = trio.join('  ·  ').split(' ');
       const lines = []; let current = '';
-      for (const word of words) {
-        const test = current ? current + ' ' + word : word;
-        if (ctx.measureText(test).width > maxTextWidth && current) { lines.push(current); current = word; }
-        else { current = test; }
-      }
+      for (const word of words) { const test = current ? current + ' ' + word : word; if (ctx.measureText(test).width > maxTextWidth && current) { lines.push(current); current = word; } else { current = test; } }
       if (current) lines.push(current);
-      const cardsBaseY  = vH - 48;
-      const totalTextH  = lines.length * lineHeight;
-      const cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
+      const cardsBaseY = vH - 48, totalTextH = lines.length * lineHeight, cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
       lines.forEach((line, i) => ctx.fillText(line, 24, cardsStartY + i * lineHeight));
 
-      // Meta
-      const metaSize = Math.round(vH * 0.014);
-      const metaTop  = vH - 20;
-      ctx.font = `${metaSize}px 'Space Mono', monospace`;
-      ctx.shadowColor = 'rgba(0,0,0,0.9)';
-      ctx.shadowBlur  = 6;
+      const metaSize = Math.round(vH * 0.014), metaTop = vH - 20;
+      ctx.font = `${metaSize}px 'Space Mono', monospace`; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
       const savedHandle = (localStorage.getItem('arkana-handle') || '').trim();
       ctx.fillStyle = '#e63030'; ctx.textAlign = 'left';
       ctx.fillText(savedHandle ? '@' + savedHandle : formatCameraDateTime(), 24, metaTop);
@@ -1325,13 +1431,9 @@
       ctx.fillText(savedHandle ? 'radioarkana.com · ' + formatCameraDateTime() : 'radioarkana.com', vW - 24, metaTop);
       ctx.shadowBlur = 0;
 
-      // Detener stream y descargar
       stream.getTracks().forEach(t => t.stop());
       const filename = `arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.jpg`;
-      const a = document.createElement('a');
-      a.href     = canvas.toDataURL('image/jpeg', 0.93);
-      a.download = filename;
-      a.click();
+      const a = document.createElement('a'); a.href = canvas.toDataURL('image/jpeg', 0.93); a.download = filename; a.click();
       return;
     }
 
@@ -1351,8 +1453,15 @@
       document.getElementById('cameraVideo').srcObject=cameraStream;
     } catch(e) {
       try { cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); document.getElementById('cameraVideo').srcObject=cameraStream; }
-      catch(err) { closeCamera(); showCamToast(currentLang === 'es' ? 'Sin acceso a la cámara' : 'Camera access denied'); }
+      catch(err) { closeCamera(); showCamToast(currentLang === 'es' ? 'Sin acceso a la cámara' : 'Camera access denied'); return; }
     }
+
+    // Detectar zoom nativo y resetear zoom al cambiar de cámara
+    await detectCamNativeZoom();
+    camCurrentZoom = 1.0;
+    document.getElementById('cameraVideo').style.transform = '';
+    document.getElementById('camZoomIndicator').classList.remove('visible');
+    document.getElementById('camZoomResetBtn').classList.remove('visible');
   }
 
   function closeCamera() {
@@ -1360,11 +1469,18 @@
     if (camWaveRafId){cancelAnimationFrame(camWaveRafId);camWaveRafId=null;}
     document.getElementById('cameraModal').classList.remove('active');
     document.getElementById('cameraVideo').srcObject=null;
+    document.getElementById('cameraVideo').style.transform='';
     document.getElementById('squareGuide').classList.remove('visible');
+    document.getElementById('camZoomIndicator').classList.remove('visible');
+    document.getElementById('camZoomResetBtn').classList.remove('visible');
     ['sqMaskTop','sqMaskBottom','sqMaskLeft','sqMaskRight'].forEach(id=>{document.getElementById(id).style.opacity='0';});
+    camCurrentZoom = 1.0;
   }
 
-  async function flipCamera() { camFacingMode=camFacingMode==='environment'?'user':'environment'; await startCameraStream(); }
+  async function flipCamera() {
+    camFacingMode=camFacingMode==='environment'?'user':'environment';
+    await startCameraStream();
+  }
 
   // ── FORMAT TOGGLE + SQUARE GUIDE ──────────────────────────────────────────
   let squareMode = false;
@@ -1381,13 +1497,10 @@
       [mTop, mBottom, mLeft, mRight].forEach(m => { m.style.opacity = '0'; });
       return;
     }
-    const vpW = vp.clientWidth;
-    const vpH = vp.clientHeight;
-    const size   = Math.min(vpW, vpH);
-    const offsetX = (vpW - size) / 2;
-    const offsetY = (vpH - size) / 2;
-    guide.style.width  = size + 'px';
-    guide.style.height = size + 'px';
+    const vpW = vp.clientWidth, vpH = vp.clientHeight;
+    const size = Math.min(vpW, vpH);
+    const offsetX = (vpW - size) / 2, offsetY = (vpH - size) / 2;
+    guide.style.width = size + 'px'; guide.style.height = size + 'px';
     guide.classList.add('visible');
     mTop.style.cssText    = `top:0;left:0;right:0;height:${offsetY}px;opacity:1;`;
     mBottom.style.cssText = `bottom:0;left:0;right:0;height:${offsetY}px;opacity:1;`;
@@ -1417,93 +1530,53 @@
     const vidW = video.videoWidth  || 1280;
     const vidH = video.videoHeight || 720;
 
-    // ── Dimensiones de salida según modo ──────────────────────────────────
     let outW, outH;
-    if (squareMode) {
-      outW = 1080; outH = 1080;
-    } else {
-      const dpr = window.devicePixelRatio || 1;
-      outW = viewport.clientWidth  * dpr;
-      outH = viewport.clientHeight * dpr;
-    }
-    canvas.width  = outW;
-    canvas.height = outH;
+    if (squareMode) { outW = 1080; outH = 1080; }
+    else { const dpr = window.devicePixelRatio || 1; outW = viewport.clientWidth * dpr; outH = viewport.clientHeight * dpr; }
+    canvas.width = outW; canvas.height = outH;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    // ── 1. Frame del video — crop centrado (cover) ─────────────────────────
-    const scale = Math.max(outW / vidW, outH / vidH);
-    const drawW = vidW * scale;
-    const drawH = vidH * scale;
-    const offX  = (outW - drawW) / 2;
-    const offY  = (outH - drawH) / 2;
+    // ── Frame con zoom — si nativo el stream ya viene zoomeado ─────────────
+    const effectiveZoom = camNativeZoom ? 1.0 : camCurrentZoom;
+    const scale = Math.max(outW / vidW, outH / vidH) * effectiveZoom;
+    const drawW = vidW * scale, drawH = vidH * scale;
+    const offX  = (outW - drawW) / 2, offY = (outH - drawH) / 2;
     ctx.drawImage(video, offX, offY, drawW, drawH);
 
-    // ── 2. Degradado inferior — solo la franja del texto ──────────────────
+    // Degradado
     const gradH = outH * 0.28;
     const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
-    grad.addColorStop(0,   'rgba(0,0,0,0)');
-    grad.addColorStop(0.4, 'rgba(0,0,0,0.55)');
-    grad.addColorStop(1,   'rgba(0,0,0,0.82)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, outH - gradH, outW, gradH);
+    grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(0.4, 'rgba(0,0,0,0.55)'); grad.addColorStop(1, 'rgba(0,0,0,0.82)');
+    ctx.fillStyle = grad; ctx.fillRect(0, outH - gradH, outW, gradH);
 
-    // ── 3. Watermark ───────────────────────────────────────────────────────
+    // Watermark
     const wmSize = Math.round(outW * 0.018);
-    ctx.font        = `700 ${wmSize}px "Space Mono", monospace`;
-    ctx.fillStyle   = 'rgba(230,48,48,0.85)';
-    ctx.textAlign   = 'right';
-    ctx.shadowColor = 'rgba(0,0,0,0.95)';
-    ctx.shadowBlur  = squareMode ? 8 : 6;
+    ctx.font = `700 ${wmSize}px "Space Mono", monospace`; ctx.fillStyle = 'rgba(230,48,48,0.85)';
+    ctx.textAlign = 'right'; ctx.shadowColor = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = squareMode ? 8 : 6;
     ctx.fillText('RADIO ARKANA EVENT', outW - Math.round(outW * 0.02), Math.round(outW * 0.05));
 
-    // ── 4. Texto cartas ────────────────────────────────────────────────────
-    const cardsSize  = Math.round(outH * 0.055);
-    const lineHeight = cardsSize * 1.05;
-    const padX       = Math.round(outW * 0.022);
-    const maxTextW   = outW - padX * 2;
-
-    ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
-    ctx.fillStyle   = '#f0ece4';
-    ctx.textAlign   = 'left';
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur  = squareMode ? 14 : 10;
-
-    const trio     = currentTrio && currentTrio.length === 3 ? currentTrio : ['—','—','—'];
-    const fullText = trio.join('  ·  ');
-    const words    = fullText.split(' ');
-    const lines    = [];
-    let current    = '';
-    for (const word of words) {
-      const test = current ? current + ' ' + word : word;
-      if (ctx.measureText(test).width > maxTextW && current) {
-        lines.push(current); current = word;
-      } else { current = test; }
-    }
+    // Cartas
+    const cardsSize = Math.round(outH * 0.055), lineHeight = cardsSize * 1.05, padX = Math.round(outW * 0.022), maxTextW = outW - padX * 2;
+    ctx.font = `${cardsSize}px 'Bebas Neue', sans-serif`; ctx.fillStyle = '#f0ece4'; ctx.textAlign = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = squareMode ? 14 : 10;
+    const trio = currentTrio && currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+    const words = trio.join('  ·  ').split(' ');
+    const lines = []; let current = '';
+    for (const word of words) { const test = current ? current + ' ' + word : word; if (ctx.measureText(test).width > maxTextW && current) { lines.push(current); current = word; } else { current = test; } }
     if (current) lines.push(current);
-
-    const cardsBaseY  = outH - Math.round(outH * 0.072);
-    const totalTextH  = lines.length * lineHeight;
-    const cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
+    const cardsBaseY = outH - Math.round(outH * 0.072), totalTextH = lines.length * lineHeight, cardsStartY = cardsBaseY - totalTextH + lineHeight * 0.85;
     lines.forEach((line, i) => ctx.fillText(line, padX, cardsStartY + i * lineHeight));
 
-    // ── 5. Meta (fecha / handle / url) ────────────────────────────────────
-    const metaSize = Math.round(outH * 0.018);
-    const metaTop  = outH - Math.round(outH * 0.028);
-    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur  = squareMode ? 8 : 6;
-
+    // Meta
+    const metaSize = Math.round(outH * 0.018), metaTop = outH - Math.round(outH * 0.028);
+    ctx.font = `${metaSize}px 'Space Mono', monospace`; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = squareMode ? 8 : 6;
     const savedHandle = (localStorage.getItem('arkana-handle') || '').trim();
-    ctx.fillStyle = '#e63030';
-    ctx.textAlign = 'left';
+    ctx.fillStyle = '#e63030'; ctx.textAlign = 'left';
     ctx.fillText(savedHandle ? '@' + savedHandle : formatCameraDateTime(), padX, metaTop);
     ctx.textAlign = 'right';
     ctx.fillText(savedHandle ? 'radioarkana.com · ' + formatCameraDateTime() : 'radioarkana.com', outW - padX, metaTop);
+    ctx.shadowBlur = 0; ctx.textAlign = 'left';
 
-    ctx.shadowBlur = 0;
-    ctx.textAlign  = 'left';
-
-    // ── Mostrar preview ────────────────────────────────────────────────────
     document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg', 0.93);
     document.getElementById('cameraPreview').classList.add('active');
   }
@@ -1544,13 +1617,11 @@
   document.getElementById('previewShare').addEventListener('click', sharePhoto);
   document.getElementById('previewExit').addEventListener('click', exitCamera);
 
-  // Actualizar HUD cada segundo (para la hora en tiempo real)
   setInterval(()=>{ if(document.getElementById('cameraModal').classList.contains('active')) updateCameraHUD(); },1000);
 
-  // ── HANDLE DE USUARIO ──────────────────────────────────────────────────────
+  // ── HANDLE ─────────────────────────────────────────────────────────────────
   const handleInput  = document.getElementById('handleInput');
   const handleHint   = document.getElementById('handleHint');
-  // isES derived from currentLang (already detected from system + localStorage)
   handleHint.textContent = currentLang === 'es'
     ? 'Introduce un @ si deseas firmar tus fotos'
     : 'Add your @ to sign your Arkana photos';
@@ -1561,7 +1632,7 @@
     localStorage.setItem('arkana-handle', val);
   });
 
-  // ── INSTANT SHOT — long-press toggle ───────────────────────────────────────
+  // ── INSTANT SHOT ───────────────────────────────────────────────────────────
   let instantMode = localStorage.getItem('arkana-instant') === '1';
   const btnCamera = document.getElementById('btnCamera');
 
@@ -1571,8 +1642,7 @@
   }
   updateCameraIconState();
 
-  let longPressTimer = null;
-  let longPressActive = false;
+  let longPressTimer = null, longPressActive = false;
 
   function startLongPress(e) {
     longPressActive = false;
@@ -1581,15 +1651,11 @@
       instantMode = !instantMode;
       localStorage.setItem('arkana-instant', instantMode ? '1' : '0');
       updateCameraIconState();
-      // Feedback háptico si está disponible
       if (navigator.vibrate) navigator.vibrate(instantMode ? [40, 30, 40] : [60]);
     }, 3000);
   }
 
-  function cancelLongPress() {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
-  }
+  function cancelLongPress() { clearTimeout(longPressTimer); longPressTimer = null; }
 
   btnCamera.addEventListener('mousedown',  startLongPress);
   btnCamera.addEventListener('touchstart', startLongPress, { passive: true });
@@ -1597,55 +1663,28 @@
   btnCamera.addEventListener('mouseleave', cancelLongPress);
   btnCamera.addEventListener('touchend',   cancelLongPress);
   btnCamera.addEventListener('touchcancel',cancelLongPress);
-
-  // Interceptar el click si el long-press se completó (evitar disparo doble)
-  btnCamera.addEventListener('click', e => {
-    if (longPressActive) { longPressActive = false; e.stopImmediatePropagation(); }
-  }, true);
+  btnCamera.addEventListener('click', e => { if (longPressActive) { longPressActive = false; e.stopImmediatePropagation(); } }, true);
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').then(reg => {
-
-        // Comprobar actualizaciones cada vez que el usuario vuelve a la pestaña
-        document.addEventListener('visibilitychange', () => {
-          if (!document.hidden) reg.update();
-        });
-
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update(); });
         reg.addEventListener('updatefound', () => {
           const newSW = reg.installing;
           newSW.addEventListener('statechange', () => {
             if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-              // Hay una versión nueva lista. Si no está sonando, actualizamos ya.
-              // Si está sonando, esperamos a que el usuario pare.
-              if (!isPlaying) {
-                activateNewSW(reg);
-              } else {
-                // Guardamos la referencia y actualizamos al parar
-                window._pendingSWUpdate = reg;
-              }
+              if (!isPlaying) { activateNewSW(reg); } else { window._pendingSWUpdate = reg; }
             }
           });
         });
-
       }).catch(err => console.warn('[SW] Error:', err));
-
-      // Cuando el SW nuevo toma control, recargamos para servir archivos frescos
       let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { refreshing = true; window.location.reload(); } });
     });
   }
 
-  function activateNewSW(reg) {
-    const sw = reg.waiting;
-    if (sw) sw.postMessage('skipWaiting');
-  }
+  function activateNewSW(reg) { const sw = reg.waiting; if (sw) sw.postMessage('skipWaiting'); }
 
   // ── CONECTIVIDAD ───────────────────────────────────────────────────────────
   const offlineBanner=document.getElementById('offlineBanner');
@@ -1662,36 +1701,18 @@
   });
 
   // ── PWA INSTALL ────────────────────────────────────────────────────────────
-  let deferredInstallPrompt    = null;
-  let deferredCamInstallPrompt = null;
+  let deferredInstallPrompt = null, deferredCamInstallPrompt = null;
+  const installBanner  = document.getElementById('installBanner');
+  const installBtn     = document.getElementById('installBtn');
+  const installCamBtn  = document.getElementById('installCamBtn');
+  const camInstallLine = document.getElementById('camInstallLine');
+  const installDismiss = document.getElementById('installDismiss');
 
-  const installBanner   = document.getElementById('installBanner');
-  const installBtn      = document.getElementById('installBtn');
-  const installCamBtn   = document.getElementById('installCamBtn');
-  const camInstallLine  = document.getElementById('camInstallLine');
-  const installDismiss  = document.getElementById('installDismiss');
-
-  // El navegador puede emitir beforeinstallprompt para la app principal
-  // y, si camera.html tiene su propio manifest, también para ella cuando
-  // el usuario la visita. Aquí capturamos ambos.
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
-
-    // Distinguimos por start_url del manifest que el navegador evaluó
-    // En la práctica, en index.html solo llega el prompt de la app principal.
-    // El de Arkana CAM llega cuando el usuario abre camera.html.
-    // Por seguridad guardamos el primero como "radio" y ofrecemos el enlace a cam.
-    if (!deferredInstallPrompt) {
-      deferredInstallPrompt = e;
-    }
-
+    if (!deferredInstallPrompt) deferredInstallPrompt = e;
     if (!localStorage.getItem('pwa-dismissed')) {
-      setTimeout(() => {
-        installBanner.classList.add('visible');
-        // Mostrar línea + botón de Arkana CAM como opción adicional
-        camInstallLine.style.display  = 'block';
-        installCamBtn.style.display   = 'block';
-      }, 3000);
+      setTimeout(() => { installBanner.classList.add('visible'); camInstallLine.style.display='block'; installCamBtn.style.display='block'; }, 3000);
     }
   });
 
@@ -1703,22 +1724,9 @@
     deferredInstallPrompt = null;
   });
 
-  // Arkana CAM: llevamos al usuario a camera.html en una nueva pestaña.
-  // El navegador lanzará el prompt de instalación de esa app cuando abra la página.
-  installCamBtn.addEventListener('click', () => {
-    installBanner.classList.remove('visible');
-    window.open('/camera.html', '_blank');
-  });
-
-  installDismiss.addEventListener('click', () => {
-    installBanner.classList.remove('visible');
-    localStorage.setItem('pwa-dismissed', '1');
-  });
-
-  window.addEventListener('appinstalled', () => {
-    installBanner.classList.remove('visible');
-    deferredInstallPrompt = null;
-  });
+  installCamBtn.addEventListener('click', () => { installBanner.classList.remove('visible'); window.open('/camera.html', '_blank'); });
+  installDismiss.addEventListener('click', () => { installBanner.classList.remove('visible'); localStorage.setItem('pwa-dismissed', '1'); });
+  window.addEventListener('appinstalled', () => { installBanner.classList.remove('visible'); deferredInstallPrompt = null; });
   fetchMarquee();
 </script>
 </body>
