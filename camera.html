@@ -70,7 +70,7 @@
       pointer-events: none;
     }
 
-    /* Watermark */
+    /* Watermark — fila superior derecha (zoom indicator queda debajo) */
     #watermark {
       position: absolute;
       top: max(20px, env(safe-area-inset-top) + 12px);
@@ -116,8 +116,10 @@
     /* ── ZOOM INDICATOR ──────────────────────────────────────────────────── */
     #zoomIndicator {
       position: absolute;
-      top: max(20px, env(safe-area-inset-top) + 12px);
-      left: 20px;
+      /* Movido a la derecha, debajo del watermark para no solaparse */
+      top: max(44px, env(safe-area-inset-top) + 36px);
+      right: 20px;
+      left: auto;
       font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 0.2em;
@@ -138,8 +140,10 @@
     /* ── ZOOM RESET BTN ──────────────────────────────────────────────────── */
     #zoomResetBtn {
       position: absolute;
-      top: max(20px, env(safe-area-inset-top) + 12px);
-      left: 20px;
+      /* Movido a la derecha, debajo del zoomIndicator */
+      top: max(72px, env(safe-area-inset-top) + 64px);
+      right: 20px;
+      left: auto;
       font-family: var(--font-mono);
       font-size: 8px;
       letter-spacing: 0.18em;

@@ -179,7 +179,7 @@
     }
     #cameraCanvas { display: none; }
     #cameraHUD { position: absolute; inset: 0; pointer-events: none; }
-    #cameraWatermark { position: absolute; top: 20px; right: 20px; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(230,48,48,0.85); text-shadow: 0 1px 6px rgba(0,0,0,0.95); }
+    #cameraWatermark { position: absolute; top: max(20px, env(safe-area-inset-top) + 12px); right: 20px; font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(230,48,48,0.85); text-shadow: 0 1px 6px rgba(0,0,0,0.95); }
     #cameraOverlayBar { position: absolute; bottom: 0; left: 0; right: 0; padding: 44px 24px 20px; background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.65) 60%, transparent 100%); }
     #cameraWaveCanvas { display: none; }
     #cameraCards { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px, 6.5vw, 38px); letter-spacing: 0.04em; color: #f0ece4; line-height: 1.05; text-shadow: 0 2px 12px rgba(0,0,0,0.9); }
@@ -194,8 +194,10 @@
     /* ── ZOOM INDICATOR (modal cámara) ──────────────────────────────────────── */
     #camZoomIndicator {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      /* Derecha, debajo del watermark — sin solapamiento */
+      top: max(44px, env(safe-area-inset-top) + 36px);
+      right: 20px;
+      left: auto;
       font-family: 'Space Mono', monospace;
       font-size: 10px;
       letter-spacing: 0.2em;
@@ -216,8 +218,10 @@
     /* ── ZOOM RESET (modal cámara) ──────────────────────────────────────────── */
     #camZoomResetBtn {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      /* Derecha, debajo del zoom indicator */
+      top: max(72px, env(safe-area-inset-top) + 64px);
+      right: 20px;
+      left: auto;
       font-family: 'Space Mono', monospace;
       font-size: 8px;
       letter-spacing: 0.18em;
