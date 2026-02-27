@@ -285,6 +285,24 @@
       text-transform: uppercase;
       color: #333;
     }
+
+    /* Temporary banner for audio activation */
+    #audioPrompt {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(230,48,48,0.9);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 9999;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      display: none;
+      text-align: center;
+      max-width: 90%;
+    }
   </style>
 </head>
 <body>
@@ -361,6 +379,9 @@
   </div>
 </div>
 
+<!-- Mensaje temporal para activar audio -->
+<div id="audioPrompt">Toca o haz clic en cualquier parte de la pantalla para activar el sonido</div>
+
 <!-- LiveKit Browser SDK -->
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
@@ -413,6 +434,7 @@
         });
       }, 60);
     } catch(e) {
+      console.warn('No se pudo iniciar analizador de audio real, usando simulación');
       waveInterval = setInterval(() => {
         bars.forEach(b => {
           b.style.height = (Math.random() * 20 + 3) + 'px';
@@ -489,19 +511,56 @@
     // ── REMOTE AUDIO HANDLING ───────────────────────────────────────────────
     room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       if (track.kind === LivekitClient.Track.Kind.AUDIO) {
-        console.log('AUDIO REMOTO SUSCRITO de:', participant.identity);
+        console.log('AUDIO REMOTO SUSCRITO de:', participant?.identity || 'desconocido');
 
         const audioEl = document.createElement('audio');
         audioEl.autoplay = true;
         audioEl.muted = false;
         audioEl.volume = 1.0;
-        audioEl.controls = false;
+        audioEl.controls = false; // Cambia a true temporalmente si quieres controles visibles
 
         track.attach(audioEl);
 
-        audioEl.play()
-          .then(() => console.log('Reproducción de audio remoto iniciada OK'))
-          .catch(err => console.error('Error al reproducir audio remoto:', err.name, err.message));
+        const audioPrompt = document.getElementById('audioPrompt');
+
+        const attemptPlay = () => {
+          const playPromise = audioEl.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('✅ Reproducción remota OK para', participant?.identity);
+                if (audioPrompt) audioPrompt.style.display = 'none';
+              })
+              .catch(err => {
+                console.error('❌ Play falló:', err.name, err.message);
+
+                // Mostrar banner y esperar gesto del usuario
+                if (audioPrompt) {
+                  audioPrompt.style.display = 'block';
+                }
+
+                const resumeOnGesture = () => {
+                  audioEl.play()
+                    .then(() => {
+                      console.log('Audio reanudado tras gesto del usuario');
+                      if (audioPrompt) audioPrompt.style.display = 'none';
+                    })
+                    .catch(e => console.warn('Aún falla tras gesto:', e.name, e.message));
+
+                  document.removeEventListener('click', resumeOnGesture);
+                  document.removeEventListener('touchend', resumeOnGesture);
+                };
+
+                document.addEventListener('click', resumeOnGesture, { once: true });
+                document.addEventListener('touchend', resumeOnGesture, { once: true });
+              });
+          }
+        };
+
+        // Intentos de reproducción
+        attemptPlay();
+        setTimeout(attemptPlay, 800);
+        setTimeout(attemptPlay, 2000);
       }
     });
 
@@ -513,6 +572,7 @@
 
     room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
       console.log('Participante conectado:', p.identity);
+      updateParticipants();
     });
 
     room.on(LivekitClient.RoomEvent.ParticipantDisconnected, updateParticipants);
@@ -545,6 +605,7 @@
       await room.connect(url, token);
       showScreen('screenStudio');
     } catch(e) {
+      console.error('Error al conectar a la sala:', e);
       throw new Error('No se pudo conectar a la cabina');
     }
   }
@@ -657,5 +718,4 @@
   }
 </script>
 </body>
-
 </html>
