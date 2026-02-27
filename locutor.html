@@ -93,11 +93,17 @@
       margin-bottom: 36px;
     }
 
-    /* ── PANTALLAS ─────────────────────────────────────────────────────────── */
+    .permission-warning {
+      color: #ff9800;
+      font-size: 12px;
+      text-align: center;
+      margin: 16px 0 24px;
+      line-height: 1.4;
+    }
+
     .screen { display: none; }
     .screen.active { display: block; }
 
-    /* ── PANTALLA: ACCESO DENEGADO ─────────────────────────────────────────── */
     #screenDenied .denied-msg {
       font-size: 11px;
       letter-spacing: 0.2em;
@@ -107,7 +113,6 @@
       text-align: center;
     }
 
-    /* ── PANTALLA: ENTRADA ─────────────────────────────────────────────────── */
     .field-label {
       font-size: 9px;
       letter-spacing: 0.2em;
@@ -164,7 +169,6 @@
       min-height: 14px;
     }
 
-    /* ── PANTALLA: EN CABINA ───────────────────────────────────────────────── */
     .status-row {
       display: flex;
       align-items: center;
@@ -223,7 +227,6 @@
     .p-name { flex: 1; }
     .p-you { color: var(--red-dim); font-size: 9px; letter-spacing: 0.15em; }
 
-    /* ── WAVEFORM ──────────────────────────────────────────────────────────── */
     .waveform {
       display: flex;
       align-items: center;
@@ -244,7 +247,6 @@
       box-shadow: 0 2px 8px rgba(230,48,48,0.35);
     }
 
-    /* ── MIC CONTROLS ──────────────────────────────────────────────────────── */
     .mic-controls {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -268,7 +270,6 @@
     .btn-mic-mute:hover { border-color: var(--red); }
     .btn-mic-mute.muted { border-color: var(--red); color: var(--red); background: rgba(230,48,48,0.08); }
 
-    /* ── FOOTER ────────────────────────────────────────────────────────────── */
     .footer {
       border: 1px solid var(--border);
       border-top: none;
@@ -305,6 +306,9 @@
 
     <!-- PANTALLA: ENTRADA -->
     <div id="screenEntry" class="screen active">
+      <div class="permission-warning">
+        ⚠️ Debes permitir el acceso al micrófono para poder <strong>escuchar</strong> a los demás locutores
+      </div>
       <div class="field-label">Tu nombre en antena</div>
       <input
         id="nameInput"
@@ -409,7 +413,6 @@
         });
       }, 60);
     } catch(e) {
-      // fallback: animación aleatoria
       waveInterval = setInterval(() => {
         bars.forEach(b => {
           b.style.height = (Math.random() * 20 + 3) + 'px';
@@ -451,7 +454,6 @@
     btn.textContent = 'Conectando...';
 
     try {
-      // Pedir token al Worker
       const res = await fetch(
         `${WORKER_URL}/livekit-token?k=${encodeURIComponent(SECRET_KEY)}&name=${encodeURIComponent(name)}`
       );
@@ -482,10 +484,38 @@
     room = new LivekitClient.Room({
       adaptiveStream: true,
       dynacast: true,
+      reconnectPolicy: new LivekitClient.ReconnectPolicy(),
     });
 
-    // Eventos de sala
-    room.on(LivekitClient.RoomEvent.ParticipantConnected, updateParticipants);
+    // ── REMOTE AUDIO HANDLING ───────────────────────────────────────────────
+    room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if (track.kind === LivekitClient.Track.Kind.AUDIO) {
+        console.log('AUDIO REMOTO SUSCRITO de:', participant.identity);
+
+        const audioEl = document.createElement('audio');
+        audioEl.autoplay = true;
+        audioEl.muted = false;
+        audioEl.volume = 1.0;
+        audioEl.controls = false;
+
+        track.attach(audioEl);
+
+        audioEl.play()
+          .then(() => console.log('Reproducción de audio remoto iniciada OK'))
+          .catch(err => console.error('Error al reproducir audio remoto:', err.name, err.message));
+      }
+    });
+
+    room.on(LivekitClient.RoomEvent.TrackPublished, (pub, participant) => {
+      if (pub.kind === LivekitClient.Track.Kind.AUDIO) {
+        console.log('Remoto publicó audio →', participant.identity);
+      }
+    });
+
+    room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
+      console.log('Participante conectado:', p.identity);
+    });
+
     room.on(LivekitClient.RoomEvent.ParticipantDisconnected, updateParticipants);
     room.on(LivekitClient.RoomEvent.TrackMuted, updateParticipants);
     room.on(LivekitClient.RoomEvent.TrackUnmuted, updateParticipants);
@@ -497,10 +527,8 @@
       updateParticipants();
       populateAudioOutputs();
 
-      // Activar micrófono
       try {
         await room.localParticipant.setMicrophoneEnabled(true);
-        // Obtener stream local para waveform
         const tracks = room.localParticipant.audioTrackPublications;
         for (const [, pub] of tracks) {
           if (pub.track && pub.track.mediaStream) {
@@ -510,6 +538,7 @@
         }
       } catch(e) {
         document.getElementById('studioStatus').textContent = 'Sin acceso al micrófono';
+        console.error('Error al activar micrófono local:', e);
       }
     });
 
@@ -567,7 +596,7 @@
     document.getElementById('studioStatus').textContent = 'Desconectado';
   }
 
-  // ── SELECTOR SALIDA AUDIO
+  // ── SELECTOR SALIDA AUDIO ─────────────────────────────────────────────────
   async function populateAudioOutputs() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -583,25 +612,24 @@
         }
         sel.appendChild(opt);
       });
-      const sel2 = document.getElementById('audioOutputSelect');
-      if (sel2.value && room) {
-        room.switchActiveDevice('audiooutput', sel2.value).catch(() => {});
+      if (sel.value && room) {
+        room.switchActiveDevice('audiooutput', sel.value).catch(() => {});
       }
     } catch(e) {
-      console.warn('No se pudo obtener dispositivos de salida:', e);
+      console.warn('No se pudo enumerar dispositivos de salida:', e);
     }
   }
 
   document.getElementById('audioOutputSelect').addEventListener('change', async (e) => {
     const deviceId = e.target.value;
-    if (!room) return;
+    if (!room || !deviceId) return;
     try {
       await room.switchActiveDevice('audiooutput', deviceId);
+      console.log('Salida de audio cambiada a:', deviceId);
     } catch(err) {
-      console.warn('Error cambiando salida:', err);
+      console.warn('Error al cambiar salida de audio:', err);
     }
   });
-
 
   // ── MUTE ──────────────────────────────────────────────────────────────────
   document.getElementById('btnMute').addEventListener('click', async () => {
