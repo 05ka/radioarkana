@@ -338,6 +338,11 @@
         <!-- participantes generados por JS -->
       </div>
 
+      <div class="field-label" style="margin-bottom:8px">Salida de audio</div>
+      <select id="audioOutputSelect" class="name-input" style="margin-bottom:16px;cursor:pointer">
+        <option value="">— Dispositivo predeterminado —</option>
+      </select>
+
       <div class="mic-controls">
         <button id="btnMute" class="btn-mic-mute">Silenciar mic</button>
         <button id="btnLeave" class="btn-mic-mute">Salir</button>
@@ -490,6 +495,7 @@
       document.getElementById('studioDot').className = 'dot live';
       document.getElementById('studioStatus').textContent = 'En antena';
       updateParticipants();
+      populateAudioOutputs();
 
       // Activar micrófono
       try {
@@ -560,6 +566,42 @@
     document.getElementById('studioDot').className = 'dot';
     document.getElementById('studioStatus').textContent = 'Desconectado';
   }
+
+  // ── SELECTOR SALIDA AUDIO
+  async function populateAudioOutputs() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outputs = devices.filter(d => d.kind === 'audiooutput');
+      const sel = document.getElementById('audioOutputSelect');
+      sel.innerHTML = '<option value="">— Dispositivo predeterminado —</option>';
+      outputs.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0,8);
+        if (d.label && d.label.toLowerCase().includes('voicemeeter input')) {
+          opt.selected = true;
+        }
+        sel.appendChild(opt);
+      });
+      const sel2 = document.getElementById('audioOutputSelect');
+      if (sel2.value && room) {
+        room.switchActiveDevice('audiooutput', sel2.value).catch(() => {});
+      }
+    } catch(e) {
+      console.warn('No se pudo obtener dispositivos de salida:', e);
+    }
+  }
+
+  document.getElementById('audioOutputSelect').addEventListener('change', async (e) => {
+    const deviceId = e.target.value;
+    if (!room) return;
+    try {
+      await room.switchActiveDevice('audiooutput', deviceId);
+    } catch(err) {
+      console.warn('Error cambiando salida:', err);
+    }
+  });
+
 
   // ── MUTE ──────────────────────────────────────────────────────────────────
   document.getElementById('btnMute').addEventListener('click', async () => {
