@@ -417,7 +417,7 @@
     </div>
     <button class="play-btn" id="playBtn" onclick="toggleMain()">
       <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      <span id="playLabel">Escuchar en directo</span>
+      <span id="playLabel">Play</span>
     </button>
     <div class="handle-row" id="handleRow">
       <span class="handle-prefix">@</span>
@@ -740,7 +740,7 @@
     statusText.textContent = 'Desconectado';
     statusText.className   = '';
     modeLabel.textContent  = 'Sistema offline';
-    playLabel.textContent  = 'Escuchar en directo';
+    playLabel.textContent  = 'Play';
     playIcon.innerHTML     = '<path d="M8 5v14l11-7z"/>';
     document.title = 'Radio Arkana · Tarot Underground · Málaga';
     setRepLabels(null, null, false, false);
@@ -824,7 +824,7 @@
     currentMode = 'TTS'; attemptId++; watchdogId++;
     clearAllTimers(); freshAudio();
     dot.className = 'dot tts'; statusText.textContent = 'Letanía Arkana'; statusText.className = '';
-    modeLabel.textContent = 'Emisión en Pruebas';
+    modeLabel.textContent = 'Arkana live';
     initGenerativeAudio(); ensureAnalyser(); startWaveform(); runTTSLoop(); scheduleWatchdog();
   }
 
