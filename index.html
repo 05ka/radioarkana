@@ -296,7 +296,7 @@
 <div class="wrap">
   <div class="header">
     <span class="header-label" id="modeLabel">offline</span>
-    <span class="freq">7.50 MHz · Málaga</span>
+    <span class="freq">Málaga Station</span>
     <span style="display:flex;align-items:center;gap:2px;">
       <span id="qrngIndicator"
             title="Aleatoriedad local · Math.random()"
@@ -757,7 +757,7 @@
     currentMode = 'TTS'; attemptId++; watchdogId++;
     clearAllTimers(); freshAudio();
     dot.className = 'dot tts'; statusText.textContent = 'Letanía Arkana'; statusText.className = '';
-    modeLabel.textContent = 'Emisión en Pruebas';
+    modeLabel.textContent = 'Arkana live';
     initGenerativeAudio(); ensureAnalyser(); startWaveform(); runTTSLoop(); scheduleWatchdog();
   }
 
