@@ -303,6 +303,24 @@
       text-align: center;
       max-width: 90%;
     }
+
+    /* Audio debug panel (hidden by default) */
+    #audioDebug {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      color: #0f0;
+      font-size: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      z-index: 10000;
+      display: none;
+      font-family: monospace;
+      max-width: 300px;
+      max-height: 200px;
+      overflow: auto;
+    }
   </style>
 </head>
 <body>
@@ -380,7 +398,10 @@
 </div>
 
 <!-- Mensaje temporal para activar audio -->
-<div id="audioPrompt">Toca o haz clic en cualquier parte de la pantalla para activar el sonido</div>
+<div id="audioPrompt">🔊 Toca o haz clic en cualquier parte para activar el sonido</div>
+
+<!-- Panel de depuración de audio (oculto por defecto) -->
+<div id="audioDebug"></div>
 
 <!-- LiveKit Browser SDK -->
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
@@ -411,11 +432,8 @@
   }
 
   let waveInterval = null;
-  let analyser = null;
-  let dataArray = null;
 
   function startWaveform(stream) {
-    // Animación simple sin AudioContext para no interferir con LiveKit
     waveformEl.classList.add('active');
     waveInterval = setInterval(() => {
       bars.forEach(b => {
@@ -439,7 +457,6 @@
   // ── ENTRADA ───────────────────────────────────────────────────────────────
   let myName = '';
   let room = null;
-  let localStream = null;
   let micMuted = false;
 
   document.getElementById('btnEnter').addEventListener('click', async () => {
@@ -482,6 +499,104 @@
     if (e.key === 'Enter') document.getElementById('btnEnter').click();
   });
 
+  // ── FUNCIÓN DE DEPURACIÓN DE AUDIO ─────────────────────────────────────────
+  function debugAudioElements() {
+    const audios = document.querySelectorAll('audio');
+    const debugDiv = document.getElementById('audioDebug');
+    let debugHtml = `🎧 Audios: ${audios.length}<br>`;
+    
+    audios.forEach((audio, i) => {
+      const participant = audio.dataset.participant || 'unknown';
+      const trackId = audio.dataset.trackId || 'no-id';
+      const state = audio.paused ? '⏸️' : '🔊';
+      const muted = audio.muted ? '🔇' : '';
+      debugHtml += `${state}${muted} ${i}: ${participant.substring(0,10)}...<br>`;
+    });
+    
+    debugDiv.innerHTML = debugHtml;
+    
+    // Auto-hide after 5 seconds if no audio elements
+    if (audios.length === 0) {
+      setTimeout(() => { debugDiv.style.display = 'none'; }, 5000);
+    } else {
+      debugDiv.style.display = 'block';
+    }
+  }
+
+  // ── FUNCIÓN MEJORADA PARA ADJUNTAR AUDIO ───────────────────────────────────
+  function attachRemoteAudio(track, identity) {
+    console.log('🎧 Adjuntando audio remoto de:', identity, 'track ID:', track.sid);
+    
+    // Verificar si ya existe un elemento de audio para este track
+    const existingAudios = document.querySelectorAll('audio[data-track-id="' + track.sid + '"]');
+    if (existingAudios.length > 0) {
+      console.log('✅ Audio element already exists for track:', track.sid);
+      return;
+    }
+    
+    // Crear elemento de audio
+    const audioEl = document.createElement('audio');
+    audioEl.setAttribute('data-track-id', track.sid);
+    audioEl.setAttribute('data-participant', identity);
+    audioEl.autoplay = true;
+    audioEl.muted = false;
+    audioEl.volume = 1.0;
+    audioEl.style.display = 'none'; // Oculto visualmente
+    
+    // CRÍTICO: Debe estar en el DOM antes de attach
+    document.body.appendChild(audioEl);
+    console.log('✅ Audio element created and appended to DOM');
+    
+    // Adjuntar el track al elemento de audio
+    try {
+      track.attach(audioEl);
+      console.log('✅ Track attached successfully to audio element');
+    } catch (e) {
+      console.error('❌ Error attaching track:', e);
+    }
+    
+    // Depuración
+    setTimeout(debugAudioElements, 100);
+    
+    // Intentar reproducir
+    const audioPrompt = document.getElementById('audioPrompt');
+    
+    const attemptPlay = () => {
+      audioEl.play()
+        .then(() => {
+          console.log('✅ Audio playing OK:', identity);
+          audioPrompt.style.display = 'none';
+          debugAudioElements();
+        })
+        .catch(err => {
+          console.warn('⏳ Autoplay bloqueado:', err.name);
+          audioPrompt.style.display = 'block';
+          
+          // Configurar manejador de un solo clic
+          const resume = () => {
+            audioEl.play()
+              .then(() => { 
+                console.log('✅ Audio resumed after user interaction');
+                audioPrompt.style.display = 'none';
+                debugAudioElements();
+              })
+              .catch(e => console.warn('Resume failed:', e));
+            document.removeEventListener('click', resume);
+            document.removeEventListener('touchend', resume);
+          };
+          
+          document.addEventListener('click', resume, { once: true });
+          document.addEventListener('touchend', resume, { once: true });
+        });
+    };
+    
+    // Múltiples intentos
+    attemptPlay();
+    setTimeout(attemptPlay, 500);
+    setTimeout(attemptPlay, 1500);
+    setTimeout(attemptPlay, 3000);
+  }
+
   // ── LIVEKIT ───────────────────────────────────────────────────────────────
   async function connectToRoom(token, url) {
     room = new LivekitClient.Room({
@@ -492,47 +607,14 @@
 
     // ── REMOTE AUDIO HANDLING ───────────────────────────────────────────────
 
-    // Helper: adjunta track al DOM y la reproduce
-    function attachRemoteAudio(track, identity) {
-      console.log('🎧 Adjuntando audio remoto de:', identity);
-      const audioEl = document.createElement('audio');
-      audioEl.autoplay = true;
-      audioEl.muted = false;
-      audioEl.volume = 1.0;
-      track.attach(audioEl);
-      document.body.appendChild(audioEl); // CRÍTICO: debe estar en el DOM
-
-      const audioPrompt = document.getElementById('audioPrompt');
-
-      const attemptPlay = () => {
-        audioEl.play()
-          .then(() => {
-            console.log('✅ Audio OK:', identity);
-            if (audioPrompt) audioPrompt.style.display = 'none';
-          })
-          .catch(err => {
-            console.warn('⏳ Autoplay bloqueado:', err.name);
-            if (audioPrompt) audioPrompt.style.display = 'block';
-            const resume = () => {
-              audioEl.play().then(() => { if (audioPrompt) audioPrompt.style.display = 'none'; }).catch(() => {});
-              document.removeEventListener('click', resume);
-              document.removeEventListener('touchend', resume);
-            };
-            document.addEventListener('click', resume, { once: true });
-            document.addEventListener('touchend', resume, { once: true });
-          });
-      };
-
-      attemptPlay();
-      setTimeout(attemptPlay, 1000);
-      setTimeout(attemptPlay, 3000);
-    }
-
     // Track suscrita correctamente → reproducir
     room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       console.log('📥 TrackSubscribed:', track.kind, 'de', participant?.identity);
       if (track.kind === LivekitClient.Track.Kind.AUDIO) {
-        attachRemoteAudio(track, participant?.identity || 'desconocido');
+        // Pequeño retraso para asegurar que el DOM está listo
+        setTimeout(() => {
+          attachRemoteAudio(track, participant?.identity || 'desconocido');
+        }, 50);
       }
     });
 
@@ -549,9 +631,27 @@
       updateParticipants();
     });
 
-    room.on(LivekitClient.RoomEvent.ParticipantDisconnected, updateParticipants);
-    room.on(LivekitClient.RoomEvent.TrackMuted, updateParticipants);
-    room.on(LivekitClient.RoomEvent.TrackUnmuted, updateParticipants);
+    room.on(LivekitClient.RoomEvent.ParticipantDisconnected, (p) => {
+      console.log('Participante desconectado:', p.identity);
+      // Limpiar elementos de audio del participante
+      document.querySelectorAll(`audio[data-participant="${p.identity}"]`).forEach(el => {
+        console.log('Removiendo audio de:', p.identity);
+        el.remove();
+      });
+      updateParticipants();
+      debugAudioElements();
+    });
+
+    room.on(LivekitClient.RoomEvent.TrackMuted, (pub, participant) => {
+      console.log('Track muted:', participant?.identity);
+      updateParticipants();
+    });
+    
+    room.on(LivekitClient.RoomEvent.TrackUnmuted, (pub, participant) => {
+      console.log('Track unmuted:', participant?.identity);
+      updateParticipants();
+    });
+    
     room.on(LivekitClient.RoomEvent.Disconnected, onDisconnected);
 
     room.on(LivekitClient.RoomEvent.Connected, async () => {
@@ -561,18 +661,24 @@
       populateAudioOutputs();
 
       // Capturar tracks remotas ya presentes en la sala al entrar
+      console.log('Participantes remotos al conectar:', room.remoteParticipants.size);
       room.remoteParticipants.forEach(p => {
         console.log('👤 Ya presente:', p.identity);
         p.audioTrackPublications.forEach(pub => {
-          console.log('  📦 Track:', pub.trackSid, '| suscrita:', pub.isSubscribed, '| track:', !!pub.track);
+          console.log('  📦 Track:', pub.trackSid, '| suscrita:', pub.isSubscribed, '| track disponible:', !!pub.track);
+          
           if (pub.track) {
-            attachRemoteAudio(pub.track, p.identity);
+            // Pequeño retraso para procesar en orden
+            setTimeout(() => {
+              attachRemoteAudio(pub.track, p.identity);
+            }, 100);
           } else if (!pub.isSubscribed) {
             pub.setSubscribed(true);
           }
         });
       });
 
+      // Inicializar micrófono local
       try {
         await room.localParticipant.setMicrophoneEnabled(true);
         const tracks = room.localParticipant.audioTrackPublications;
@@ -586,6 +692,9 @@
         document.getElementById('studioStatus').textContent = 'Sin acceso al micrófono';
         console.error('Error al activar micrófono local:', e);
       }
+      
+      // Depuración después de conectar
+      setTimeout(debugAudioElements, 2000);
     });
 
     try {
@@ -641,22 +750,36 @@
     stopWaveform();
     document.getElementById('studioDot').className = 'dot';
     document.getElementById('studioStatus').textContent = 'Desconectado';
+    
+    // Limpiar todos los elementos de audio
+    document.querySelectorAll('audio').forEach(el => {
+      console.log('Limpiando audio en desconexión');
+      el.remove();
+    });
+    
+    debugAudioElements();
   }
 
   // ── SELECTOR SALIDA AUDIO ─────────────────────────────────────────────────
   async function populateAudioOutputs() {
     try {
+      // Solicitar permisos si es necesario
+      await navigator.mediaDevices.getUserMedia({ audio: true })
+        .catch(() => {}); // Ignorar error, solo para activar dispositivos
+      
       const devices = await navigator.mediaDevices.enumerateDevices();
       const outputs = devices.filter(d => d.kind === 'audiooutput');
       const sel = document.getElementById('audioOutputSelect');
       sel.innerHTML = '<option value="">— Dispositivo predeterminado —</option>';
+      
       outputs.forEach(d => {
         const opt = document.createElement('option');
         opt.value = d.deviceId;
-        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0,8);
+        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0, 8);
         sel.appendChild(opt);
       });
-      // NO llamar switchActiveDevice aquí — causa el error de AudioContext
+      
+      console.log('Dispositivos de salida cargados:', outputs.length);
     } catch(e) {
       console.warn('No se pudo enumerar dispositivos de salida:', e);
     }
@@ -703,6 +826,29 @@
   function escHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+
+  // ── INICIALIZACIÓN ────────────────────────────────────────────────────────
+  // Mostrar panel de depuración con doble clic en el logo
+  document.querySelector('.station-name').addEventListener('dblclick', () => {
+    const debugDiv = document.getElementById('audioDebug');
+    debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
+    if (debugDiv.style.display === 'block') {
+      debugAudioElements();
+      // Actualizar cada 2 segundos
+      setInterval(debugAudioElements, 2000);
+    }
+  });
+
+  // Forzar reproducción de audio en cualquier interacción
+  document.addEventListener('click', function forceAudio() {
+    document.querySelectorAll('audio').forEach(audio => {
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      }
+    });
+  }, { once: true });
+  
+  console.log('✅ Aplicación iniciada');
 </script>
 </body>
 </html>
