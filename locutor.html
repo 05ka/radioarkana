@@ -121,7 +121,7 @@
       margin-bottom: 8px;
     }
 
-    .name-input, select.name-input {
+    .name-input {
       width: 100%;
       background: transparent;
       border: 1px solid var(--border);
@@ -132,19 +132,11 @@
       padding: 14px 16px;
       outline: none;
       transition: border-color 0.2s;
-      margin-bottom: 16px;
-      appearance: none;
+      margin-bottom: 20px;
     }
 
     .name-input::placeholder { color: var(--gray); }
     .name-input:focus { border-color: var(--red); }
-
-    .audio-device-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
 
     .btn {
       width: 100%;
@@ -196,7 +188,7 @@
     .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
     .dot.connecting { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 0.7s infinite; }
 
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.4;} }
 
     .participants-label {
       font-size: 9px;
@@ -294,6 +286,7 @@
       color: #333;
     }
 
+    /* Temporary banner for audio activation */
     #audioPrompt {
       position: fixed;
       bottom: 20px;
@@ -367,21 +360,10 @@
         <!-- participantes generados por JS -->
       </div>
 
-      <div class="field-label">Dispositivos de audio</div>
-      <div class="audio-device-grid">
-        <div>
-          <div class="field-label" style="margin-bottom:4px">Entrada (micrófono)</div>
-          <select id="audioInputSelect" class="name-input">
-            <option value="">— Mic predeterminado —</option>
-          </select>
-        </div>
-        <div>
-          <div class="field-label" style="margin-bottom:4px">Salida (escucha)</div>
-          <select id="audioOutputSelect" class="name-input">
-            <option value="">— Dispositivo predeterminado —</option>
-          </select>
-        </div>
-      </div>
+      <div class="field-label" style="margin-bottom:8px">Salida de audio</div>
+      <select id="audioOutputSelect" class="name-input" style="margin-bottom:16px;cursor:pointer">
+        <option value="">— Dispositivo predeterminado —</option>
+      </select>
 
       <div class="mic-controls">
         <button id="btnMute" class="btn-mic-mute">Silenciar mic</button>
@@ -527,57 +509,73 @@
     });
 
     // ── REMOTE AUDIO HANDLING ───────────────────────────────────────────────
+
+    // Helper: adjunta y reproduce un track de audio remoto
+    function attachRemoteAudio(track, identity) {
+      console.log('🎧 Adjuntando audio remoto de:', identity);
+
+      const audioEl = document.createElement('audio');
+      audioEl.autoplay = true;
+      audioEl.muted = false;
+      audioEl.volume = 1.0;
+
+      track.attach(audioEl);
+      document.body.appendChild(audioEl); // ← crítico: el elemento debe estar en el DOM
+
+      const audioPrompt = document.getElementById('audioPrompt');
+
+      const attemptPlay = () => {
+        audioEl.play()
+          .then(() => {
+            console.log('✅ Reproducción remota OK para', identity);
+            if (audioPrompt) audioPrompt.style.display = 'none';
+          })
+          .catch(err => {
+            console.warn('⏳ Autoplay bloqueado, esperando gesto...', err.name);
+            if (audioPrompt) audioPrompt.style.display = 'block';
+
+            const resumeOnGesture = () => {
+              audioEl.play()
+                .then(() => {
+                  console.log('✅ Audio reanudado tras gesto');
+                  if (audioPrompt) audioPrompt.style.display = 'none';
+                })
+                .catch(e => console.warn('Aún falla:', e.name));
+              document.removeEventListener('click', resumeOnGesture);
+              document.removeEventListener('touchend', resumeOnGesture);
+            };
+            document.addEventListener('click', resumeOnGesture, { once: true });
+            document.addEventListener('touchend', resumeOnGesture, { once: true });
+          });
+      };
+
+      attemptPlay();
+      setTimeout(attemptPlay, 800);
+      setTimeout(attemptPlay, 2500);
+    }
+
+    // Evento principal: track suscrita correctamente
     room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       if (track.kind === LivekitClient.Track.Kind.AUDIO) {
-        console.log('AUDIO REMOTO SUSCRITO de:', participant?.identity || 'desconocido');
-
-        const audioEl = document.createElement('audio');
-        audioEl.autoplay = true;
-        audioEl.muted = false;
-        audioEl.volume = 1.0;
-        audioEl.controls = false;
-
-        track.attach(audioEl);
-
-        const audioPrompt = document.getElementById('audioPrompt');
-
-        const attemptPlay = () => {
-          const playPromise = audioEl.play();
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                console.log('✅ Reproducción remota OK para', participant?.identity);
-                if (audioPrompt) audioPrompt.style.display = 'none';
-              })
-              .catch(err => {
-                console.error('❌ Play falló:', err.name, err.message);
-                if (audioPrompt) audioPrompt.style.display = 'block';
-
-                const resumeOnGesture = () => {
-                  audioEl.play()
-                    .then(() => {
-                      console.log('Audio reanudado tras gesto');
-                      if (audioPrompt) audioPrompt.style.display = 'none';
-                    })
-                    .catch(e => console.warn('Aún falla tras gesto:', e));
-
-                  document.removeEventListener('click', resumeOnGesture);
-                  document.removeEventListener('touchend', resumeOnGesture);
-                };
-
-                document.addEventListener('click', resumeOnGesture, { once: true });
-                document.addEventListener('touchend', resumeOnGesture, { once: true });
-              });
-          }
-        };
-
-        attemptPlay();
-        setTimeout(attemptPlay, 800);
-        setTimeout(attemptPlay, 2000);
+        attachRemoteAudio(track, participant?.identity || 'desconocido');
       }
     });
 
-    room.on(LivekitClient.RoomEvent.ParticipantConnected, updateParticipants);
+    // Track publicada pero aún no suscrita → forzar suscripción
+    room.on(LivekitClient.RoomEvent.TrackPublished, (pub, participant) => {
+      if (pub.kind === LivekitClient.Track.Kind.AUDIO) {
+        console.log('📡 Remoto publicó audio →', participant.identity, '| suscribiendo...');
+        if (!pub.isSubscribed) {
+          pub.setSubscribed(true);
+        }
+      }
+    });
+
+    room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
+      console.log('Participante conectado:', p.identity);
+      updateParticipants();
+    });
+
     room.on(LivekitClient.RoomEvent.ParticipantDisconnected, updateParticipants);
     room.on(LivekitClient.RoomEvent.TrackMuted, updateParticipants);
     room.on(LivekitClient.RoomEvent.TrackUnmuted, updateParticipants);
@@ -587,8 +585,20 @@
       document.getElementById('studioDot').className = 'dot live';
       document.getElementById('studioStatus').textContent = 'En antena';
       updateParticipants();
+      populateAudioOutputs();
 
-      await populateAudioDevices();
+      // ← FIX: capturar tracks remotas que ya estaban en la sala al entrar
+      room.remoteParticipants.forEach(p => {
+        console.log('👤 Participante ya presente:', p.identity);
+        p.audioTrackPublications.forEach(pub => {
+          console.log('  📦 Track encontrada:', pub.trackSid, '| suscrita:', pub.isSubscribed, '| track:', !!pub.track);
+          if (pub.track) {
+            attachRemoteAudio(pub.track, p.identity);
+          } else if (!pub.isSubscribed) {
+            pub.setSubscribed(true);
+          }
+        });
+      });
 
       try {
         await room.localParticipant.setMicrophoneEnabled(true);
@@ -614,98 +624,6 @@
     }
   }
 
-  // ── SELECTORES DE AUDIO ───────────────────────────────────────────────────
-  async function populateAudioDevices() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-
-      // Input (micrófono)
-      const inputSelect = document.getElementById('audioInputSelect');
-      inputSelect.innerHTML = '<option value="">— Mic predeterminado —</option>';
-      const inputs = devices.filter(d => d.kind === 'audioinput');
-      inputs.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.deviceId;
-        opt.textContent = d.label || 'Mic ' + d.deviceId.slice(0,8);
-        // Priorizar VoiceMeeter Aux Output para el host
-        if (d.label && d.label.toLowerCase().includes('voicemeeter aux output')) {
-          opt.selected = true;
-        }
-        inputSelect.appendChild(opt);
-      });
-
-      // Output (escucha)
-      const outputSelect = document.getElementById('audioOutputSelect');
-      outputSelect.innerHTML = '<option value="">— Dispositivo predeterminado —</option>';
-      const outputs = devices.filter(d => d.kind === 'audiooutput');
-      outputs.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.deviceId;
-        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0,8);
-        // Priorizar VoiceMeeter Input para el host
-        if (d.label && d.label.toLowerCase().includes('voicemeeter input')) {
-          opt.selected = true;
-        }
-        outputSelect.appendChild(opt);
-      });
-
-      // Aplicar dispositivos seleccionados (si hay valor)
-      if (inputSelect.value && room) {
-        await room.switchActiveDevice('audioinput', inputSelect.value).catch(console.warn);
-      }
-      if (outputSelect.value && room) {
-        await room.switchActiveDevice('audiooutput', outputSelect.value).catch(console.warn);
-      }
-
-    } catch(e) {
-      console.warn('No se pudieron enumerar dispositivos de audio:', e);
-    }
-  }
-
-  document.getElementById('audioInputSelect').addEventListener('change', async (e) => {
-    const deviceId = e.target.value;
-    if (!room || !deviceId) return;
-    try {
-      await room.switchActiveDevice('audioinput', deviceId);
-      console.log('Entrada de micrófono cambiada a:', deviceId);
-    } catch(err) {
-      console.warn('Error al cambiar entrada de micrófono:', err);
-    }
-  });
-
-  document.getElementById('audioOutputSelect').addEventListener('change', async (e) => {
-    const deviceId = e.target.value;
-    if (!room || !deviceId) return;
-    try {
-      await room.switchActiveDevice('audiooutput', deviceId);
-      console.log('Salida de audio cambiada a:', deviceId);
-    } catch(err) {
-      console.warn('Error al cambiar salida de audio:', err);
-    }
-  });
-
-  // ── MUTE ──────────────────────────────────────────────────────────────────
-  document.getElementById('btnMute').addEventListener('click', async () => {
-    if (!room) return;
-    micMuted = !micMuted;
-    await room.localParticipant.setMicrophoneEnabled(!micMuted);
-    const btn = document.getElementById('btnMute');
-    btn.textContent = micMuted ? 'Activar mic' : 'Silenciar mic';
-    btn.classList.toggle('muted', micMuted);
-    updateParticipants();
-  });
-
-  // ── SALIR ─────────────────────────────────────────────────────────────────
-  document.getElementById('btnLeave').addEventListener('click', async () => {
-    if (room) await room.disconnect();
-    stopWaveform();
-    showScreen('screenEntry');
-    document.getElementById('btnEnter').disabled = false;
-    document.getElementById('btnEnter').textContent = 'Entrar a cabina';
-    document.getElementById('nameInput').value = '';
-  });
-
-  // ── PARTICIPANTES ─────────────────────────────────────────────────────────
   function updateParticipants() {
     const list = document.getElementById('participantsList');
     list.innerHTML = '';
@@ -751,6 +669,62 @@
     document.getElementById('studioDot').className = 'dot';
     document.getElementById('studioStatus').textContent = 'Desconectado';
   }
+
+  // ── SELECTOR SALIDA AUDIO ─────────────────────────────────────────────────
+  async function populateAudioOutputs() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outputs = devices.filter(d => d.kind === 'audiooutput');
+      const sel = document.getElementById('audioOutputSelect');
+      sel.innerHTML = '<option value="">— Dispositivo predeterminado —</option>';
+      outputs.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0,8);
+        if (d.label && d.label.toLowerCase().includes('voicemeeter input')) {
+          opt.selected = true;
+        }
+        sel.appendChild(opt);
+      });
+      if (sel.value && room) {
+        room.switchActiveDevice('audiooutput', sel.value).catch(() => {});
+      }
+    } catch(e) {
+      console.warn('No se pudo enumerar dispositivos de salida:', e);
+    }
+  }
+
+  document.getElementById('audioOutputSelect').addEventListener('change', async (e) => {
+    const deviceId = e.target.value;
+    if (!room || !deviceId) return;
+    try {
+      await room.switchActiveDevice('audiooutput', deviceId);
+      console.log('Salida de audio cambiada a:', deviceId);
+    } catch(err) {
+      console.warn('Error al cambiar salida de audio:', err);
+    }
+  });
+
+  // ── MUTE ──────────────────────────────────────────────────────────────────
+  document.getElementById('btnMute').addEventListener('click', async () => {
+    if (!room) return;
+    micMuted = !micMuted;
+    await room.localParticipant.setMicrophoneEnabled(!micMuted);
+    const btn = document.getElementById('btnMute');
+    btn.textContent = micMuted ? 'Activar mic' : 'Silenciar mic';
+    btn.classList.toggle('muted', micMuted);
+    updateParticipants();
+  });
+
+  // ── SALIR ─────────────────────────────────────────────────────────────────
+  document.getElementById('btnLeave').addEventListener('click', async () => {
+    if (room) await room.disconnect();
+    stopWaveform();
+    showScreen('screenEntry');
+    document.getElementById('btnEnter').disabled = false;
+    document.getElementById('btnEnter').textContent = 'Entrar a cabina';
+    document.getElementById('nameInput').value = '';
+  });
 
   // ── UTILS ─────────────────────────────────────────────────────────────────
   function escHtml(str) {
