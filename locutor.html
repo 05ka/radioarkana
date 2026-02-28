@@ -415,32 +415,13 @@
   let dataArray = null;
 
   function startWaveform(stream) {
-    try {
-      const ctx = new AudioContext();
-      const src = ctx.createMediaStreamSource(stream);
-      analyser = ctx.createAnalyser();
-      analyser.fftSize = 64;
-      src.connect(analyser);
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-      waveformEl.classList.add('active');
-      waveInterval = setInterval(() => {
-        analyser.getByteFrequencyData(dataArray);
-        bars.forEach((b, i) => {
-          const idx = Math.floor(i * dataArray.length / BAR_COUNT);
-          const val = dataArray[idx] / 255;
-          const h = Math.max(3, val * 28);
-          b.style.height = h + 'px';
-        });
-      }, 60);
-    } catch(e) {
-      console.warn('No se pudo iniciar analizador de audio real, usando simulación');
-      waveInterval = setInterval(() => {
-        bars.forEach(b => {
-          b.style.height = (Math.random() * 20 + 3) + 'px';
-        });
-      }, 120);
-    }
+    // Animación simple sin AudioContext para no interferir con LiveKit
+    waveformEl.classList.add('active');
+    waveInterval = setInterval(() => {
+      bars.forEach(b => {
+        b.style.height = (Math.random() * 22 + 3) + 'px';
+      });
+    }, 120);
   }
 
   function stopWaveform() {
@@ -673,28 +654,28 @@
         const opt = document.createElement('option');
         opt.value = d.deviceId;
         opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0,8);
-        if (d.label && d.label.toLowerCase().includes('voicemeeter input')) {
-          opt.selected = true;
-        }
         sel.appendChild(opt);
       });
-      if (sel.value && room) {
-        room.switchActiveDevice('audiooutput', sel.value).catch(() => {});
-      }
+      // NO llamar switchActiveDevice aquí — causa el error de AudioContext
     } catch(e) {
       console.warn('No se pudo enumerar dispositivos de salida:', e);
     }
   }
 
+  // Aplica el dispositivo de salida directamente a los elementos <audio> del DOM
+  function applyAudioOutputToAll(deviceId) {
+    document.querySelectorAll('audio').forEach(el => {
+      if (typeof el.setSinkId === 'function') {
+        el.setSinkId(deviceId).catch(e => console.warn('setSinkId falló:', e));
+      }
+    });
+  }
+
   document.getElementById('audioOutputSelect').addEventListener('change', async (e) => {
     const deviceId = e.target.value;
-    if (!room || !deviceId) return;
-    try {
-      await room.switchActiveDevice('audiooutput', deviceId);
-      console.log('Salida de audio cambiada a:', deviceId);
-    } catch(err) {
-      console.warn('Error al cambiar salida de audio:', err);
-    }
+    if (!deviceId) return;
+    console.log('Aplicando salida de audio:', deviceId);
+    applyAudioOutputToAll(deviceId);
   });
 
   // ── MUTE ──────────────────────────────────────────────────────────────────
