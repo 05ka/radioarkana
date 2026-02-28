@@ -504,70 +504,62 @@
   // ── LIVEKIT ───────────────────────────────────────────────────────────────
   async function connectToRoom(token, url) {
     room = new LivekitClient.Room({
-      adaptiveStream: true,
-      dynacast: true,
+      adaptiveStream: false,
+      dynacast: false,
+      autoSubscribe: true,
     });
 
     // ── REMOTE AUDIO HANDLING ───────────────────────────────────────────────
 
-    // Helper: adjunta y reproduce un track de audio remoto
+    // Helper: adjunta track al DOM y la reproduce
     function attachRemoteAudio(track, identity) {
       console.log('🎧 Adjuntando audio remoto de:', identity);
-
       const audioEl = document.createElement('audio');
       audioEl.autoplay = true;
       audioEl.muted = false;
       audioEl.volume = 1.0;
-
       track.attach(audioEl);
-      document.body.appendChild(audioEl); // ← crítico: el elemento debe estar en el DOM
+      document.body.appendChild(audioEl); // CRÍTICO: debe estar en el DOM
 
       const audioPrompt = document.getElementById('audioPrompt');
 
       const attemptPlay = () => {
         audioEl.play()
           .then(() => {
-            console.log('✅ Reproducción remota OK para', identity);
+            console.log('✅ Audio OK:', identity);
             if (audioPrompt) audioPrompt.style.display = 'none';
           })
           .catch(err => {
-            console.warn('⏳ Autoplay bloqueado, esperando gesto...', err.name);
+            console.warn('⏳ Autoplay bloqueado:', err.name);
             if (audioPrompt) audioPrompt.style.display = 'block';
-
-            const resumeOnGesture = () => {
-              audioEl.play()
-                .then(() => {
-                  console.log('✅ Audio reanudado tras gesto');
-                  if (audioPrompt) audioPrompt.style.display = 'none';
-                })
-                .catch(e => console.warn('Aún falla:', e.name));
-              document.removeEventListener('click', resumeOnGesture);
-              document.removeEventListener('touchend', resumeOnGesture);
+            const resume = () => {
+              audioEl.play().then(() => { if (audioPrompt) audioPrompt.style.display = 'none'; }).catch(() => {});
+              document.removeEventListener('click', resume);
+              document.removeEventListener('touchend', resume);
             };
-            document.addEventListener('click', resumeOnGesture, { once: true });
-            document.addEventListener('touchend', resumeOnGesture, { once: true });
+            document.addEventListener('click', resume, { once: true });
+            document.addEventListener('touchend', resume, { once: true });
           });
       };
 
       attemptPlay();
-      setTimeout(attemptPlay, 800);
-      setTimeout(attemptPlay, 2500);
+      setTimeout(attemptPlay, 1000);
+      setTimeout(attemptPlay, 3000);
     }
 
-    // Evento principal: track suscrita correctamente
+    // Track suscrita correctamente → reproducir
     room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      console.log('📥 TrackSubscribed:', track.kind, 'de', participant?.identity);
       if (track.kind === LivekitClient.Track.Kind.AUDIO) {
         attachRemoteAudio(track, participant?.identity || 'desconocido');
       }
     });
 
-    // Track publicada pero aún no suscrita → forzar suscripción
+    // Track publicada por remoto → forzar suscripción si no está suscrita
     room.on(LivekitClient.RoomEvent.TrackPublished, (pub, participant) => {
-      if (pub.kind === LivekitClient.Track.Kind.AUDIO) {
-        console.log('📡 Remoto publicó audio →', participant.identity, '| suscribiendo...');
-        if (!pub.isSubscribed) {
-          pub.setSubscribed(true);
-        }
+      console.log('📡 TrackPublished:', pub.kind, 'de', participant.identity, '| suscrita:', pub.isSubscribed);
+      if (pub.kind === LivekitClient.Track.Kind.AUDIO && !pub.isSubscribed) {
+        pub.setSubscribed(true);
       }
     });
 
@@ -587,11 +579,11 @@
       updateParticipants();
       populateAudioOutputs();
 
-      // ← FIX: capturar tracks remotas que ya estaban en la sala al entrar
+      // Capturar tracks remotas ya presentes en la sala al entrar
       room.remoteParticipants.forEach(p => {
-        console.log('👤 Participante ya presente:', p.identity);
+        console.log('👤 Ya presente:', p.identity);
         p.audioTrackPublications.forEach(pub => {
-          console.log('  📦 Track encontrada:', pub.trackSid, '| suscrita:', pub.isSubscribed, '| track:', !!pub.track);
+          console.log('  📦 Track:', pub.trackSid, '| suscrita:', pub.isSubscribed, '| track:', !!pub.track);
           if (pub.track) {
             attachRemoteAudio(pub.track, p.identity);
           } else if (!pub.isSubscribed) {
