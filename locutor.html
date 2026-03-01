@@ -3,20 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Radio Arkana · Cabina de Locutores</title>
+  <title>Radio Arkana · Cabina</title>
   <link rel="icon" href="/icon-192.png" type="image/png">
-  <meta name="theme-color" content="#e63030">
+  <meta name="theme-color" content="#c8002a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #0a0a0a; --surface: #111111; --border: #1e1e1e;
-      --red: #e63030; --red-dim: #7a1a1a; --white: #f0ece4; --gray: #555;
-      --font-head: 'Bebas Neue', sans-serif; --font-body: 'Space Mono', monospace;
+      --bg:       #080808;
+      --surface:  #0f0f0f;
+      --border:   #1f1f1f;
+      --border2:  #2a2a2a;
+      --red:      #c8002a;
+      --red-glow: rgba(200,0,42,0.18);
+      --red-dim:  #5a0012;
+      --amber:    #d4860a;
+      --white:    #ede9e0;
+      --gray:     #4a4a4a;
+      --gray2:    #333;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-body: 'Space Mono', monospace;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
 
     body {
       background: var(--bg);
@@ -28,123 +39,187 @@
       align-items: center;
       justify-content: center;
       overflow-x: hidden;
+      position: relative;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
     }
 
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
       pointer-events: none;
-      z-index: 100;
-      opacity: 0.4;
+      z-index: 1;
     }
 
-    .wrap {
-      width: min(460px, 92vw);
-      display: flex;
-      flex-direction: column;
+    .shell {
+      width: min(440px, 94vw);
+      position: relative;
+      z-index: 2;
+      animation: fade-up 0.5s ease-out both;
     }
 
-    .header {
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .tape {
       background: var(--red);
-      padding: 6px 20px;
+      height: 4px;
+      width: 100%;
+    }
+
+    .topbar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .header-label {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.6);
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .freq {
-      font-size: 10px;
+    .on-air-badge {
+      background: var(--red);
+      color: #fff;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      padding: 3px 7px;
+      text-transform: uppercase;
+      display: none;
+    }
+
+    .on-air-badge.visible {
+      display: block;
+      animation: blink-badge 2s infinite;
+    }
+
+    @keyframes blink-badge {
+      0%,49%  { opacity: 1; }
+      50%,100%{ opacity: 0.3; }
+    }
+
+    .topbar-station {
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    .topbar-right {
+      font-size: 9px;
       letter-spacing: 0.15em;
-      color: rgba(0,0,0,0.5);
+      color: var(--gray2);
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-top: none;
-      padding: 36px 32px 32px;
+      padding: 32px 28px 28px;
     }
 
-    .station-name {
+    .logo {
       font-family: var(--font-head);
-      font-size: clamp(56px, 14vw, 80px);
-      line-height: 0.88;
-      letter-spacing: 0.02em;
+      font-size: clamp(60px, 15vw, 84px);
+      line-height: 0.86;
+      letter-spacing: 0.01em;
       color: var(--white);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      user-select: none;
     }
 
-    .station-name span { color: var(--red); }
+    .logo em { color: var(--red); font-style: normal; }
 
     .tagline {
-      font-size: 10px;
-      letter-spacing: 0.25em;
+      font-size: 9px;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
       color: var(--gray);
-      margin-bottom: 36px;
+      margin-bottom: 32px;
     }
 
-    .permission-warning {
-      color: #ff9800;
-      font-size: 12px;
-      text-align: center;
-      margin: 16px 0 24px;
-      line-height: 1.4;
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 0 24px;
     }
 
     .screen { display: none; }
     .screen.active { display: block; }
 
-    #screenDenied .denied-msg {
-      font-size: 11px;
+    .denied-msg {
+      font-size: 10px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--red-dim);
-      padding: 24px 0;
+      padding: 20px 0;
       text-align: center;
+      line-height: 1.8;
+    }
+
+    .mic-notice {
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: var(--amber);
+      margin-bottom: 24px;
+      padding: 12px 14px;
+      border: 1px solid rgba(212,134,10,0.2);
+      background: rgba(212,134,10,0.04);
+      line-height: 1.6;
     }
 
     .field-label {
-      font-size: 9px;
-      letter-spacing: 0.2em;
+      font-size: 8px;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
       color: var(--gray);
       margin-bottom: 8px;
     }
 
-    .name-input {
+    .text-input {
       width: 100%;
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border2);
       color: var(--white);
       font-family: var(--font-body);
-      font-size: 13px;
+      font-size: 12px;
       letter-spacing: 0.1em;
-      padding: 14px 16px;
+      padding: 13px 14px;
       outline: none;
       transition: border-color 0.2s;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
-    .name-input::placeholder { color: var(--gray); }
-    .name-input:focus { border-color: var(--red); }
+    .text-input::placeholder { color: var(--gray); }
+    .text-input:focus { border-color: var(--red); }
+    .text-input option { background: #111; color: var(--white); }
 
-    .btn {
+    .btn-enter {
       width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--white);
+      background: var(--red);
+      border: none;
+      color: #fff;
       font-family: var(--font-body);
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.3em;
       text-transform: uppercase;
       padding: 16px;
@@ -152,233 +227,252 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
-      transition: all 0.2s;
+      gap: 12px;
+      transition: opacity 0.2s;
+      position: relative;
+      overflow: hidden;
     }
 
-    .btn:hover { border-color: var(--red); background: rgba(230,48,48,0.06); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn.active { border-color: var(--red); background: rgba(230,48,48,0.1); }
+    .btn-enter::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.15s;
+    }
+
+    .btn-enter:hover::after { background: rgba(255,255,255,0.07); }
+    .btn-enter:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .error-msg {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--red);
-      margin-top: 12px;
-      min-height: 14px;
+      margin-top: 10px;
+      min-height: 12px;
     }
 
     .status-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 28px;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      margin-bottom: 24px;
     }
 
     .dot {
-      width: 8px; height: 8px; border-radius: 50%;
+      width: 8px; height: 8px;
+      border-radius: 50%;
       background: var(--gray);
-      transition: background 0.3s;
       flex-shrink: 0;
+      transition: background 0.4s, box-shadow 0.4s;
     }
-    .dot.live { background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1.4s infinite; }
-    .dot.connecting { background: #ce9d06; box-shadow: 0 0 8px #ce9d06; animation: pulse 0.7s infinite; }
 
-    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.4;} }
+    .dot.live {
+      background: var(--red);
+      box-shadow: 0 0 10px var(--red), 0 0 22px rgba(200,0,42,0.35);
+      animation: pulse-dot 1.6s ease-in-out infinite;
+    }
 
-    .participants-label {
-      font-size: 9px;
+    .dot.connecting {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+      animation: pulse-dot 0.7s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%,100%{ opacity: 1; }
+      50%{ opacity: 0.3; }
+    }
+
+    .status-text {
+      font-size: 10px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
+      color: var(--white);
+    }
+
+    .waveform {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 30px;
+      margin-bottom: 24px;
+    }
+
+    .bar {
+      flex: 1;
+      background: var(--border2);
+      border-radius: 1px;
+      transition: height 0.07s ease-out, background 0.3s;
+      min-width: 2px;
+    }
+
+    .waveform.active .bar { background: var(--red); }
+
+    .section-label {
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
       color: var(--gray);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .participants-list {
-      min-height: 40px;
-      margin-bottom: 28px;
+      margin-bottom: 22px;
+      border: 1px solid var(--border);
     }
 
     .participant-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 0;
+      padding: 11px 14px;
       border-bottom: 1px solid var(--border);
       font-size: 11px;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
     }
 
     .participant-item:last-child { border-bottom: none; }
 
     .p-dot {
-      width: 6px; height: 6px; border-radius: 50%;
+      width: 6px; height: 6px;
+      border-radius: 50%;
       background: var(--red);
       box-shadow: 0 0 6px var(--red);
       flex-shrink: 0;
+      transition: all 0.3s;
     }
 
-    .p-dot.muted { background: var(--gray); box-shadow: none; }
-
+    .p-dot.muted { background: var(--gray2); box-shadow: none; }
     .p-name { flex: 1; }
-    .p-you { color: var(--red-dim); font-size: 9px; letter-spacing: 0.15em; }
-
-    .waveform {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      height: 32px;
-      margin-bottom: 28px;
+    .p-tag {
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gray);
     }
 
-    .bar {
-      width: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      transition: height 0.06s ease-out;
-    }
-
-    .waveform.active .bar {
-      background: linear-gradient(to top, #4a0000, #e63030 60%, #ff8a8a);
-      box-shadow: 0 2px 8px rgba(230,48,48,0.35);
-    }
-
-    .mic-controls {
+    .controls-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-top: 4px;
     }
 
-    .btn-mic-mute {
+    .btn-ctrl {
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border2);
       color: var(--white);
       font-family: var(--font-body);
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      padding: 12px;
+      padding: 13px 10px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .btn-mic-mute:hover { border-color: var(--red); }
-    .btn-mic-mute.muted { border-color: var(--red); color: var(--red); background: rgba(230,48,48,0.08); }
+    .btn-ctrl:hover { border-color: var(--red); background: var(--red-glow); }
+
+    .btn-ctrl.muted {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(200,0,42,0.08);
+    }
+
+    .btn-ctrl.leave { color: var(--gray); }
+    .btn-ctrl.leave:hover { border-color: var(--gray2); background: rgba(255,255,255,0.02); color: var(--white); }
+
+    #audioPrompt {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      z-index: 9000;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.15);
+      white-space: nowrap;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #audioPrompt.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     .footer {
       border: 1px solid var(--border);
       border-top: none;
-      padding: 12px 32px;
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      padding: 10px 20px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
       display: flex;
       justify-content: space-between;
-      flex-shrink: 0;
     }
 
     .footer-note {
-      font-size: 9px;
+      font-size: 8px;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #333;
-    }
-
-    /* Temporary banner for audio activation */
-    #audioPrompt {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(230,48,48,0.95);
-      color: white;
-      padding: 15px 30px;
-      border-radius: 50px;
-      z-index: 9999;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
-      display: none;
-      text-align: center;
-      max-width: 90%;
-      cursor: pointer;
-      border: 2px solid white;
-    }
-
-    /* Audio debug panel */
-    #audioDebug {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.95);
-      color: #0f0;
-      font-size: 12px;
-      padding: 15px;
-      border-radius: 8px;
-      z-index: 10000;
-      display: block;
-      font-family: monospace;
-      max-width: 400px;
-      max-height: 300px;
-      overflow: auto;
-      border: 2px solid var(--red);
-    }
-
-    .audio-debug-item {
-      border-bottom: 1px solid #333;
-      padding: 5px 0;
-    }
-
-    /* Zona visible para audios (solo para debug) */
-    #audioContainer {
-      position: fixed;
-      bottom: 320px;
-      right: 10px;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 10px;
-      border-radius: 4px;
-      z-index: 9999;
-      display: none;
+      color: var(--gray2);
     }
   </style>
 </head>
 <body>
 
-<div class="wrap">
-  <div class="header">
-    <span class="header-label">Radio Arkana · Cabina</span>
-    <span class="freq">LOCUTOR</span>
+<div class="shell">
+  <div class="tape"></div>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <span id="onAirBadge" class="on-air-badge">ON AIR</span>
+      <span class="topbar-station">Radio Arkana · Cabina</span>
+    </div>
+    <span class="topbar-right">LOCUTOR</span>
   </div>
 
   <div class="card">
-    <div class="station-name">RADIO<br><span>ARK</span>ANA</div>
+    <div class="logo">RADIO<br><em>ARK</em>ANA</div>
     <div class="tagline">Cabina de locutores · Tarot Underground</div>
 
     <!-- PANTALLA: ACCESO DENEGADO -->
     <div id="screenDenied" class="screen">
+      <div class="divider"></div>
       <div class="denied-msg">Enlace no válido.<br>Contacta con el presentador.</div>
     </div>
 
     <!-- PANTALLA: ENTRADA -->
     <div id="screenEntry" class="screen active">
-      <div class="permission-warning">
-        ⚠️ Debes permitir el acceso al micrófono para poder <strong>escuchar</strong> a los demás locutores
+      <div class="divider"></div>
+      <div class="mic-notice">
+        ⚠ Debes permitir el acceso al micrófono para poder escuchar a los demás locutores.
       </div>
       <div class="field-label">Tu nombre en antena</div>
       <input
         id="nameInput"
-        class="name-input"
+        class="text-input"
         type="text"
         placeholder="Introduce tu nombre..."
         maxlength="40"
         autocomplete="off"
         spellcheck="false"
       >
-      <button id="btnEnter" class="btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+      <button id="btnEnter" class="btn-enter">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
         Entrar a cabina
       </button>
       <div id="entryError" class="error-msg"></div>
@@ -388,26 +482,28 @@
     <div id="screenStudio" class="screen">
       <div class="status-row">
         <div id="studioDot" class="dot connecting"></div>
-        <span id="studioStatus">Conectando...</span>
+        <span id="studioStatus" class="status-text">Conectando...</span>
       </div>
 
-      <div class="waveform" id="waveform">
-        <!-- bars generados por JS -->
-      </div>
+      <div class="waveform" id="waveform"></div>
 
-      <div class="participants-label">En cabina</div>
-      <div class="participants-list" id="participantsList">
-        <!-- participantes generados por JS -->
-      </div>
+      <div class="section-label">En cabina</div>
+      <div class="participants-list" id="participantsList"></div>
 
-      <div class="field-label" style="margin-bottom:8px">Salida de audio</div>
-      <select id="audioOutputSelect" class="name-input" style="margin-bottom:16px;cursor:pointer">
+      <div class="field-label">Salida de audio</div>
+      <select id="audioOutputSelect" class="text-input" style="cursor:pointer;margin-bottom:18px">
         <option value="">— Dispositivo predeterminado —</option>
       </select>
 
-      <div class="mic-controls">
-        <button id="btnMute" class="btn-mic-mute">Silenciar mic</button>
-        <button id="btnLeave" class="btn-mic-mute">Salir</button>
+      <div class="controls-grid">
+        <button id="btnMute" class="btn-ctrl">
+          <svg id="iconMic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          Silenciar
+        </button>
+        <button id="btnLeave" class="btn-ctrl leave">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Salir
+        </button>
       </div>
     </div>
 
@@ -419,34 +515,32 @@
   </div>
 </div>
 
-<!-- Mensaje temporal para activar audio -->
-<div id="audioPrompt">🔊 TOCA AQUÍ PARA ACTIVAR EL SONIDO</div>
-
-<!-- Panel de depuración de audio -->
-<div id="audioDebug">
-  <div style="color: var(--red); font-weight: bold; margin-bottom: 10px;">🔊 DIAGNÓSTICO</div>
-  <div id="debugContent">Inicializando...</div>
-  <button id="forceAudioBtn" style="background: var(--red); color: white; border: none; padding: 8px; margin-top: 10px; width: 100%; cursor: pointer; border-radius: 4px;">🔊 FORZAR CREACIÓN DE AUDIO</button>
-</div>
+<!-- Banner desbloqueo audio (aparece solo si autoplay falla) -->
+<div id="audioPrompt">▶ Toca para activar el sonido</div>
 
 <!-- LiveKit Browser SDK -->
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <script>
-  // ── CONFIG ────────────────────────────────────────────────────────────────
   const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
 
-  // ── VALIDAR CLAVE EN URL ──────────────────────────────────────────────────
   const params = new URLSearchParams(window.location.search);
   const SECRET_KEY = params.get('k');
+  if (!SECRET_KEY) showScreen('screenDenied');
 
-  if (!SECRET_KEY) {
-    showScreen('screenDenied');
+  let room = null;
+  let myName = '';
+  let micMuted = false;
+
+  // ── PANTALLAS ──────────────────────────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
   }
 
-  // ── WAVEFORM ──────────────────────────────────────────────────────────────
+  // ── WAVEFORM ───────────────────────────────────────────────────────────────
   const waveformEl = document.getElementById('waveform');
-  const BAR_COUNT = 28;
+  const BAR_COUNT = 34;
   const bars = [];
 
   for (let i = 0; i < BAR_COUNT; i++) {
@@ -459,13 +553,15 @@
 
   let waveInterval = null;
 
-  function startWaveform(stream) {
+  function startWaveform() {
     waveformEl.classList.add('active');
     waveInterval = setInterval(() => {
-      bars.forEach(b => {
-        b.style.height = (Math.random() * 22 + 3) + 'px';
+      const t = Date.now() * 0.003;
+      bars.forEach((b, i) => {
+        const h = Math.sin(t + i * 0.55) * 8 + Math.random() * 12 + 3;
+        b.style.height = Math.max(3, h) + 'px';
       });
-    }, 120);
+    }, 80);
   }
 
   function stopWaveform() {
@@ -474,50 +570,204 @@
     bars.forEach(b => b.style.height = '3px');
   }
 
-  // ── PANTALLAS ─────────────────────────────────────────────────────────────
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+  // ── AUDIO PROMPT ───────────────────────────────────────────────────────────
+  const audioPromptEl = document.getElementById('audioPrompt');
+  function showAudioPrompt() { audioPromptEl.classList.add('visible'); }
+  function hideAudioPrompt() { audioPromptEl.classList.remove('visible'); }
+
+  // ── AUDIO REMOTO ───────────────────────────────────────────────────────────
+  function attachRemoteAudio(track, identity) {
+    console.log('🎧 attachRemoteAudio:', identity, track.sid);
+    if (document.querySelector(`audio[data-track-id="${track.sid}"]`)) return;
+
+    const audioEl = document.createElement('audio');
+    audioEl.setAttribute('data-track-id', track.sid);
+    audioEl.setAttribute('data-participant', identity);
+    audioEl.autoplay = true;
+    audioEl.muted = false;
+    audioEl.volume = 1.0;
+    audioEl.style.display = 'none';
+    audioEl.setAttribute('playsinline', '');
+    document.body.appendChild(audioEl);
+    track.attach(audioEl);
+
+    const sel = document.getElementById('audioOutputSelect');
+    if (sel.value && typeof audioEl.setSinkId === 'function') {
+      audioEl.setSinkId(sel.value).catch(() => {});
+    }
+
+    audioEl.play()
+      .then(() => { console.log('✅ Reproduciendo:', identity); hideAudioPrompt(); })
+      .catch(err => { console.warn('⏳ Autoplay bloqueado:', err.message); showAudioPrompt(); });
   }
 
-  // ── ENTRADA ───────────────────────────────────────────────────────────────
-  let myName = '';
-  let room = null;
-  let micMuted = false;
+  function forcePlayAllAudio() {
+    document.querySelectorAll('audio').forEach(a => {
+      a.muted = false;
+      a.volume = 1.0;
+      a.play().catch(() => {});
+    });
+    hideAudioPrompt();
+  }
 
+  // ── LIVEKIT ────────────────────────────────────────────────────────────────
+  async function connectToRoom(token, url) {
+    room = new LivekitClient.Room({ adaptiveStream: false, dynacast: false, autoSubscribe: true });
+
+    room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      console.log('📥 TrackSubscribed', track.kind, participant?.identity);
+      if (track.kind === 'audio') {
+        attachRemoteAudio(track, participant?.identity || 'desconocido');
+        setTimeout(forcePlayAllAudio, 500);
+      }
+    });
+
+    room.on(LivekitClient.RoomEvent.TrackPublished, (pub, participant) => {
+      console.log('📡 TrackPublished', pub.kind, participant.identity, 'suscrita:', pub.isSubscribed);
+      if (pub.kind === 'audio' && !pub.isSubscribed) pub.setSubscribed(true);
+    });
+
+    room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
+      console.log('👤 Conectado:', p.identity);
+      updateParticipants();
+    });
+
+    room.on(LivekitClient.RoomEvent.ParticipantDisconnected, (p) => {
+      console.log('👤 Desconectado:', p.identity);
+      document.querySelectorAll(`audio[data-participant="${p.identity}"]`).forEach(el => el.remove());
+      updateParticipants();
+    });
+
+    room.on(LivekitClient.RoomEvent.Connected, async () => {
+      console.log('✅ Sala conectada');
+      document.getElementById('studioDot').className = 'dot live';
+      document.getElementById('studioStatus').textContent = 'En antena';
+      document.getElementById('onAirBadge').classList.add('visible');
+
+      updateParticipants();
+      populateAudioOutputs();
+
+      room.remoteParticipants.forEach(p => {
+        p.audioTrackPublications.forEach(pub => {
+          if (pub.track) attachRemoteAudio(pub.track, p.identity);
+        });
+      });
+
+      try {
+        await room.localParticipant.setMicrophoneEnabled(true);
+        startWaveform();
+      } catch(e) { console.error('Error micrófono:', e); }
+
+      setTimeout(forcePlayAllAudio, 1000);
+    });
+
+    room.on(LivekitClient.RoomEvent.Disconnected, () => {
+      stopWaveform();
+      document.getElementById('studioDot').className = 'dot';
+      document.getElementById('studioStatus').textContent = 'Desconectado';
+      document.getElementById('onAirBadge').classList.remove('visible');
+      document.querySelectorAll('audio').forEach(el => el.remove());
+    });
+
+    await room.connect(url, token);
+    showScreen('screenStudio');
+  }
+
+  // ── PARTICIPANTES ──────────────────────────────────────────────────────────
+  function updateParticipants() {
+    if (!room) return;
+    const list = document.getElementById('participantsList');
+    list.innerHTML = '';
+
+    const meEl = document.createElement('div');
+    meEl.className = 'participant-item';
+    const meMuted = !room.localParticipant.isMicrophoneEnabled;
+    meEl.innerHTML = `<div class="p-dot${meMuted ? ' muted' : ''}"></div><span class="p-name">${escHtml(myName)}</span><span class="p-tag">Tú</span>`;
+    list.appendChild(meEl);
+
+    room.remoteParticipants.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'participant-item';
+      let isMuted = true;
+      p.audioTrackPublications.forEach(pub => { if (!pub.isMuted) isMuted = false; });
+      item.innerHTML = `<div class="p-dot${isMuted ? ' muted' : ''}"></div><span class="p-name">${escHtml(p.identity)}</span>`;
+      list.appendChild(item);
+    });
+  }
+
+  // ── SALIDA AUDIO ───────────────────────────────────────────────────────────
+  async function populateAudioOutputs() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outputs = devices.filter(d => d.kind === 'audiooutput');
+      const sel = document.getElementById('audioOutputSelect');
+      sel.innerHTML = '<option value="">— Dispositivo predeterminado —</option>';
+      outputs.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0, 8);
+        sel.appendChild(opt);
+      });
+    } catch(e) { console.warn('Error enumerando dispositivos:', e); }
+  }
+
+  document.getElementById('audioOutputSelect').addEventListener('change', e => {
+    console.log('🔊 Aplicando salida de audio:', e.target.value);
+    document.querySelectorAll('audio').forEach(async el => {
+      if (typeof el.setSinkId === 'function') {
+        try { await el.setSinkId(e.target.value || ''); } catch(err) { console.warn('setSinkId:', err); }
+      }
+    });
+  });
+
+  // ── MUTE ───────────────────────────────────────────────────────────────────
+  document.getElementById('btnMute').addEventListener('click', async () => {
+    if (!room) return;
+    micMuted = !micMuted;
+    await room.localParticipant.setMicrophoneEnabled(!micMuted);
+    const btn = document.getElementById('btnMute');
+    if (micMuted) {
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>Activar mic`;
+      btn.classList.add('muted');
+    } else {
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>Silenciar`;
+      btn.classList.remove('muted');
+    }
+    updateParticipants();
+  });
+
+  // ── SALIR ──────────────────────────────────────────────────────────────────
+  document.getElementById('btnLeave').addEventListener('click', async () => {
+    if (room) await room.disconnect();
+    stopWaveform();
+    micMuted = false;
+    showScreen('screenEntry');
+    document.getElementById('btnEnter').disabled = false;
+    document.getElementById('btnEnter').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>Entrar a cabina`;
+    document.getElementById('nameInput').value = '';
+  });
+
+  // ── ENTRADA ────────────────────────────────────────────────────────────────
   document.getElementById('btnEnter').addEventListener('click', async () => {
     const name = document.getElementById('nameInput').value.trim();
     const errEl = document.getElementById('entryError');
     errEl.textContent = '';
-
-    if (!name) {
-      errEl.textContent = 'Introduce tu nombre para continuar';
-      return;
-    }
+    if (!name) { errEl.textContent = 'Introduce tu nombre para continuar'; return; }
 
     const btn = document.getElementById('btnEnter');
     btn.disabled = true;
     btn.textContent = 'Conectando...';
 
     try {
-      const res = await fetch(
-        `${WORKER_URL}/livekit-token?k=${encodeURIComponent(SECRET_KEY)}&name=${encodeURIComponent(name)}`
-      );
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Error al obtener acceso');
-      }
-
+      const res = await fetch(`${WORKER_URL}/livekit-token?k=${encodeURIComponent(SECRET_KEY)}&name=${encodeURIComponent(name)}`);
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Error al obtener acceso'); }
       const { token, url } = await res.json();
       myName = name;
-
       await connectToRoom(token, url);
-
     } catch(e) {
       errEl.textContent = e.message;
       btn.disabled = false;
-      btn.textContent = 'Entrar a cabina';
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>Entrar a cabina`;
     }
   });
 
@@ -525,300 +775,23 @@
     if (e.key === 'Enter') document.getElementById('btnEnter').click();
   });
 
-  // ── FUNCIÓN DE DEPURACIÓN DE AUDIO ────────────────────────────────────────
-  function debugAudioElements() {
+  // ── DESBLOQUEO AUTOPLAY ────────────────────────────────────────────────────
+  audioPromptEl.addEventListener('click', forcePlayAllAudio);
+  document.addEventListener('click', forcePlayAllAudio, { once: true });
+
+  setInterval(() => {
     const audios = document.querySelectorAll('audio');
-    const debugDiv = document.getElementById('debugContent');
-    let debugHtml = '';
-    
-    debugHtml = `📊 TOTAL: ${audios.length} elementos<br><br>`;
-    
-    if (audios.length === 0) {
-      debugHtml += '<span style="color: #ff9800;">⚠️ NO HAY ELEMENTOS DE AUDIO</span>';
-    } else {
-      audios.forEach((audio, i) => {
-        const participant = audio.dataset.participant || 'unknown';
-        const trackId = audio.dataset.trackId || 'no-id';
-        const state = audio.paused ? '⏸️ PAUSED' : '🔊 PLAYING';
-        const hasSrc = audio.src ? '✅' : '❌';
-        const hasSrcObject = audio.srcObject ? '✅' : '❌';
-        
-        debugHtml += `<div class="audio-debug-item">
-          ${state} | SRC:${hasSrc} | OBJ:${hasSrcObject}<br>
-          👤 ${participant.substring(0, 15)}<br>
-          🆔 ${trackId.substring(0, 10)}...
-        </div>`;
-      });
+    if (audios.length > 0 && Array.from(audios).every(a => a.paused)) {
+      console.log('⚠️ Audios pausados, forzando...');
+      forcePlayAllAudio();
     }
-    
-    debugDiv.innerHTML = debugHtml;
+  }, 2000);
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // Actualizar debug cada segundo
-  setInterval(debugAudioElements, 1000);
-
-  // ── FUNCIÓN SIMPLIFICADA PARA ADJUNTAR AUDIO ──────────────────────────────
-  function attachRemoteAudio(track, identity) {
-    console.log('🎧 attachRemoteAudio llamado para:', identity, 'track:', track.sid);
-    
-    try {
-      // 1. Crear elemento de audio
-      const audioEl = document.createElement('audio');
-      audioEl.setAttribute('data-track-id', track.sid);
-      audioEl.setAttribute('data-participant', identity);
-      audioEl.autoplay = true;
-      audioEl.muted = false;
-      audioEl.volume = 1.0;
-      audioEl.style.display = 'none'; // Oculto
-      audioEl.setAttribute('playsinline', '');
-      
-      // 2. Agregar al DOM (CRÍTICO)
-      document.body.appendChild(audioEl);
-      console.log('✅ Audio element creado y agregado al DOM');
-      
-      // 3. Adjuntar el track
-      track.attach(audioEl);
-      console.log('✅ Track adjuntado, srcObject:', !!audioEl.srcObject);
-      
-      // 4. Intentar reproducir
-      audioEl.play()
-        .then(() => {
-          console.log('✅ Reproducción exitosa para:', identity);
-          document.getElementById('audioPrompt').style.display = 'none';
-        })
-        .catch(err => {
-          console.warn('⏳ Error al reproducir:', err.message);
-          document.getElementById('audioPrompt').style.display = 'block';
-        });
-      
-      // 5. Debug
-      debugAudioElements();
-      
-    } catch (e) {
-      console.error('❌ Error en attachRemoteAudio:', e);
-    }
-  }
-
-  // ── FUNCIÓN PARA FORZAR CREACIÓN MANUAL ───────────────────────────────────
-  function forceCreateAudio() {
-    console.log('🔧 FORZANDO creación manual de audio');
-    
-    if (!room) {
-      alert('No hay sala conectada');
-      return;
-    }
-    
-    // Buscar tracks manualmente
-    room.remoteParticipants.forEach(p => {
-      console.log('  Revisando participante:', p.identity);
-      p.audioTrackPublications.forEach(pub => {
-        console.log('    Track publication:', pub.trackSid, 'track:', !!pub.track);
-        if (pub.track) {
-          attachRemoteAudio(pub.track, p.identity);
-        }
-      });
-    });
-  }
-
-  // ── LIVEKIT ───────────────────────────────────────────────────────────────
-  async function connectToRoom(token, url) {
-    room = new LivekitClient.Room({
-      adaptiveStream: false,
-      dynacast: false,
-      autoSubscribe: true,
-    });
-
-    // Eventos de LiveKit
-    room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-      console.log('📥 EVENTO: TrackSubscribed', track.kind, participant?.identity);
-      if (track.kind === 'audio') {
-        attachRemoteAudio(track, participant?.identity || 'desconocido');
-      }
-    });
-
-    room.on(LivekitClient.RoomEvent.TrackPublished, (pub, participant) => {
-      console.log('📡 EVENTO: TrackPublished', pub.kind, participant.identity, 'suscrita:', pub.isSubscribed);
-      if (pub.kind === 'audio' && !pub.isSubscribed) {
-        pub.setSubscribed(true);
-      }
-    });
-
-    room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
-      console.log('👤 Participante conectado:', p.identity);
-      updateParticipants();
-    });
-
-    room.on(LivekitClient.RoomEvent.ParticipantDisconnected, (p) => {
-      console.log('👤 Participante desconectado:', p.identity);
-      document.querySelectorAll(`audio[data-participant="${p.identity}"]`).forEach(el => el.remove());
-      updateParticipants();
-      debugAudioElements();
-    });
-
-    room.on(LivekitClient.RoomEvent.Connected, async () => {
-      console.log('✅ Conectado a la sala');
-      document.getElementById('studioDot').className = 'dot live';
-      document.getElementById('studioStatus').textContent = 'En antena';
-      updateParticipants();
-      populateAudioOutputs();
-
-      // Procesar participantes existentes
-      console.log('Participantes existentes:', room.remoteParticipants.size);
-      room.remoteParticipants.forEach(p => {
-        console.log('  Procesando:', p.identity);
-        p.audioTrackPublications.forEach(pub => {
-          if (pub.track) {
-            attachRemoteAudio(pub.track, p.identity);
-          }
-        });
-      });
-
-      // Inicializar micrófono local
-      try {
-        await room.localParticipant.setMicrophoneEnabled(true);
-        const tracks = room.localParticipant.audioTrackPublications;
-        for (const [, pub] of tracks) {
-          if (pub.track && pub.track.mediaStream) {
-            startWaveform(pub.track.mediaStream);
-            break;
-          }
-        }
-      } catch(e) {
-        console.error('Error al activar micrófono:', e);
-      }
-      
-      debugAudioElements();
-    });
-
-    room.on(LivekitClient.RoomEvent.Disconnected, () => {
-      console.log('❌ Desconectado');
-      stopWaveform();
-      document.getElementById('studioDot').className = 'dot';
-      document.getElementById('studioStatus').textContent = 'Desconectado';
-      document.querySelectorAll('audio').forEach(el => el.remove());
-      debugAudioElements();
-    });
-
-    try {
-      await room.connect(url, token);
-      showScreen('screenStudio');
-    } catch(e) {
-      console.error('Error al conectar:', e);
-      throw e;
-    }
-  }
-
-  function updateParticipants() {
-    if (!room) return;
-    
-    const list = document.getElementById('participantsList');
-    list.innerHTML = '';
-
-    // Yo
-    const meEl = document.createElement('div');
-    meEl.className = 'participant-item';
-    const meMuted = !room.localParticipant.isMicrophoneEnabled;
-    meEl.innerHTML = `
-      <div class="p-dot${meMuted ? ' muted' : ''}"></div>
-      <span class="p-name">${escHtml(myName)}</span>
-      <span class="p-you">Tú</span>
-    `;
-    list.appendChild(meEl);
-
-    // Remotos
-    room.remoteParticipants.forEach(p => {
-      const item = document.createElement('div');
-      item.className = 'participant-item';
-      let isMuted = true;
-      p.audioTrackPublications.forEach(pub => {
-        if (!pub.isMuted) isMuted = false;
-      });
-      item.innerHTML = `
-        <div class="p-dot${isMuted ? ' muted' : ''}"></div>
-        <span class="p-name">${escHtml(p.identity)}</span>
-      `;
-      list.appendChild(item);
-    });
-  }
-
-  // ── SELECTOR SALIDA AUDIO ─────────────────────────────────────────────────
-  async function populateAudioOutputs() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const outputs = devices.filter(d => d.kind === 'audiooutput');
-      const sel = document.getElementById('audioOutputSelect');
-      sel.innerHTML = '<option value="">— Dispositivo predeterminado —</option>';
-      
-      outputs.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.deviceId;
-        opt.textContent = d.label || 'Salida ' + d.deviceId.slice(0, 8);
-        sel.appendChild(opt);
-      });
-      
-      console.log('Dispositivos de salida:', outputs.length);
-    } catch(e) {
-      console.warn('Error enumerando dispositivos:', e);
-    }
-  }
-
-  // ── MUTE ──────────────────────────────────────────────────────────────────
-  document.getElementById('btnMute').addEventListener('click', async () => {
-    if (!room) return;
-    micMuted = !micMuted;
-    await room.localParticipant.setMicrophoneEnabled(!micMuted);
-    const btn = document.getElementById('btnMute');
-    btn.textContent = micMuted ? 'Activar mic' : 'Silenciar mic';
-    btn.classList.toggle('muted', micMuted);
-    updateParticipants();
-  });
-
-  // ── SALIR ─────────────────────────────────────────────────────────────────
-  document.getElementById('btnLeave').addEventListener('click', async () => {
-    if (room) await room.disconnect();
-    stopWaveform();
-    showScreen('screenEntry');
-    document.getElementById('btnEnter').disabled = false;
-    document.getElementById('btnEnter').textContent = 'Entrar a cabina';
-    document.getElementById('nameInput').value = '';
-  });
-
-  // ── UTILS ─────────────────────────────────────────────────────────────────
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // ── MANEJADORES ───────────────────────────────────────────────────────────
-  
-  // Botón de forzar creación
-  document.getElementById('forceAudioBtn').addEventListener('click', forceCreateAudio);
-
-  // Audio prompt
-  document.getElementById('audioPrompt').addEventListener('click', () => {
-    document.querySelectorAll('audio').forEach(audio => {
-      audio.play().catch(() => {});
-    });
-    document.getElementById('audioPrompt').style.display = 'none';
-  });
-
-  // Clics globales
-  document.addEventListener('click', () => {
-    document.querySelectorAll('audio').forEach(audio => {
-      if (audio.paused) {
-        audio.play().catch(() => {});
-      }
-    });
-  });
-
-  // Inicialización
-  console.log('✅ Aplicación iniciada');
-  debugAudioElements();
-
-  // Mostrar/ocultar debug con doble clic
-  document.querySelector('.station-name').addEventListener('dblclick', () => {
-    const debugDiv = document.getElementById('audioDebug');
-    debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
-  });
+  console.log('✅ Radio Arkana · Cabina iniciada');
 </script>
 </body>
 </html>
