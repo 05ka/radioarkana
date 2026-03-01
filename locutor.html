@@ -552,9 +552,45 @@
   }
 
   let waveInterval = null;
+  let audioCtx = null;
+  let analyser = null;
+  let freqData = null;
+  let rafId = null;
 
-  function startWaveform() {
+  function startWaveform(stream) {
     waveformEl.classList.add('active');
+
+    // Intentar análisis real del micrófono
+    if (stream) {
+      try {
+        audioCtx = new AudioContext();
+        const src = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.75;
+        src.connect(analyser);
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+
+        function drawFrame() {
+          rafId = requestAnimationFrame(drawFrame);
+          analyser.getByteFrequencyData(freqData);
+          bars.forEach((b, i) => {
+            const idx = Math.floor(i * freqData.length / bars.length);
+            const val = freqData[idx] / 255;
+            // Mínimo visible de 3px, máximo 28px
+            const h = 3 + val * 25;
+            b.style.height = h + 'px';
+          });
+        }
+        drawFrame();
+        console.log('🎙️ Forma de onda reactiva activada');
+        return;
+      } catch(e) {
+        console.warn('AudioContext falló, usando animación de fallback:', e.message);
+      }
+    }
+
+    // Fallback: animación sintética si no hay stream o falla el AudioContext
     waveInterval = setInterval(() => {
       const t = Date.now() * 0.003;
       bars.forEach((b, i) => {
@@ -565,7 +601,9 @@
   }
 
   function stopWaveform() {
-    clearInterval(waveInterval);
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; analyser = null; freqData = null; }
+    clearInterval(waveInterval); waveInterval = null;
     waveformEl.classList.remove('active');
     bars.forEach(b => b.style.height = '3px');
   }
@@ -655,7 +693,12 @@
 
       try {
         await room.localParticipant.setMicrophoneEnabled(true);
-        startWaveform();
+        // Obtener el mediaStream del micrófono local para el analizador
+        let micStream = null;
+        room.localParticipant.audioTrackPublications.forEach(pub => {
+          if (pub.track?.mediaStream) micStream = pub.track.mediaStream;
+        });
+        startWaveform(micStream);
       } catch(e) { console.error('Error micrófono:', e); }
 
       setTimeout(forcePlayAllAudio, 1000);
