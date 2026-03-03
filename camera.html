@@ -381,7 +381,36 @@
     .prev-btn.primary { border-color: var(--red); color: var(--red); }
     .prev-btn:hover { background: rgba(230,48,48,0.08); border-color: var(--red); color: var(--red); }
 
-    /* ── SPLASH / PERMISO ────────────────────────────────────────────────── */
+    /* ── SAVE TOAST ──────────────────────────────────────────────────────── */
+    #saveToast {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom) + 180px);
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface);
+      border: 1px solid rgba(42,157,92,0.5);
+      color: #2a9d5c;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 10px 22px;
+      white-space: nowrap;
+      z-index: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    #saveToast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .prev-btn.saved {
+      border-color: #2a9d5c !important;
+      color: #2a9d5c !important;
+      pointer-events: none;
+      transition: all 0.2s;
+    } ────────────────────────────────────────────────── */
     #splash {
       position: fixed;
       inset: 0;
@@ -829,7 +858,7 @@
   <img id="previewImg" alt="Sincronicidad capturada">
   <div id="previewActions">
     <button class="prev-btn" onclick="closePreview()">← Repetir</button>
-    <button class="prev-btn primary" onclick="downloadPhoto()">↓ Guardar</button>
+    <button class="prev-btn primary" onclick="downloadPhoto(this)">↓ Guardar</button>
     <button class="prev-btn primary" onclick="sharePhoto()">↗ Compartir</button>
   </div>
 </div>
@@ -839,10 +868,13 @@
   <video id="previewVideo" controls playsinline></video>
   <div id="previewActions2" style="background:var(--bg);padding:16px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom));display:flex;gap:8px;">
     <button class="prev-btn" onclick="closeVideoPreview()">← Repetir</button>
-    <button class="prev-btn primary" id="btnDownloadVideo" onclick="downloadVideo()">↓ Guardar</button>
+    <button class="prev-btn primary" id="btnDownloadVideo" onclick="downloadVideo(this)">↓ Guardar</button>
     <button class="prev-btn primary" onclick="shareVideo()">↗ Compartir</button>
   </div>
 </div>
+
+<!-- Toast guardado -->
+<div id="saveToast">✓ Guardado en descargas</div>
 
 <!-- PANEL ARCHIVO -->
 <div id="archivePanel">
@@ -1239,13 +1271,34 @@
     document.getElementById('preview').classList.remove('active');
   }
 
-  function downloadPhoto() {
+  // ── SAVE FEEDBACK ──────────────────────────────────────────────────────────
+  let toastTimer = null;
+  function showSaveToast(btn) {
+    // Botón: cambia a estado "guardado" momentáneamente
+    if (btn) {
+      const original = btn.innerHTML;
+      btn.classList.add('saved');
+      btn.innerHTML = '✓ Guardado';
+      setTimeout(() => {
+        btn.classList.remove('saved');
+        btn.innerHTML = original;
+      }, 2200);
+    }
+    // Toast flotante
+    const toast = document.getElementById('saveToast');
+    clearTimeout(toastTimer);
+    toast.classList.add('visible');
+    toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
+  }
+
+  function downloadPhoto(btn) {
     const dataUrl  = document.getElementById('canvas').toDataURL('image/jpeg', 0.93);
     const filename = currentTrio.length === 3
       ? `arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.jpg`
       : `arkana-cam-${Date.now()}.jpg`;
     const a = document.createElement('a');
     a.href = dataUrl; a.download = filename; a.click();
+    showSaveToast(btn);
   }
 
   async function sharePhoto() {
@@ -1513,7 +1566,7 @@
     pv.src = '';
   }
 
-  function downloadVideo() {
+  function downloadVideo(btn) {
     if (!recVideoBlob) return;
     const ext = recVideoBlob.type.includes('mp4') ? 'mp4' : 'webm';
     const filename = currentTrio.length === 3
@@ -1523,6 +1576,7 @@
     a.href = URL.createObjectURL(recVideoBlob);
     a.download = filename;
     a.click();
+    showSaveToast(btn);
   }
 
   async function shareVideo() {
