@@ -222,7 +222,7 @@
     .marquee-wrap.trio-mode .marquee-text.fading { opacity: 0; }
     body.deep-listen { background: #030303 !important; }
     body.deep-listen .wrap { opacity: 0; pointer-events: none; transition: opacity 0.7s ease; }
-    #deepListenOverlay { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 32px; background: #030303; }
+    #deepListenOverlay { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: max(24px, env(safe-area-inset-top) + 16px) 16px max(24px, env(safe-area-inset-bottom) + 16px); background: #030303; }
     body.deep-listen #deepListenOverlay { display: flex; }
     #deepWaveform { display: flex; align-items: center; gap: 3px; height: 54px; width: min(300px, 80vw); }
     #deepWaveform .bar { flex: 1; background: #1a1a1a; border-radius: 2px; height: 8%; transition: height 0.06s ease-out, background 0.4s, box-shadow 0.4s; transform-origin: bottom center; }
@@ -237,10 +237,6 @@
       display: flex;
       align-items: stretch;
       gap: 0;
-      position: absolute;
-      top: max(40px, env(safe-area-inset-top) + 24px);
-      left: 50%;
-      transform: translateX(-50%);
       z-index: 10;
     }
     #deepTrio.text-mode {
@@ -257,8 +253,8 @@
     }
     #deepTrio.fading { opacity: 0; }
     .deep-card {
-      width: 100px;
-      height: 150px;
+      width: clamp(80px, 22vw, 110px);
+      height: clamp(120px, 33vw, 165px);
       position: relative;
       border: 1px solid #2a2a2a;
       border-right: none;
@@ -275,7 +271,7 @@
     body.deep-listen .deep-card:nth-child(2) { transition-delay: .15s; }
     body.deep-listen .deep-card:nth-child(3) { transition-delay: .25s; }
     .deep-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--red-dim); }
-    .deep-card img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .82; }
+    .deep-card img { width: 100%; height: 100%; object-fit: contain; display: block; opacity: .82; }
     .dc-roman { display: none !important;}
     .dc-name { display: none !important; }
 
@@ -307,35 +303,39 @@
       flex-shrink: 0;
       opacity: 0;
       transform: translateY(-27px);
-      transition: opacity .4s;
+      transition: opacity .5s;
       pointer-events: none;
     }
     .micro-trio.visible   { opacity: 1; pointer-events: auto; }
-    .micro-trio.hidden-by-user { opacity: 0 !important;}
+    .micro-trio.hidden-by-user { opacity: 0 !important; pointer-events: none; }
 
     .micro-card {
-      width: 56px;
-      height: 112px;
+      width: 49px;
+      height: 91px; /* 98x182 thumb al 50% — pixel-perfect en HiDPI */
       position: relative;
       border: 1px solid #2a2a2a;
       border-right: none;
       background: #0d0d0d;
       overflow: hidden;
       flex-shrink: 0;
-      transition: filter .2s, border-color .2s;
       cursor: pointer;
+      transition: filter .2s, border-color .2s;
     }
     .micro-card:last-child  { border-right: 1px solid #2a2a2a; }
     .micro-card:hover       { filter: brightness(1.25); border-color: var(--red-dim); }
-    .micro-card::before     { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--red-dim); }
-    .micro-card img         { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .85; transition: opacity .3s; }
+    .micro-card::before     { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--red-dim); z-index: 1; }
+    .micro-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      opacity: .88;
+      transition: opacity .3s;
+    }
     .micro-card:hover img   { opacity: 1; }
-    .mc-roman {
-      display: none !important;
-    }
-    .mc-name {
-     display: none !important;
-    }
+    .mc-roman { display: none !important; }
+    .mc-name  { display: none !important; }
   </style>
 </head>
 <body>
@@ -1507,7 +1507,7 @@
       const el = document.createElement('div');
       el.className = 'micro-card';
       el.innerHTML = `
-        <img src="/cartas/${slug}.jpg" alt="${name}" onerror="this.style.display='none'">
+        <img src="/cartas/thumb/${slug}.jpg" srcset="/cartas/thumb/${slug}.jpg 2x" alt="${name}" onerror="this.style.display='none'">
         <div class="mc-roman">${roman}</div>
         <div class="mc-name">${name}</div>
       `;
