@@ -62,8 +62,8 @@
     .station-name { font-family: var(--font-head); font-size: clamp(64px, 16vw, 88px); line-height: 0.88; letter-spacing: 0.02em; color: var(--white); margin-bottom: 4px; }
     .station-name span { color: var(--red); }
     .tagline { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gray); margin-bottom: 36px; }
-    .marquee-wrap { overflow: hidden; margin-bottom: 36px; }
-    .marquee-text { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); white-space: nowrap; display: inline-block; animation: marquee 30s linear infinite; }
+    .marquee-wrap { overflow: hidden; margin-bottom: 36px; min-height: 18px; display: flex; align-items: center; }
+    .marquee-text { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); white-space: nowrap; display: inline-block; animation: marquee 30s linear infinite; }
     @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
     .waveform { display: flex; align-items: center; gap: 3px; height: 40px; margin-bottom: 28px; perspective: 200px; }
     .bar { width: 3px; background: var(--border); border-radius: 2px; transition: height 0.06s ease-out, background 0.4s, box-shadow 0.4s, transform 0.12s ease; transform-origin: bottom center; }
@@ -293,6 +293,111 @@
     /* ── CAM TOAST ─────────────────────────────────────────────────────────────── */
     #camToast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 100px); left: 50%; transform: translateX(-50%) translateY(12px); background: #1a0a0a; border: 1px solid #7a1a1a; color: #e63030; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; padding: 10px 20px; z-index: 700; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; white-space: nowrap; }
     #camToast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── FONDO BINAURAL — radial pulse sobre el waveform ───────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(ellipse 72% 38% at 50% 51%, rgba(230,48,48,0.06) 0%, transparent 68%);
+      opacity: 0;
+      will-change: opacity;
+    }
+
+    /* ── MARQUEE ESTÁTICO — triada activa ───────────────────────────────────── */
+    .marquee-wrap.trio-mode { overflow: visible; }
+    .marquee-wrap.trio-mode .marquee-text {
+      animation: none;
+      transform: none;
+      display: block;
+      white-space: normal;
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      color: var(--white);
+      text-align: center;
+      transition: opacity 0.4s;
+    }
+    .marquee-wrap.trio-mode .marquee-text.fading { opacity: 0; }
+
+    /* ── MODO ESCUCHA PROFUNDA ──────────────────────────────────────────────── */
+    body.deep-listen { background: #030303 !important; }
+    body.deep-listen .wrap { opacity: 0; pointer-events: none; transition: opacity 0.7s ease; }
+
+    #deepListenOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background: #030303;
+    }
+    body.deep-listen #deepListenOverlay { display: flex; }
+
+    #deepWaveform {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 54px;
+      width: min(300px, 80vw);
+    }
+    #deepWaveform .bar {
+      flex: 1;
+      background: #1a1a1a;
+      border-radius: 2px;
+      height: 8%;
+      transition: height 0.06s ease-out, background 0.4s, box-shadow 0.4s;
+      transform-origin: bottom center;
+    }
+    #deepWaveform .bar.playing { background: linear-gradient(to top, #4a0000, #e63030 60%, #ff8a8a); box-shadow: 0 2px 8px rgba(230,48,48,0.35); }
+    #deepWaveform .bar.tts-mode { background: linear-gradient(to top, #7a1a1a, #e63030 55%, #ff6060); }
+    #deepWaveform .bar.high-peak { filter: brightness(1.18); }
+
+    #deepStatus {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-body);
+      font-size: 8px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #2a2a2a;
+    }
+    #deepStatus .dot { width: 7px; height: 7px; flex-shrink: 0; }
+
+    #deepTrio {
+      font-family: var(--font-body);
+      font-size: 8px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #252525;
+      text-align: center;
+      min-height: 13px;
+      max-width: min(300px, 80vw);
+      transition: opacity 0.5s;
+    }
+    #deepTrio.fading { opacity: 0; }
+
+    #deepExitHint {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom) + 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-body);
+      font-size: 7px;
+      letter-spacing: 0.2em;
+      color: #181818;
+      text-transform: uppercase;
+      pointer-events: none;
+      transition: opacity 1.2s;
+      white-space: nowrap;
+    }
+    #deepExitHint.fade-out { opacity: 0; }
+
   </style>
 </head>
 <body>
@@ -374,6 +479,17 @@
   </div>
 </div>
 
+<!-- ── MODO ESCUCHA PROFUNDA ─────────────────────────────────────────────── -->
+<div id="deepListenOverlay">
+  <div id="deepWaveform"></div>
+  <div id="deepStatus">
+    <span class="dot" id="deepDot"></span>
+    <span id="deepStatusText">—</span>
+  </div>
+  <div id="deepTrio"></div>
+  <div id="deepExitHint">doble tap · salir</div>
+</div>
+
 <div class="wrap">
   <div class="header">
     <span class="header-label" id="modeLabel">offline</span>
@@ -397,7 +513,7 @@
     </span>
   </div>
   <div class="card">
-    <h1 class="station-name">RADIO<br><span>ARKANA</span></h1>
+    <h1 class="station-name" id="stationName" title="Doble tap: escucha profunda">RADIO<br><span>ARKANA</span></h1>
     <p class="tagline">Tarot Underground · Málaga</p>
     <div class="marquee-wrap">
       <span class="marquee-text" id="marqueeText">"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"       </span>
@@ -753,6 +869,9 @@
     if (window._pendingSWUpdate) { activateNewSW(window._pendingSWUpdate); window._pendingSWUpdate = null; }
     quantumPool = [];
     setQrngIndicator('local');
+    // Salir del modo escucha profunda y restaurar marquee
+    if (window._exitDeepListenFn) window._exitDeepListenFn();
+    if (window._restoreMarqueeFn) window._restoreMarqueeFn();
   }
 
   // ── BEEP ───────────────────────────────────────────────────────────────────
@@ -991,6 +1110,7 @@
     if (repCount===0) {
       currentTrio=drawTrio();
       sessionStorage.setItem('arkana-last-trio', JSON.stringify(currentTrio));
+      if(window._onNewTrio) window._onNewTrio(currentTrio);
     }
     repCount++;
     setRepLabels(`Rep ${repCount}/${loopReps}`, null, true, false);
@@ -1052,7 +1172,7 @@
     const wrap=document.getElementById('binauralKnob'),marker=document.getElementById('binauralKnobMarker'),valLbl=document.getElementById('binauralKnobVal');
     function applyPos(pos) {
       onUserKnobChange(); knobPos=Math.min(1,Math.max(0,pos)); window._binauralPos=knobPos;
-      const hz=posToFreq(knobPos),band=freqToBand(hz); binauralFreq=hz;
+      const hz=posToFreq(knobPos),band=freqToBand(hz); binauralFreq=hz; if(window._onBinauralChange) window._onBinauralChange(hz);
       marker.style.transform=`translateX(-50%) rotate(${posToAngle(knobPos)}deg)`; marker.style.background=band.color;
       valLbl.textContent=band.name; valLbl.style.color=band.name==='OFF'?'var(--gray)':band.color;
       const icon=document.querySelector('#binauralKnobDial .knob-icon'); if (icon) icon.style.color=band.name==='OFF'?'var(--gray)':band.color;
@@ -1194,7 +1314,7 @@
       const res = await fetch(`${WORKER_URL}/marquee`, { headers: fetchHeaders, cache: 'no-store' });
       if (res.status === 304) return;
       const data = await res.json();
-      if (data.text) { marqueeEtag = res.headers.get('ETag') ?? null; applyMarquee(data.text); }
+      if (data.text) { marqueeEtag = res.headers.get('ETag') ?? null; (window._applyMarqueeHook || applyMarquee)(data.text); }
     } catch(e) {}
   }
 
@@ -1732,6 +1852,252 @@
   installDismiss.addEventListener('click', () => { installBanner.classList.remove('visible'); localStorage.setItem('pwa-dismissed', '1'); });
   window.addEventListener('appinstalled', () => { installBanner.classList.remove('visible'); deferredInstallPrompt = null; });
   fetchMarquee();
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ── MARQUEE ESTÁTICO: triada activa ────────────────────────────────────────
+  // Cuando el TTS está activo, el marquee muestra las 3 cartas en modo estático.
+  // Se actualiza con cada nueva triada (repCount === 0 en runTTSLoop).
+  // Al parar, vuelve al marquee animado.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const marqueeWrap = document.querySelector('.marquee-wrap');
+  let _marqueeUserPref = null;
+  let _lastTickerText  = null;
+
+  function trioToSentence(trio) {
+    const cfg = LANG_CONFIG[currentLang] || { conj: 'con', and: 'y' };
+    return '“' + trio[0] + '  ' + cfg.conj + '  ' + trio[1] + '  ' + cfg.and + '  ' + trio[2] + '”';
+  }
+
+  function _applyTrioText(trio) {
+    const el = marqueeWrap.querySelector('.marquee-text');
+    if (!el) return;
+    el.classList.add('fading');
+    setTimeout(() => {
+      marqueeWrap.classList.add('trio-mode');
+      el.textContent = trioToSentence(trio);
+      el.classList.remove('fading');
+    }, 340);
+  }
+
+  function _applyTickerText(text) {
+    const el = marqueeWrap.querySelector('.marquee-text');
+    if (!el) return;
+    const content = text || _lastTickerText || '"For those Dark Horses with the Spirit to look up and see . . .  A recondite family awaits"       ';
+    el.classList.add('fading');
+    setTimeout(() => {
+      marqueeWrap.classList.remove('trio-mode');
+      el.textContent = content;
+      el.classList.remove('fading');
+    }, 340);
+  }
+
+  function setMarqueeTrio(trio) {
+    if (!trio || trio.length < 3) return;
+    updateDeepTrio(trio);
+    if (_marqueeUserPref === 'ticker') return;
+    _applyTrioText(trio);
+  }
+
+  function restoreMarquee(text) {
+    _marqueeUserPref = null;
+    _applyTickerText(text);
+  }
+
+  window._onNewTrio = function(trio) {
+    if (trio && trio.length === 3) setMarqueeTrio(trio);
+  };
+
+  const _origApplyMarquee = applyMarquee;
+  function applyMarqueeWithSave(text) {
+    _lastTickerText = text + '       ';
+    if (_marqueeUserPref === 'ticker') { _applyTickerText(_lastTickerText); return; }
+    _origApplyMarquee(text);
+  }
+  window._applyMarqueeHook = applyMarqueeWithSave;
+
+  let _marqueeTapTimer = null;
+  marqueeWrap.addEventListener('click', () => {
+    if (_marqueeTapTimer) {
+      clearTimeout(_marqueeTapTimer);
+      _marqueeTapTimer = null;
+      const hasTrio = currentTrio && currentTrio.length === 3;
+      if (_marqueeUserPref === 'ticker') {
+        _marqueeUserPref = hasTrio ? 'trio' : null;
+        if (hasTrio) _applyTrioText(currentTrio);
+      } else {
+        _marqueeUserPref = 'ticker';
+        _applyTickerText();
+      }
+    } else {
+      _marqueeTapTimer = setTimeout(() => { _marqueeTapTimer = null; }, 360);
+    }
+  });
+
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ── FONDO BINAURAL: pulso a la frecuencia del beat ─────────────────────────
+  // Anima la opacidad del ::after de body a la freq exacta del binaural.
+  // No usa CSS animation (no podemos cambiarla dinámicamente); usa rAF + sin().
+  // ═══════════════════════════════════════════════════════════════════════════
+  let _binauralPulseRaf = null;
+  let _binauralPulseFreq = 0;
+
+  function startBinauralPulse(hz) {
+    _binauralPulseFreq = hz;
+    if (_binauralPulseRaf) return; // ya corriendo
+    const bodyStyle = document.body.style;
+    let t0 = null;
+
+    function tick(ts) {
+      if (!_binauralPulseFreq) {
+        // Apagar suavemente
+        bodyStyle.setProperty('--binaural-opacity', '0');
+        document.body.style.removeProperty('--binaural-opacity');
+        // Forzar opacidad 0 en ::after via una clase de transición
+        document.body.classList.remove('binaural-active');
+        _binauralPulseRaf = null;
+        return;
+      }
+      if (!t0) t0 = ts;
+      const elapsed = (ts - t0) / 1000; // segundos
+      // sin va de -1 a 1; mapeamos a 0..1 para que el pulso sea siempre positivo
+      const raw = (Math.sin(2 * Math.PI * _binauralPulseFreq * elapsed) + 1) / 2;
+      // Rango de opacidad: 0.01 a 0.07 (±3% subjetivamente, imperceptible)
+      const opacity = 0.01 + raw * 0.06;
+      // Aplicamos directamente al pseudoelemento via una custom property en body
+      document.documentElement.style.setProperty('--binaural-pulse', opacity.toFixed(4));
+      _binauralPulseRaf = requestAnimationFrame(tick);
+    }
+    _binauralPulseRaf = requestAnimationFrame(tick);
+  }
+
+  function stopBinauralPulse() {
+    _binauralPulseFreq = 0;
+    document.documentElement.style.removeProperty('--binaural-pulse');
+    if (_binauralPulseRaf) { cancelAnimationFrame(_binauralPulseRaf); _binauralPulseRaf = null; }
+  }
+
+  // Inyectar CSS variable en ::after — la única forma de animar ::after desde JS
+  // es usar una custom property que el selector ::after consuma
+  (function injectBinauralPulseCSS() {
+    const s = document.createElement('style');
+    s.textContent = 'body::after { opacity: var(--binaural-pulse, 0) !important; transition: none !important; }';
+    document.head.appendChild(s);
+  })();
+
+  // Hook via _onBinauralChange callback (injected at binauralFreq assignment site)
+  window._onBinauralChange = function(hz) {
+    if (hz > 0) startBinauralPulse(hz);
+    else stopBinauralPulse();
+  };
+
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ── MODO ESCUCHA PROFUNDA ──────────────────────────────────────────────────
+  // Doble tap en el título RADIO ARKANA → colapsa UI → muestra solo waveform.
+  // Doble tap de nuevo → sale.
+  // ═══════════════════════════════════════════════════════════════════════════
+  let _deepListenActive = false;
+  const DEEP_BAR_COUNT  = 48;
+  const deepBars        = [];
+  const deepWaveEl      = document.getElementById('deepWaveform');
+  const deepDot         = document.getElementById('deepDot');
+  const deepStatusEl    = document.getElementById('deepStatusText');
+  const deepTrioEl      = document.getElementById('deepTrio');
+  const deepExitHint    = document.getElementById('deepExitHint');
+
+  // Poblar el waveform del overlay con las mismas barras (mirrored)
+  for (let i = 0; i < DEEP_BAR_COUNT; i++) {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    deepWaveEl.appendChild(b);
+    deepBars.push(b);
+  }
+
+  // Sincronizar barras deep con las barras principales vía rAF
+  let _deepSyncRaf = null;
+  function syncDeepBars() {
+    if (!_deepListenActive) { _deepSyncRaf = null; return; }
+    for (let i = 0; i < DEEP_BAR_COUNT && i < bars.length; i++) {
+      deepBars[i].style.height   = bars[i].style.height   || bars[i].dataset.idleH || '10%';
+      deepBars[i].style.transform = bars[i].style.transform || '';
+      deepBars[i].style.opacity  = bars[i].style.opacity  || '1';
+      // Sincronizar clases de color
+      deepBars[i].classList.toggle('playing',   bars[i].classList.contains('playing') || wf.classList.contains('playing'));
+      deepBars[i].classList.toggle('tts-mode',  bars[i].classList.contains('tts-mode'));
+      deepBars[i].classList.toggle('high-peak', bars[i].classList.contains('high-peak'));
+    }
+    // Sincronizar dot
+    deepDot.className   = dot.className;
+    deepStatusEl.textContent = statusText.textContent || '\u2014';
+    _deepSyncRaf = requestAnimationFrame(syncDeepBars);
+  }
+
+  function updateDeepTrio(trio) {
+    if (!deepTrioEl) return;
+    deepTrioEl.classList.add('fading');
+    setTimeout(() => {
+      if (trio && trio.length === 3) {
+        deepTrioEl.textContent = trio[0] + '  \u00b7  ' + trio[1] + '  \u00b7  ' + trio[2];
+      } else {
+        deepTrioEl.textContent = '';
+      }
+      deepTrioEl.classList.remove('fading');
+    }, 460);
+  }
+
+  function enterDeepListen() {
+    if (!isPlaying) return; // solo tiene sentido mientras reproduce
+    _deepListenActive = true;
+    document.body.classList.add('deep-listen');
+    // Actualizar trio inicial si hay uno activo
+    if (currentTrio && currentTrio.length === 3) updateDeepTrio(currentTrio);
+    else deepTrioEl.textContent = '';
+    // Mostrar hint y ocultarlo a los 3s
+    deepExitHint.classList.remove('fade-out');
+    setTimeout(() => deepExitHint.classList.add('fade-out'), 3000);
+    // Iniciar sync
+    if (!_deepSyncRaf) _deepSyncRaf = requestAnimationFrame(syncDeepBars);
+    // Pedir wake lock de pantalla (no se duerma)
+    requestWakeLock && requestWakeLock();
+    // Forzar pantalla a negro en iOS via meta theme-color
+    document.querySelector('meta[name="theme-color"]').content = '#030303';
+  }
+
+  function exitDeepListen() {
+    _deepListenActive = false;
+    document.body.classList.remove('deep-listen');
+    if (_deepSyncRaf) { cancelAnimationFrame(_deepSyncRaf); _deepSyncRaf = null; }
+    document.querySelector('meta[name="theme-color"]').content = '#e63030';
+  }
+
+  // Doble tap en el título
+  let _titleTapTimer = null;
+  const stationName = document.getElementById('stationName');
+  if (stationName) {
+    stationName.addEventListener('click', () => {
+      if (_titleTapTimer) {
+        clearTimeout(_titleTapTimer);
+        _titleTapTimer = null;
+        // Segundo tap — toggle
+        if (_deepListenActive) exitDeepListen();
+        else enterDeepListen();
+      } else {
+        _titleTapTimer = setTimeout(() => { _titleTapTimer = null; }, 380);
+      }
+    });
+  }
+
+  // Doble tap en el overlay también sale
+  document.getElementById('deepListenOverlay').addEventListener('click', () => {
+    if (_deepListenActive) exitDeepListen();
+  });
+
+  // Registrar callbacks para stop() u2014 invocados desde la funciu00f3n stop() original
+  window._exitDeepListenFn  = () => { if (_deepListenActive) exitDeepListen(); };
+  window._restoreMarqueeFn  = () => restoreMarquee();
+  window._clearDeepTrioFn   = () => updateDeepTrio([]);
+
 </script>
 </body>
 </html>
