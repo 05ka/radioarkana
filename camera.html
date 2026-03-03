@@ -46,7 +46,7 @@
     #viewport {
       position: fixed;
       inset: 0;
-      bottom: calc(env(safe-area-inset-bottom) + 140px);
+      bottom: calc(env(safe-area-inset-bottom) + 172px);
       background: #000;
       overflow: hidden;
       /* Bloquear zoom del navegador sobre el viewport */
@@ -206,7 +206,7 @@
     #controls {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: calc(140px + env(safe-area-inset-bottom));
+      height: calc(172px + env(safe-area-inset-bottom));
       background: var(--bg);
       border-top: 1px solid var(--border);
       display: flex;
@@ -478,6 +478,302 @@
       transition: opacity 0.05s;
     }
     #flashOverlay.flash { opacity: 0.7; }
+
+    /* ── MODE SWITCHER (foto / vídeo / archivo) ──────────────────────────── */
+    #modeSwitcher {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .mode-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--gray);
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 8px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .mode-btn:last-child { border-right: none; }
+    .mode-btn.active { color: var(--red); }
+    .mode-btn svg { flex-shrink: 0; }
+
+    /* ── GRABACIÓN ───────────────────────────────────────────────────────── */
+    #recIndicator {
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top) + 12px);
+      left: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(230,48,48,0.5);
+      padding: 5px 10px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #recIndicator.visible { display: flex; }
+    #recDot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: blink-rec 1s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes blink-rec {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
+    }
+    #recTimer {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--white);
+    }
+
+    /* Shutter en modo vídeo */
+    #shutter.rec-mode {
+      background: transparent;
+      border: 4px solid var(--red);
+    }
+    #shutter.rec-mode::after {
+      content: '';
+      display: block;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--red);
+      margin: auto;
+      margin-top: 14px;
+      transition: all 0.2s;
+    }
+    #shutter.recording {
+      background: transparent;
+      border: 4px solid var(--red);
+    }
+    #shutter.recording::after {
+      content: '';
+      display: block;
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      background: var(--red);
+      margin: auto;
+      margin-top: 17px;
+      transition: all 0.2s;
+    }
+
+    /* ── VIDEO PREVIEW ───────────────────────────────────────────────────── */
+    #videoPreview {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #000;
+      flex-direction: column;
+    }
+    #videoPreview.active { display: flex; }
+    #previewVideo {
+      flex: 1;
+      width: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* ── ARCHIVE OVERLAY PANEL ───────────────────────────────────────────── */
+    #archivePanel {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: rgba(0,0,0,0.92);
+      flex-direction: column;
+    }
+    #archivePanel.active { display: flex; }
+
+    #archiveHeader {
+      padding: max(16px, env(safe-area-inset-top) + 10px) 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .arch-title {
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+    .arch-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--gray);
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .arch-close:hover { border-color: var(--red); color: var(--red); }
+
+    #archiveGrid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      align-content: start;
+    }
+
+    .arch-thumb {
+      aspect-ratio: 1;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, opacity 0.2s;
+      display: block;
+      width: 100%;
+    }
+    .arch-thumb:hover { opacity: 0.8; }
+    .arch-thumb.selected { border-color: var(--red); }
+
+    #archiveActions {
+      padding: 14px 20px;
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .arch-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 13px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .arch-btn.primary { border-color: var(--red); color: var(--red); }
+    .arch-btn:hover { background: rgba(230,48,48,0.08); border-color: var(--red); color: var(--red); }
+    #archiveUploadBtn {
+      display: none;
+    }
+
+    /* Overlay activo sobre el viewport */
+    #overlayImgEl {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      opacity: 0.42;
+      display: none;
+      mix-blend-mode: screen;
+    }
+    #overlayImgEl.visible { display: block; }
+
+    /* Control de opacidad del overlay */
+    #overlayControls {
+      position: absolute;
+      bottom: 56px;
+      left: 16px;
+      right: 16px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(230,48,48,0.3);
+      padding: 8px 14px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #overlayControls.visible { display: flex; }
+    .ov-label {
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gray);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #overlayOpacity {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    #overlayOpacity::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--red);
+      cursor: pointer;
+    }
+    #overlayOpacity::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--red);
+      border: none;
+      cursor: pointer;
+    }
+    .ov-remove {
+      background: none;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+      padding: 2px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .ov-remove:hover { color: var(--red); }
+
+    /* Indicador de modo archivo activo en formatBar */
+    #archiveActiveBar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(230,48,48,0.06);
+    }
+    #archiveActiveBar.visible { display: flex; }
+    .arch-active-label {
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--red);
+    }
+    .arch-change-btn {
+      background: none;
+      border: 1px solid rgba(230,48,48,0.35);
+      color: var(--red);
+      font-family: var(--font-mono);
+      font-size: 7px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -538,6 +834,12 @@
 
     <div id="watermark">Arkana File</div>
 
+    <!-- Indicador REC -->
+    <div id="recIndicator">
+      <div id="recDot"></div>
+      <span id="recTimer">00:00</span>
+    </div>
+
     <!-- Zoom indicator (top-left, debajo del topBar) -->
     <div id="zoomIndicator">1.0×</div>
 
@@ -548,6 +850,20 @@
         <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
       </svg>
       1×
+    </div>
+
+    <!-- Overlay foto de archivo -->
+    <img id="overlayImgEl" alt="">
+
+    <!-- Controles de opacidad del overlay -->
+    <div id="overlayControls">
+      <span class="ov-label">Opacidad</span>
+      <input type="range" id="overlayOpacity" min="0" max="100" value="42">
+      <button class="ov-remove" onclick="removeOverlay()" title="Quitar overlay">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
     <div id="overlayBar">
@@ -564,6 +880,38 @@
     <input type="text" id="handleInput" placeholder="tu_usuario" maxlength="32"
            autocomplete="off" spellcheck="false">
   </div>
+
+  <!-- Selector de modo: foto / vídeo / archivo -->
+  <div id="modeSwitcher">
+    <button class="mode-btn active" id="modePhoto" onclick="setMode('photo')">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      foto
+    </button>
+    <button class="mode-btn" id="modeVideo" onclick="setMode('video')">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+      </svg>
+      vídeo
+    </button>
+    <button class="mode-btn" id="modeArchive" onclick="setMode('archive')">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      archivo
+    </button>
+  </div>
+
+  <!-- Barra de overlay activo (visible solo cuando hay foto de archivo cargada) -->
+  <div id="archiveActiveBar">
+    <span class="arch-active-label">● overlay activo</span>
+    <button class="arch-change-btn" onclick="openArchivePanel()">cambiar</button>
+  </div>
+
   <div id="formatBar">
     <button class="fmt-btn active" id="btnFree"   onclick="setFormat('free')">libre</button>
     <button class="fmt-btn"        id="btnSquare" onclick="setFormat('square')">1080 × 1080</button>
@@ -578,7 +926,7 @@
       girar
     </button>
 
-    <button id="shutter" aria-label="Disparar" onclick="shoot()"></button>
+    <button id="shutter" aria-label="Disparar" onclick="handleShutter()"></button>
 
     <button class="side-btn" id="btnBack" onclick="window.location.href='/'">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -591,13 +939,47 @@
   </div>
 </div>
 
-<!-- PREVIEW -->
+<!-- PREVIEW FOTO -->
 <div id="preview">
   <img id="previewImg" alt="Sincronicidad capturada">
   <div id="previewActions">
     <button class="prev-btn" onclick="closePreview()">← Repetir</button>
     <button class="prev-btn primary" onclick="downloadPhoto()">↓ Guardar</button>
     <button class="prev-btn primary" onclick="sharePhoto()">↗ Compartir</button>
+  </div>
+</div>
+
+<!-- PREVIEW VÍDEO -->
+<div id="videoPreview">
+  <video id="previewVideo" controls playsinline></video>
+  <div id="previewActions2" style="background:var(--bg);padding:16px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom));display:flex;gap:8px;">
+    <button class="prev-btn" onclick="closeVideoPreview()">← Repetir</button>
+    <button class="prev-btn primary" id="btnDownloadVideo" onclick="downloadVideo()">↓ Guardar</button>
+    <button class="prev-btn primary" onclick="shareVideo()">↗ Compartir</button>
+  </div>
+</div>
+
+<!-- PANEL ARCHIVO -->
+<div id="archivePanel">
+  <div id="archiveHeader">
+    <span class="arch-title">Archivo · Selecciona overlay</span>
+    <button class="arch-close" onclick="closeArchivePanel()">× cerrar</button>
+  </div>
+  <div id="archiveGrid" id="archiveGrid">
+    <!-- miniaturas inyectadas por JS -->
+    <label style="aspect-ratio:1;border:1px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--gray);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      añadir fotos
+      <input type="file" id="archiveUploadBtn" accept="image/*" multiple style="display:none" onchange="loadArchiveImages(event)">
+    </label>
+  </div>
+  <div id="archiveActions">
+    <button class="arch-btn" onclick="closeArchivePanel()">cancelar</button>
+    <button class="arch-btn primary" id="btnApplyOverlay" onclick="applySelectedOverlay()" disabled>aplicar overlay</button>
   </div>
 </div>
 
@@ -959,77 +1341,9 @@
     }
     canvas.width  = outW;
     canvas.height = outH;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    // ── 1. Frame con zoom aplicado ─────────────────────────────────────────
-    // Si el zoom es nativo, el stream ya viene "zoomeado" → crop normal.
-    // Si el zoom es CSS, hay que recortar el centro del frame según el factor.
-    const effectiveZoom = nativeZoomSupported ? 1.0 : currentZoom;
-
-    const scale  = Math.max(outW / vidW, outH / vidH) * effectiveZoom;
-    const drawW  = vidW * scale;
-    const drawH  = vidH * scale;
-    const offX   = (outW - drawW) / 2;
-    const offY   = (outH - drawH) / 2;
-    ctx.drawImage(video, offX, offY, drawW, drawH);
-
-    // 2. Gradiente inferior
-    const gradH = outH * 0.30;
-    const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
-    grad.addColorStop(0,   'rgba(0,0,0,0)');
-    grad.addColorStop(0.4, 'rgba(0,0,0,0.58)');
-    grad.addColorStop(1,   'rgba(0,0,0,0.85)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, outH - gradH, outW, gradH);
-
-    // 3. Watermark
-    const wmSize = Math.round(outW * 0.018);
-    ctx.font        = `700 ${wmSize}px "Space Mono", monospace`;
-    ctx.fillStyle   = 'rgba(230,48,48,0.85)';
-    ctx.textAlign   = 'right';
-    ctx.shadowColor = 'rgba(0,0,0,0.95)';
-    ctx.shadowBlur  = 6;
-    ctx.fillText('ARKANA CAM', outW - Math.round(outW * 0.02), Math.round(outH * 0.05));
-
-    // 4. Cartas — word wrap
-    const cardsSize  = Math.round(outH * 0.055);
-    const lineHeight = cardsSize * 1.08;
-    const padX       = Math.round(outW * 0.022);
-    const maxTextW   = outW - padX * 2;
-    ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
-    ctx.fillStyle   = '#f0ece4';
-    ctx.textAlign   = 'left';
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur  = 12;
-
-    const trio     = currentTrio.length === 3 ? currentTrio : ['—','—','—'];
-    const words    = trio.join('  ·  ').split(' ');
-    const lines    = []; let cur = '';
-    for (const w of words) {
-      const test = cur ? cur + ' ' + w : w;
-      if (ctx.measureText(test).width > maxTextW && cur) { lines.push(cur); cur = w; }
-      else cur = test;
-    }
-    if (cur) lines.push(cur);
-
-    const baseY   = outH - Math.round(outH * 0.07);
-    const totalH  = lines.length * lineHeight;
-    const startY  = baseY - totalH + lineHeight * 0.85;
-    lines.forEach((l, i) => ctx.fillText(l, padX, startY + i * lineHeight));
-
-    // 5. Meta
-    const metaSize = Math.round(outH * 0.017);
-    const metaY    = outH - Math.round(outH * 0.026);
-    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
-    ctx.shadowBlur  = 5;
-    const handle = (localStorage.getItem('arkana-handle') || '').trim();
-    ctx.fillStyle   = '#e63030';
-    ctx.textAlign   = 'left';
-    ctx.fillText(handle ? '@' + handle : formatDateTime(), padX, metaY);
-    ctx.textAlign   = 'right';
-    ctx.fillText(handle ? 'radioarkana.com · ' + formatDateTime() : 'radioarkana.com', outW - padX, metaY);
-    ctx.shadowBlur  = 0;
-    ctx.textAlign   = 'left';
+    // Usar la función de render compartida
+    drawFrameToCanvas(ctx, outW, outH, video);
 
     // Mostrar preview
     document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg', 0.93);
@@ -1073,6 +1387,369 @@
     const val = e.target.value.replace(/[@\s]/g, '').slice(0, 32);
     e.target.value = val;
     localStorage.setItem('arkana-handle', val);
+  });
+
+  // ── MODE SYSTEM ────────────────────────────────────────────────────────────
+  let currentMode = 'photo'; // 'photo' | 'video' | 'archive'
+
+  function setMode(mode) {
+    // Si estamos grabando, no permitir cambio de modo
+    if (isRecording) return;
+
+    currentMode = mode;
+    ['photo','video','archive'].forEach(m => {
+      document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1))
+        .classList.toggle('active', m === mode);
+    });
+
+    const shutter = document.getElementById('shutter');
+    if (mode === 'video') {
+      shutter.classList.add('rec-mode');
+      shutter.classList.remove('recording');
+    } else {
+      shutter.classList.remove('rec-mode', 'recording');
+    }
+
+    // Modo archivo: abrir el panel
+    if (mode === 'archive') {
+      openArchivePanel();
+      // Volver visualmente al modo anterior en el switcher
+      // (el modo efectivo de disparo sigue siendo foto)
+      setTimeout(() => {
+        document.getElementById('modeArchive').classList.remove('active');
+        document.getElementById('modePhoto').classList.add('active');
+        currentMode = 'photo';
+      }, 0);
+    }
+  }
+
+  function handleShutter() {
+    if (currentMode === 'video') {
+      if (!isRecording) startRecording();
+      else stopRecording();
+    } else {
+      shoot();
+    }
+  }
+
+  // ── GRABACIÓN DE VÍDEO (canvas captureStream) ──────────────────────────────
+  let isRecording      = false;
+  let mediaRecorder    = null;
+  let recordedChunks   = [];
+  let recStartTime     = 0;
+  let recTimerInterval = null;
+  let recRafId         = null;
+  let recCanvas        = null;
+  let recCtx           = null;
+  let recVideoBlob     = null;
+
+  async function startRecording() {
+    const video = document.getElementById('video');
+    if (!video.videoWidth) return;
+
+    isRecording    = true;
+    recordedChunks = [];
+    recVideoBlob   = null;
+
+    // Canvas de grabación — resolución del stream
+    recCanvas        = document.createElement('canvas');
+    recCanvas.width  = video.videoWidth;
+    recCanvas.height = video.videoHeight;
+    recCtx           = recCanvas.getContext('2d');
+
+    // Render loop — dibuja frame + overlays a 30fps
+    function renderFrame() {
+      if (!isRecording) return;
+      recRafId = requestAnimationFrame(renderFrame);
+      drawFrameToCanvas(recCtx, recCanvas.width, recCanvas.height, video);
+    }
+    renderFrame();
+
+    // Capturar stream del canvas
+    let stream;
+    try {
+      stream = recCanvas.captureStream(30);
+    } catch(e) {
+      console.error('captureStream no soportado:', e);
+      isRecording = false;
+      return;
+    }
+
+    // Elegir codec disponible
+    const mimeTypes = [
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm',
+      'video/mp4',
+    ];
+    const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || '';
+
+    mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = onRecordingStop;
+    mediaRecorder.start(100); // chunk cada 100ms
+
+    // UI
+    const shutter = document.getElementById('shutter');
+    shutter.classList.remove('rec-mode');
+    shutter.classList.add('recording');
+    document.getElementById('recIndicator').classList.add('visible');
+    recStartTime = Date.now();
+    recTimerInterval = setInterval(updateRecTimer, 500);
+    updateRecTimer();
+    document.getElementById('onAirBadge') && document.getElementById('onAirBadge');
+  }
+
+  function stopRecording() {
+    if (!mediaRecorder || !isRecording) return;
+    isRecording = false;
+    mediaRecorder.stop();
+    cancelAnimationFrame(recRafId);
+    clearInterval(recTimerInterval);
+
+    const shutter = document.getElementById('shutter');
+    shutter.classList.remove('recording');
+    shutter.classList.add('rec-mode');
+    document.getElementById('recIndicator').classList.remove('visible');
+  }
+
+  function onRecordingStop() {
+    const mimeType = mediaRecorder.mimeType || 'video/webm';
+    recVideoBlob = new Blob(recordedChunks, { type: mimeType });
+    const url = URL.createObjectURL(recVideoBlob);
+    const pv  = document.getElementById('previewVideo');
+    pv.src    = url;
+    pv.load();
+    document.getElementById('videoPreview').classList.add('active');
+  }
+
+  function updateRecTimer() {
+    const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('recTimer').textContent = `${m}:${s}`;
+  }
+
+  // Render de un frame completo al canvas (igual que shoot() pero continuo)
+  function drawFrameToCanvas(ctx, outW, outH, video) {
+    const vidW = video.videoWidth  || outW;
+    const vidH = video.videoHeight || outH;
+    const effectiveZoom = nativeZoomSupported ? 1.0 : currentZoom;
+    const scale = Math.max(outW / vidW, outH / vidH) * effectiveZoom;
+    const drawW = vidW * scale;
+    const drawH = vidH * scale;
+    const offX  = (outW - drawW) / 2;
+    const offY  = (outH - drawH) / 2;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(video, offX, offY, drawW, drawH);
+
+    // Overlay de archivo (si está activo)
+    if (overlayImage) {
+      const ov = document.getElementById('overlayOpacity');
+      ctx.globalAlpha = (ov ? parseInt(ov.value) / 100 : 0.42);
+      ctx.globalCompositeOperation = 'screen';
+      const os = Math.max(outW / overlayImage.naturalWidth, outH / overlayImage.naturalHeight);
+      const ow = overlayImage.naturalWidth  * os;
+      const oh = overlayImage.naturalHeight * os;
+      ctx.drawImage(overlayImage, (outW - ow) / 2, (outH - oh) / 2, ow, oh);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // Gradiente inferior
+    const gradH = outH * 0.30;
+    const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
+    grad.addColorStop(0,   'rgba(0,0,0,0)');
+    grad.addColorStop(0.4, 'rgba(0,0,0,0.58)');
+    grad.addColorStop(1,   'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, outH - gradH, outW, gradH);
+
+    // Watermark
+    const wmSize = Math.round(outW * 0.018);
+    ctx.font      = `700 ${wmSize}px "Space Mono", monospace`;
+    ctx.fillStyle = 'rgba(230,48,48,0.85)';
+    ctx.textAlign = 'right';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur  = 6;
+    ctx.fillText('ARKANA CAM', outW - Math.round(outW * 0.02), Math.round(outH * 0.05));
+
+    // REC badge (solo durante grabación)
+    if (isRecording) {
+      const recSize = Math.round(outW * 0.016);
+      ctx.font      = `700 ${recSize}px "Space Mono", monospace`;
+      ctx.fillStyle = 'rgba(230,48,48,0.9)';
+      ctx.textAlign = 'left';
+      ctx.shadowBlur = 4;
+      const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      // Punto parpadeante (visible ~50% del tiempo)
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillText(`● REC ${m}:${s}`, Math.round(outW * 0.02), Math.round(outH * 0.05));
+      }
+    }
+
+    // Cartas
+    const cardsSize  = Math.round(outH * 0.055);
+    const lineHeight = cardsSize * 1.08;
+    const padX       = Math.round(outW * 0.022);
+    const maxTextW   = outW - padX * 2;
+    ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
+    ctx.fillStyle   = '#f0ece4';
+    ctx.textAlign   = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur  = 12;
+    const trio  = currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+    const words = trio.join('  ·  ').split(' ');
+    const lines = []; let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > maxTextW && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    const baseY  = outH - Math.round(outH * 0.07);
+    const totalH = lines.length * lineHeight;
+    const startY = baseY - totalH + lineHeight * 0.85;
+    lines.forEach((l, i) => ctx.fillText(l, padX, startY + i * lineHeight));
+
+    // Meta
+    const metaSize = Math.round(outH * 0.017);
+    const metaY    = outH - Math.round(outH * 0.026);
+    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
+    ctx.shadowBlur  = 5;
+    const handle = (localStorage.getItem('arkana-handle') || '').trim();
+    ctx.fillStyle   = '#e63030';
+    ctx.textAlign   = 'left';
+    ctx.fillText(handle ? '@' + handle : formatDateTime(), padX, metaY);
+    ctx.textAlign   = 'right';
+    ctx.fillText(handle ? 'radioarkana.com · ' + formatDateTime() : 'radioarkana.com', outW - padX, metaY);
+    ctx.shadowBlur  = 0;
+    ctx.textAlign   = 'left';
+  }
+
+  function closeVideoPreview() {
+    document.getElementById('videoPreview').classList.remove('active');
+    const pv = document.getElementById('previewVideo');
+    pv.pause();
+    pv.src = '';
+  }
+
+  function downloadVideo() {
+    if (!recVideoBlob) return;
+    const ext = recVideoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+    const filename = currentTrio.length === 3
+      ? `arkana-${currentTrio[0].replace(/\s/g,'')}-${Date.now()}.${ext}`
+      : `arkana-cam-${Date.now()}.${ext}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(recVideoBlob);
+    a.download = filename;
+    a.click();
+  }
+
+  async function shareVideo() {
+    if (!recVideoBlob) return;
+    const ext  = recVideoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+    const caption = currentTrio.length === 3
+      ? `${currentTrio[0]} · ${currentTrio[1]} · ${currentTrio[2]} — Radio Arkana #RadioArkana #ArkanaCAM`
+      : 'Radio Arkana · Arkana CAM #RadioArkana';
+    if (navigator.share) {
+      const file = new File([recVideoBlob], `arkana-cam.${ext}`, { type: recVideoBlob.type });
+      try { await navigator.share({ files: [file], title: 'Arkana CAM', text: caption }); }
+      catch(e) { downloadVideo(); }
+    } else {
+      downloadVideo();
+    }
+  }
+
+  // ── ARCHIVE OVERLAY ────────────────────────────────────────────────────────
+  let archiveImages   = []; // { dataUrl, img }
+  let selectedArchIdx = -1;
+  let overlayImage    = null; // HTMLImageElement activo
+
+  function openArchivePanel() {
+    document.getElementById('archivePanel').classList.add('active');
+    selectedArchIdx = -1;
+    document.getElementById('btnApplyOverlay').disabled = true;
+    renderArchiveGrid();
+  }
+
+  function closeArchivePanel() {
+    document.getElementById('archivePanel').classList.remove('active');
+  }
+
+  function loadArchiveImages(event) {
+    const files = Array.from(event.target.files);
+    let loaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.src   = e.target.result;
+        archiveImages.push({ dataUrl: e.target.result, img });
+        loaded++;
+        if (loaded === files.length) renderArchiveGrid();
+      };
+      reader.readAsDataURL(file);
+    });
+    // Reset input para poder volver a cargar los mismos archivos
+    event.target.value = '';
+  }
+
+  function renderArchiveGrid() {
+    const grid = document.getElementById('archiveGrid');
+    // Mantener el botón de carga (primer hijo)
+    const uploadLabel = grid.firstElementChild;
+    grid.innerHTML = '';
+    grid.appendChild(uploadLabel);
+
+    archiveImages.forEach((item, idx) => {
+      const img = document.createElement('img');
+      img.className = 'arch-thumb' + (idx === selectedArchIdx ? ' selected' : '');
+      img.src = item.dataUrl;
+      img.onclick = () => selectArchiveImage(idx);
+      grid.appendChild(img);
+    });
+  }
+
+  function selectArchiveImage(idx) {
+    selectedArchIdx = idx;
+    document.getElementById('btnApplyOverlay').disabled = false;
+    renderArchiveGrid();
+  }
+
+  function applySelectedOverlay() {
+    if (selectedArchIdx < 0) return;
+    overlayImage = archiveImages[selectedArchIdx].img;
+
+    const el = document.getElementById('overlayImgEl');
+    el.src = overlayImage.src;
+    el.classList.add('visible');
+    document.getElementById('overlayControls').classList.add('visible');
+    document.getElementById('archiveActiveBar').classList.add('visible');
+
+    closeArchivePanel();
+    // Asegurar que estamos en modo foto
+    currentMode = 'photo';
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('modePhoto').classList.add('active');
+  }
+
+  function removeOverlay() {
+    overlayImage = null;
+    const el = document.getElementById('overlayImgEl');
+    el.src = '';
+    el.classList.remove('visible');
+    document.getElementById('overlayControls').classList.remove('visible');
+    document.getElementById('archiveActiveBar').classList.remove('visible');
+  }
+
+  // Sincronizar slider de opacidad con el elemento CSS
+  document.getElementById('overlayOpacity').addEventListener('input', e => {
+    const val = e.target.value / 100;
+    document.getElementById('overlayImgEl').style.opacity = val;
   });
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
