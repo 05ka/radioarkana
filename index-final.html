@@ -276,8 +276,8 @@
     body.deep-listen .deep-card:nth-child(3) { transition-delay: .25s; }
     .deep-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--red-dim); }
     .deep-card img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .82; }
-    .dc-roman { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-family: var(--font-body); font-size: 8px; letter-spacing: .12em; color: var(--red); opacity: .7; }
-    .dc-name { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,.95) 0%, transparent 100%); padding: 20px 4px 6px; font-family: var(--font-head); font-size: 12px; letter-spacing: .05em; text-align: center; color: var(--white); line-height: 1.1; }
+    .dc-roman { display: none !important;}
+    .dc-name { display: none !important; }
 
     #deepExitHint { position: fixed; bottom: max(24px, env(safe-area-inset-bottom) + 14px); left: 50%; transform: translateX(-50%); font-family: var(--font-body); font-size: 7px; letter-spacing: 0.2em; color: #181818; text-transform: uppercase; pointer-events: none; transition: opacity 1.2s; white-space: nowrap; }
     #deepExitHint.fade-out { opacity: 0; }
