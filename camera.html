@@ -541,33 +541,35 @@
     }
 
     /* Shutter en modo vídeo */
-    #shutter.rec-mode {
-      background: transparent;
-      border: 4px solid var(--red);
-    }
-    #shutter.rec-mode::after {
-      content: '';
-      display: block;
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      background: var(--red);
-      margin: auto;
-      margin-top: 14px;
-      transition: all 0.2s;
-    }
+    /* Fix 1+4: flexbox centra el interior correctamente; transicion animada entre estados */
+    #shutter.rec-mode,
     #shutter.recording {
       background: transparent;
       border: 4px solid var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
     }
+    #shutter.rec-mode::after,
     #shutter.recording::after {
       content: '';
       display: block;
-      width: 22px; height: 22px;
-      border-radius: 4px;
       background: var(--red);
-      margin: auto;
-      margin-top: 17px;
-      transition: all 0.2s;
+      /* anima circulo <-> cuadrado al cambiar de clase */
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1),
+                  height 0.25s cubic-bezier(0.4,0,0.2,1),
+                  border-radius 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    /* Listo para grabar: circulo rojo */
+    #shutter.rec-mode::after {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+    }
+    /* Grabando: cuadrado redondeado */
+    #shutter.recording::after {
+      width: 22px; height: 22px;
+      border-radius: 5px;
     }
 
     /* ── VIDEO PREVIEW ───────────────────────────────────────────────────── */
@@ -677,103 +679,6 @@
     }
 
     /* Overlay activo sobre el viewport */
-    #overlayImgEl {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-      opacity: 0.42;
-      display: none;
-      mix-blend-mode: screen;
-    }
-    #overlayImgEl.visible { display: block; }
-
-    /* Control de opacidad del overlay */
-    #overlayControls {
-      position: absolute;
-      bottom: 56px;
-      left: 16px;
-      right: 16px;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(230,48,48,0.3);
-      padding: 8px 14px;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-    #overlayControls.visible { display: flex; }
-    .ov-label {
-      font-size: 8px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gray);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    #overlayOpacity {
-      flex: 1;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 2px;
-      background: var(--border);
-      outline: none;
-      cursor: pointer;
-    }
-    #overlayOpacity::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--red);
-      cursor: pointer;
-    }
-    #overlayOpacity::-moz-range-thumb {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--red);
-      border: none;
-      cursor: pointer;
-    }
-    .ov-remove {
-      background: none;
-      border: none;
-      color: var(--gray);
-      cursor: pointer;
-      padding: 2px;
-      transition: color 0.2s;
-      flex-shrink: 0;
-    }
-    .ov-remove:hover { color: var(--red); }
-
-    /* Indicador de modo archivo activo en formatBar */
-    #archiveActiveBar {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 14px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(230,48,48,0.06);
-    }
-    #archiveActiveBar.visible { display: flex; }
-    .arch-active-label {
-      font-size: 8px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--red);
-    }
-    .arch-change-btn {
-      background: none;
-      border: 1px solid rgba(230,48,48,0.35);
-      color: var(--red);
-      font-family: var(--font-mono);
-      font-size: 7px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      padding: 4px 9px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -852,20 +757,6 @@
       1×
     </div>
 
-    <!-- Overlay foto de archivo -->
-    <img id="overlayImgEl" alt="">
-
-    <!-- Controles de opacidad del overlay -->
-    <div id="overlayControls">
-      <span class="ov-label">Opacidad</span>
-      <input type="range" id="overlayOpacity" min="0" max="100" value="42">
-      <button class="ov-remove" onclick="removeOverlay()" title="Quitar overlay">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-
     <div id="overlayBar">
       <div id="cardsDisplay">— · — · —</div>
       <div id="metaDisplay">—</div>
@@ -904,12 +795,6 @@
       </svg>
       archivo
     </button>
-  </div>
-
-  <!-- Barra de overlay activo (visible solo cuando hay foto de archivo cargada) -->
-  <div id="archiveActiveBar">
-    <span class="arch-active-label">● overlay activo</span>
-    <button class="arch-change-btn" onclick="openArchivePanel()">cambiar</button>
   </div>
 
   <div id="formatBar">
@@ -962,7 +847,7 @@
 <!-- PANEL ARCHIVO -->
 <div id="archivePanel">
   <div id="archiveHeader">
-    <span class="arch-title">Archivo · Selecciona overlay</span>
+    <span class="arch-title">Archivo · Elige una foto</span>
     <button class="arch-close" onclick="closeArchivePanel()">× cerrar</button>
   </div>
   <div id="archiveGrid" id="archiveGrid">
@@ -979,7 +864,7 @@
   </div>
   <div id="archiveActions">
     <button class="arch-btn" onclick="closeArchivePanel()">cancelar</button>
-    <button class="arch-btn primary" id="btnApplyOverlay" onclick="applySelectedOverlay()" disabled>aplicar overlay</button>
+    <button class="arch-btn primary" id="btnApplyOverlay" onclick="processArchivePhoto()" disabled>aplicar cartas →</button>
   </div>
 </div>
 
@@ -1438,6 +1323,8 @@
   let recordedChunks   = [];
   let recStartTime     = 0;
   let recTimerInterval = null;
+  let recElapsedSecs   = 0;    // fuente unica: DOM timer y canvas leen esto
+  let recBlinkOn       = true; // toggle a 1Hz para parpadeo limpio en canvas
   let recRafId         = null;
   let recCanvas        = null;
   let recCtx           = null;
@@ -1524,10 +1411,12 @@
   }
 
   function updateRecTimer() {
-    const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
-    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-    const s = String(elapsed % 60).padStart(2, '0');
-    document.getElementById('recTimer').textContent = `${m}:${s}`;
+    // Fix 3+5: fuente unica para DOM y canvas; toggle limpio a 1Hz
+    recElapsedSecs = Math.floor((Date.now() - recStartTime) / 1000);
+    recBlinkOn = !recBlinkOn; // setInterval 500ms = 2 calls por segundo = 1Hz
+    const m = String(Math.floor(recElapsedSecs / 60)).padStart(2, '0');
+    const s = String(recElapsedSecs % 60).padStart(2, '0');
+    document.getElementById('recTimer').textContent = m + ':' + s;
   }
 
   // Render de un frame completo al canvas (igual que shoot() pero continuo)
@@ -1544,18 +1433,6 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(video, offX, offY, drawW, drawH);
 
-    // Overlay de archivo (si está activo)
-    if (overlayImage) {
-      const ov = document.getElementById('overlayOpacity');
-      ctx.globalAlpha = (ov ? parseInt(ov.value) / 100 : 0.42);
-      ctx.globalCompositeOperation = 'screen';
-      const os = Math.max(outW / overlayImage.naturalWidth, outH / overlayImage.naturalHeight);
-      const ow = overlayImage.naturalWidth  * os;
-      const oh = overlayImage.naturalHeight * os;
-      ctx.drawImage(overlayImage, (outW - ow) / 2, (outH - oh) / 2, ow, oh);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-    }
 
     // Gradiente inferior
     const gradH = outH * 0.30;
@@ -1575,20 +1452,19 @@
     ctx.shadowBlur  = 6;
     ctx.fillText('ARKANA CAM', outW - Math.round(outW * 0.02), Math.round(outH * 0.05));
 
-    // REC badge (solo durante grabación)
+    // Fix 2+3+5: REC badge en fila propia bajo watermark; timer y blink sincronizados
     if (isRecording) {
       const recSize = Math.round(outW * 0.016);
-      ctx.font      = `700 ${recSize}px "Space Mono", monospace`;
-      ctx.fillStyle = 'rgba(230,48,48,0.9)';
-      ctx.textAlign = 'left';
-      ctx.shadowBlur = 4;
-      const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
-      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-      const s = String(elapsed % 60).padStart(2, '0');
-      // Punto parpadeante (visible ~50% del tiempo)
-      if (Math.floor(Date.now() / 500) % 2 === 0) {
-        ctx.fillText(`● REC ${m}:${s}`, Math.round(outW * 0.02), Math.round(outH * 0.05));
-      }
+      const recY = Math.round(outH * 0.05) + Math.round(recSize * 1.9);
+      const rm = String(Math.floor(recElapsedSecs / 60)).padStart(2, '0');
+      const rs = String(recElapsedSecs % 60).padStart(2, '0');
+      const dot = recBlinkOn ? '●' : '○';
+      ctx.font        = '700 ' + recSize + 'px "Space Mono", monospace';
+      ctx.fillStyle   = 'rgba(230,48,48,0.92)';
+      ctx.textAlign   = 'left';
+      ctx.shadowColor = 'rgba(0,0,0,0.95)';
+      ctx.shadowBlur  = 5;
+      ctx.fillText(dot + ' REC ' + rm + ':' + rs, Math.round(outW * 0.02), recY);
     }
 
     // Cartas
@@ -1664,10 +1540,9 @@
     }
   }
 
-  // ── ARCHIVE OVERLAY ────────────────────────────────────────────────────────
+  // ── ARCHIVO — foto como fondo, cartas encima ───────────────────────────────
   let archiveImages   = []; // { dataUrl, img }
   let selectedArchIdx = -1;
-  let overlayImage    = null; // HTMLImageElement activo
 
   function openArchivePanel() {
     document.getElementById('archivePanel').classList.add('active');
@@ -1687,30 +1562,30 @@
       const reader = new FileReader();
       reader.onload = e => {
         const img = new Image();
-        img.src   = e.target.result;
-        archiveImages.push({ dataUrl: e.target.result, img });
-        loaded++;
-        if (loaded === files.length) renderArchiveGrid();
+        img.onload = () => {
+          archiveImages.push({ dataUrl: e.target.result, img });
+          loaded++;
+          if (loaded === files.length) renderArchiveGrid();
+        };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     });
-    // Reset input para poder volver a cargar los mismos archivos
     event.target.value = '';
   }
 
   function renderArchiveGrid() {
     const grid = document.getElementById('archiveGrid');
-    // Mantener el botón de carga (primer hijo)
     const uploadLabel = grid.firstElementChild;
     grid.innerHTML = '';
     grid.appendChild(uploadLabel);
 
     archiveImages.forEach((item, idx) => {
-      const img = document.createElement('img');
-      img.className = 'arch-thumb' + (idx === selectedArchIdx ? ' selected' : '');
-      img.src = item.dataUrl;
-      img.onclick = () => selectArchiveImage(idx);
-      grid.appendChild(img);
+      const el = document.createElement('img');
+      el.className = 'arch-thumb' + (idx === selectedArchIdx ? ' selected' : '');
+      el.src = item.dataUrl;
+      el.onclick = () => selectArchiveImage(idx);
+      grid.appendChild(el);
     });
   }
 
@@ -1720,37 +1595,97 @@
     renderArchiveGrid();
   }
 
-  function applySelectedOverlay() {
+  // La foto del archivo es el FONDO; cartas + watermarks se aplican encima
+  function processArchivePhoto() {
     if (selectedArchIdx < 0) return;
-    overlayImage = archiveImages[selectedArchIdx].img;
+    const srcImg = archiveImages[selectedArchIdx].img;
 
-    const el = document.getElementById('overlayImgEl');
-    el.src = overlayImage.src;
-    el.classList.add('visible');
-    document.getElementById('overlayControls').classList.add('visible');
-    document.getElementById('archiveActiveBar').classList.add('visible');
+    const canvas = document.getElementById('canvas');
+    const ctx    = canvas.getContext('2d');
 
+    // Dimensiones: respeta el formato seleccionado
+    let outW, outH;
+    if (squareMode) {
+      outW = 1080; outH = 1080;
+    } else {
+      outW = srcImg.naturalWidth;
+      outH = srcImg.naturalHeight;
+    }
+    canvas.width  = outW;
+    canvas.height = outH;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // 1. Foto del archivo como fondo (object-fit: cover)
+    const scale = Math.max(outW / srcImg.naturalWidth, outH / srcImg.naturalHeight);
+    const drawW = srcImg.naturalWidth  * scale;
+    const drawH = srcImg.naturalHeight * scale;
+    const offX  = (outW - drawW) / 2;
+    const offY  = (outH - drawH) / 2;
+    ctx.drawImage(srcImg, offX, offY, drawW, drawH);
+
+    // 2. Gradiente inferior
+    const gradH = outH * 0.30;
+    const grad  = ctx.createLinearGradient(0, outH - gradH, 0, outH);
+    grad.addColorStop(0,   'rgba(0,0,0,0)');
+    grad.addColorStop(0.4, 'rgba(0,0,0,0.58)');
+    grad.addColorStop(1,   'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, outH - gradH, outW, gradH);
+
+    // 3. Watermark
+    const wmSize = Math.round(outW * 0.018);
+    ctx.font        = `700 ${wmSize}px "Space Mono", monospace`;
+    ctx.fillStyle   = 'rgba(230,48,48,0.85)';
+    ctx.textAlign   = 'right';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur  = 6;
+    ctx.fillText('ARKANA CAM', outW - Math.round(outW * 0.02), Math.round(outH * 0.05));
+
+    // 4. Cartas — word wrap
+    const cardsSize  = Math.round(outH * 0.055);
+    const lineHeight = cardsSize * 1.08;
+    const padX       = Math.round(outW * 0.022);
+    const maxTextW   = outW - padX * 2;
+    ctx.font        = `${cardsSize}px 'Bebas Neue', sans-serif`;
+    ctx.fillStyle   = '#f0ece4';
+    ctx.textAlign   = 'left';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur  = 12;
+
+    const trio  = currentTrio.length === 3 ? currentTrio : ['—','—','—'];
+    const words = trio.join('  ·  ').split(' ');
+    const lines = []; let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > maxTextW && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    const baseY  = outH - Math.round(outH * 0.07);
+    const totalH = lines.length * lineHeight;
+    const startY = baseY - totalH + lineHeight * 0.85;
+    lines.forEach((l, i) => ctx.fillText(l, padX, startY + i * lineHeight));
+
+    // 5. Meta
+    const metaSize = Math.round(outH * 0.017);
+    const metaY    = outH - Math.round(outH * 0.026);
+    ctx.font        = `${metaSize}px 'Space Mono', monospace`;
+    ctx.shadowBlur  = 5;
+    const handle = (localStorage.getItem('arkana-handle') || '').trim();
+    ctx.fillStyle   = '#e63030';
+    ctx.textAlign   = 'left';
+    ctx.fillText(handle ? '@' + handle : formatDateTime(), padX, metaY);
+    ctx.textAlign   = 'right';
+    ctx.fillText(handle ? 'radioarkana.com · ' + formatDateTime() : 'radioarkana.com', outW - padX, metaY);
+    ctx.shadowBlur  = 0;
+    ctx.textAlign   = 'left';
+
+    // Mostrar en el preview de foto estándar (reutiliza download/share)
+    document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg', 0.93);
     closeArchivePanel();
-    // Asegurar que estamos en modo foto
-    currentMode = 'photo';
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('modePhoto').classList.add('active');
+    document.getElementById('preview').classList.add('active');
   }
 
-  function removeOverlay() {
-    overlayImage = null;
-    const el = document.getElementById('overlayImgEl');
-    el.src = '';
-    el.classList.remove('visible');
-    document.getElementById('overlayControls').classList.remove('visible');
-    document.getElementById('archiveActiveBar').classList.remove('visible');
-  }
-
-  // Sincronizar slider de opacidad con el elemento CSS
-  document.getElementById('overlayOpacity').addEventListener('input', e => {
-    const val = e.target.value / 100;
-    document.getElementById('overlayImgEl').style.opacity = val;
-  });
 
   // ── SERVICE WORKER ─────────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
