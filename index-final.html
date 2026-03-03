@@ -300,7 +300,7 @@
       gap: 0;
       flex-shrink: 0;
       opacity: 0;
-      transform: translateY(-25px);
+      transform: translateY(-10px);
       transition: opacity .5s;
       pointer-events: none;
     }
@@ -308,8 +308,8 @@
     .micro-trio.hidden-by-user { opacity: 0 !important; pointer-events: none; }
 
     .micro-card {
-      width: 62px;
-      height: 124px; /* 98x182 thumb al 50% — pixel-perfect en HiDPI */
+      width: clamp(48px, 13vw, 62px);
+      height: clamp(90px, 24vw, 124px);
       position: relative;
       border: 1px solid #2a2a2a;
       border-right: none;
@@ -334,6 +334,9 @@
     .micro-card:hover img   { opacity: 1; }
     .mc-roman { display: none !important; }
     .mc-name  { display: none !important; }
+    @media (max-width: 480px) {
+      .micro-trio { transform: translateY(-8px); }
+    }
   </style>
 </head>
 <body>
