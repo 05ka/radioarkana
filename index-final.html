@@ -251,7 +251,11 @@
       max-width: min(300px, 80vw);
       transition: opacity 0.5s;
     }
-    #deepTrio.fading { opacity: 0; }
+    #deepTrio.fading .deep-card {
+      opacity: 0;
+     transform: scale(1.06) translateY(-8px);
+     filter: blur(3px);
+    }
     .deep-card {
       width: clamp(80px, 22vw, 110px);
       height: clamp(120px, 33vw, 165px);
@@ -261,7 +265,7 @@
       flex-shrink: 0;
       opacity: 0;
       transform: translateY(16px) scale(.95);
-      transition: opacity .5s, transform .5s;
+      transition: opacity .5s, transform .5s, filter .5s;
     }
     .deep-card:last-child { border-right: 1px solid #2a2a2a; }
     body.deep-listen .deep-card { opacity: 1; transform: none; }
@@ -1589,9 +1593,23 @@
   }
 
   function updateDeepTrio(trio) {
-    if (!deepTrioEl) return;
-    deepTrioEl.classList.add('fading');
-    setTimeout(() => { renderDeepTrio(trio); deepTrioEl.classList.remove('fading'); }, 460);
+    const cards = deepTrioEl.querySelectorAll('.deep-card');
+
+  // Fase 1: salida carta a carta con stagger
+    cards.forEach((card, i) => {
+      setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(1.06) translateY(-8px)';
+        card.style.filter = 'blur(3px)';
+      }, i * 80);
+    });
+
+  // Fase 2: swap + entrada tras la salida
+    setTimeout(() => {
+      renderDeepTrio(trio);
+    // Las nuevas cartas arrancan en el estado invisible del CSS
+    // y entran escalonadas igual que al abrir deep listen
+    }, cards.length * 80 + 420);
   }
 
   function enterDeepListen(){
