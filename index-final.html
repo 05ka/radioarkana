@@ -1503,46 +1503,24 @@
   // ══════════════════════════════════════════════════════════════════════════
   function cardIndexES(name) { return CARDS.es.indexOf(name); }
 
-  function updateMicroTrio(trio) {
+  function renderMicroTrio(trio) {
     const container = document.getElementById('microTrio');
-    const cards = container.querySelectorAll('.micro-card');  // ← único cambio de selector
-    const isHidden = container.classList.contains('hidden-by-user');
-
-    // Fase 1: salida escalonada
-    cards.forEach((card, i) => {
-      setTimeout(() => {
-        card.style.opacity = '0';
-        card.style.transform = 'scale(1.06) translateY(-8px)';
-        card.style.filter = 'blur(3px)';
-      }, i * 80);
+    if (!container || !trio || trio.length < 3) return;
+    container.innerHTML = '';
+    trio.forEach(name => {
+      const idx  = cardIndexES(name);
+      const slug = idx >= 0 ? CARD_SLUGS_ES[idx] : name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+      const roman = idx >= 0 ? ROMANS[idx] : '';
+      const el = document.createElement('div');
+      el.className = 'micro-card';
+      el.innerHTML = `
+        <img src="/cartas/thumb/${slug}.jpg" srcset="/cartas/thumb/${slug}.jpg 2x" alt="${name}" onerror="this.style.display='none'">
+        <div class="mc-roman">${roman}</div>
+        <div class="mc-name">${name}</div>
+      `;
+      container.appendChild(el);
     });
-
-  // Fase 2: swap + entrada inversa
-    setTimeout(() => {
-      renderMicroTrio(trio);  // ← renderMicroTrio en lugar de renderDeepTrio
-      const newCards = container.querySelectorAll('.micro-card');  // ← micro-card
-
-      newCards.forEach(card => {
-        card.style.transition = 'none';
-        card.style.opacity = '0';
-        card.style.transform = 'scale(1.06) translateY(-8px)';
-        card.style.filter = 'blur(3px)';
-      });
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          newCards.forEach((card, i) => {
-            setTimeout(() => {
-              card.style.transition = 'opacity .8s, transform .8s, filter .8s';
-              card.style.transform = 'scale(1) translateY(0)';
-              card.style.filter = 'blur(0px)';
-              //card.style.opacity = isHidden ? '' : '1';
-            }, i * 80);
-          });
-        });
-      });
-
-    }, cards.length * 80 + 420);
+    if (!container.classList.contains('hidden-by-user')) container.classList.add('visible');
   }
 
   function renderDeepTrio(trio) {
@@ -1687,7 +1665,7 @@
   // ── _onNewTrio: actualiza micro-trio + deep + marquee ─────────────────────
   window._onNewTrio = function(trio) {
     if (!trio || trio.length < 3) return;
-    updateMicroTrio(trio);
+    renderMicroTrio(trio);
     updateDeepTrio(trio);
     setMarqueeTrio(trio);
   };
