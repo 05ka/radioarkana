@@ -444,7 +444,7 @@
     <!-- ── TITLE BLOCK con micro-trio ── -->
     <div class="title-block">
       <h1 class="station-name" id="stationName" title="Doble tap: escucha profunda">RADIO<br><span>ARKANA</span></h1>
-      <div class="micro-trio" id="microTrio"></div>
+      <div class="micro-trio hidden-by-user" id="microTrio"></div>
     </div>
     <p class="tagline">Tarot Underground · Málaga</p>
     <div class="marquee-wrap">
@@ -1541,7 +1541,7 @@
 
   // Doble tap en micro-trio: toggle visibilidad
   // El listener va en title-block para evitar problemas con pointer-events y overflow
-  let _microTapTimer = null, _microHidden = false;
+  let _microTapTimer = null, _microHidden = true;
   const _titleBlock = document.querySelector('.title-block');
   if (_titleBlock) {
     _titleBlock.addEventListener('click', (e) => {
