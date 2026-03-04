@@ -1595,7 +1595,7 @@
   function updateDeepTrio(trio) {
     const cards = deepTrioEl.querySelectorAll('.deep-card');
 
-  // Fase 1: salida carta a carta con stagger
+  // Fase 1: salida escalonada
     cards.forEach((card, i) => {
       setTimeout(() => {
         card.style.opacity = '0';
@@ -1604,11 +1604,34 @@
       }, i * 80);
     });
 
-  // Fase 2: swap + entrada tras la salida
+  // Fase 2: swap + entrada inversa
     setTimeout(() => {
       renderDeepTrio(trio);
-    // Las nuevas cartas arrancan en el estado invisible del CSS
-    // y entran escalonadas igual que al abrir deep listen
+      const newCards = deepTrioEl.querySelectorAll('.deep-card');
+
+    // Forzar estado inicial (escala grande, blur, invisible)
+    // antes de que el browser pinte el frame
+      newCards.forEach(card => {
+        card.style.transition = 'none';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(1.06) translateY(-8px)';
+        card.style.filter = 'blur(3px)';
+      });
+
+    // Siguiente frame: activar transición y animar hacia estado final
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {  // doble rAF para garantizar repaint
+          newCards.forEach((card, i) => {
+            setTimeout(() => {
+              card.style.transition = 'opacity .5s, transform .5s, filter .5s';
+              card.style.opacity = '1';
+              card.style.transform = 'scale(1) translateY(0)';
+              card.style.filter = 'blur(0px)';
+            }, i * 80);
+          });
+        });
+      });
+
     }, cards.length * 80 + 420);
   }
 
