@@ -1506,6 +1506,7 @@
   function updateMicroTrio(trio) {
     const container = document.getElementById('microTrio');
     const cards = container.querySelectorAll('.micro-card');  // ← único cambio de selector
+    const isHidden = container.classList.contains('hidden-by-user');
 
     // Fase 1: salida escalonada
     cards.forEach((card, i) => {
@@ -1533,9 +1534,9 @@
           newCards.forEach((card, i) => {
             setTimeout(() => {
               card.style.transition = 'opacity .8s, transform .8s, filter .8s';
-              card.style.opacity = '1';
               card.style.transform = 'scale(1) translateY(0)';
               card.style.filter = 'blur(0px)';
+              card.style.opacity = isHidden ? '' : '1';
             }, i * 80);
           });
         });
