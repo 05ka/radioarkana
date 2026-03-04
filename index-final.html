@@ -300,12 +300,12 @@
       gap: 0;
       flex-shrink: 0;
       opacity: 0;
-      transform: translateY(-10px);
+      margin-top: -10px;
       transition: opacity .5s;
       pointer-events: none;
     }
     .micro-trio.visible   { opacity: 1; pointer-events: auto; }
-    .micro-trio.hidden-by-user { opacity: 0 !important; pointer-events: none; }
+    .micro-trio.hidden-by-user { opacity: 0 !important; pointer-events: auto; }
 
     .micro-card {
       width: clamp(48px, 13vw, 62px);
@@ -335,7 +335,7 @@
     .mc-roman { display: none !important; }
     .mc-name  { display: none !important; }
     @media (max-width: 480px) {
-      .micro-trio { transform: translateY(-8px); }
+      .micro-trio { margin-top: -8px; }
     }
   </style>
 </head>
@@ -1538,22 +1538,23 @@
   }
 
   // Doble tap en micro-trio: toggle visibilidad
+  // El listener va en title-block para evitar problemas con pointer-events y overflow
   let _microTapTimer = null, _microHidden = false;
-  const _microTrioEl = document.getElementById('microTrio');
-
-  function _microTapHandler(e) {
-    e.preventDefault();
-    if (_microTapTimer) {
-      clearTimeout(_microTapTimer); _microTapTimer = null;
-      _microHidden = !_microHidden;
-      _microTrioEl.classList.toggle('hidden-by-user', _microHidden);
-    } else {
-      _microTapTimer = setTimeout(() => { _microTapTimer = null; }, 380);
-    }
+  const _titleBlock = document.querySelector('.title-block');
+  if (_titleBlock) {
+    _titleBlock.addEventListener('click', (e) => {
+      // Solo actuar si el click viene de dentro del micro-trio
+      if (!e.target.closest('#microTrio')) return;
+      e.stopPropagation();
+      if (_microTapTimer) {
+        clearTimeout(_microTapTimer); _microTapTimer = null;
+        _microHidden = !_microHidden;
+        document.getElementById('microTrio').classList.toggle('hidden-by-user', _microHidden);
+      } else {
+        _microTapTimer = setTimeout(() => { _microTapTimer = null; }, 380);
+      }
+    });
   }
-
-  _microTrioEl.addEventListener('click', _microTapHandler);
-  _microTrioEl.addEventListener('touchend', _microTapHandler);
 
   // Restaurar desde sesión si se recarga la página mientras hay trio activo
   (function initMicroFromSession() {
