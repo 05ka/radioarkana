@@ -1539,15 +1539,21 @@
 
   // Doble tap en micro-trio: toggle visibilidad
   let _microTapTimer = null, _microHidden = false;
-  document.getElementById('microTrio').addEventListener('click', () => {
+  const _microTrioEl = document.getElementById('microTrio');
+
+  function _microTapHandler(e) {
+    e.preventDefault();
     if (_microTapTimer) {
       clearTimeout(_microTapTimer); _microTapTimer = null;
       _microHidden = !_microHidden;
-      document.getElementById('microTrio').classList.toggle('hidden-by-user', _microHidden);
+      _microTrioEl.classList.toggle('hidden-by-user', _microHidden);
     } else {
       _microTapTimer = setTimeout(() => { _microTapTimer = null; }, 380);
     }
-  });
+  }
+
+  _microTrioEl.addEventListener('click', _microTapHandler);
+  _microTrioEl.addEventListener('touchend', _microTapHandler);
 
   // Restaurar desde sesión si se recarga la página mientras hay trio activo
   (function initMicroFromSession() {
