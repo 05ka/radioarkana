@@ -396,8 +396,8 @@
     <button class="cam-side-btn" id="cameraFlip">⇄ Girar</button>
   </div>
   <div id="cameraFormatBar">
-    <button class="fmt-btn active" id="btnFmtFree">libre</button>
-    <button class="fmt-btn" id="btnFmt1080">1080 × 1080</button>
+    <button class="fmt-btn" id="btnFmtFree">libre</button>
+    <button class="fmt-btn active" id="btnFmt1080">1080 × 1080</button>
   </div>
 </div>
 
@@ -1372,7 +1372,7 @@
   }
   async function flipCamera(){camFacingMode=camFacingMode==='environment'?'user':'environment';await startCameraStream();}
 
-  let squareMode=false;
+  let squareMode=true;
   function updateSquareGuide(){
     const vp=document.getElementById('cameraViewport'),guide=document.getElementById('squareGuide');
     const mTop=document.getElementById('sqMaskTop'),mBottom=document.getElementById('sqMaskBottom'),mLeft=document.getElementById('sqMaskLeft'),mRight=document.getElementById('sqMaskRight');
