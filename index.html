@@ -1501,8 +1501,8 @@
   // ── MICRO TRIO — cartas del arcano activo ─────────────────────────────────
   // Assets: /cartas/el-loco.jpg … (slugs en CARD_SLUGS_ES, índice = CARDS.es)
   // ══════════════════════════════════════════════════════════════════════════
-  function cardIndexES(name) { return CARDS.es.indexOf(name); }
-
+  // DESPUÉS (arreglado):
+  function cardIndexES(name) {let idx = CARDS.es.indexOf(name); if (idx < 0) idx = CARDS.en.indexOf(name); return idx;}
   function renderMicroTrio(trio) {
     const container = document.getElementById('microTrio');
     if (!container || !trio || trio.length < 3) return;
