@@ -274,8 +274,6 @@
     body.deep-listen .deep-card:nth-child(3) { transition-delay: .25s; }
     .deep-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; }
     .deep-card img { width: 100%; height: 100%; object-fit: contain; display: block; opacity: .82; }
-    .dc-roman { display: none !important;}
-    .dc-name { display: none !important; }
 
     #deepExitHint { position: fixed; bottom: max(24px, env(safe-area-inset-bottom) + 14px); left: 50%; transform: translateX(-50%); font-family: var(--font-body); font-size: 7px; letter-spacing: 0.2em; color: #181818; text-transform: uppercase; pointer-events: none; transition: opacity 1.2s; white-space: nowrap; }
     #deepExitHint.fade-out { opacity: 0; }
@@ -338,8 +336,6 @@
       transition: opacity .3s;
     }
     .micro-card:hover img   { opacity: 1; }
-    .mc-roman { display: none !important; }
-    .mc-name  { display: none !important; }
     @media (max-width: 480px) {
       .micro-trio { margin-top: -23px; }
     }
@@ -527,6 +523,11 @@
           <button class="lang-opt" id="langEN" onclick="setLang('en')" aria-pressed="false">EN</button>
         </div>
         <span class="ctrl-sep"></span>
+        <div class="lang-toggle" role="group" aria-label="Mazo de cartas" title="Baraja: Marsella o Rider-Waite">
+          <button class="lang-opt active" id="deckMarsella" onclick="setDeck('marsella')" aria-pressed="true">MRS</button>
+          <button class="lang-opt" id="deckRider" onclick="setDeck('rider')" aria-pressed="false">RWS</button>
+        </div>
+        <span class="ctrl-sep"></span>
         <button class="layer-btn" id="btnCamera" onclick="openCamera()" title="Capturar sincronicidad" aria-label="Capturar sincronicidad">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -558,18 +559,28 @@
   const STREAM_URL = 'https://stream.radioarkana.com/stream-opus';
   const WORKER_URL = 'https://gentle-glitter-2552.oscardevalle.workers.dev';
 
-  const CARDS = {
-    es: ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"],
-    en: ["The Fool","The Magician","The High Priestess","The Empress","The Emperor","The Hierophant","The Lovers","The Chariot","Strength","The Hermit","The Wheel of Fortune","The Justice","The Hanged Man","Death","The Temperance","The Devil","The Tower","The Star","The Moon","The Sun","The Judgement","The World"]
+  // ── DECKS ──────────────────────────────────────────────────────────────────
+  const DECKS = {
+    marsella: {
+      es: ["El Loco","El Mago","La Papisa","La Emperatriz","El Emperador","El Papa","El Enamorado","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"],
+      en: ["The Fool","The Magician","The Papess","The Empress","The Emperor","The Pope","The Lover","The Chariot","Strength","The Hermit","The Wheel of Fortune","The Justice","The Hanged Man","Death","The Temperance","The Devil","The Tower","The Star","The Moon","The Sun","The Judgement","The World"],
+      slugs: ["el-loco","el-mago","la-papisa","la-emperatriz","el-emperador","el-papa","el-enamorado","el-carro","la-fuerza","el-ermitano","la-rueda-de-la-fortuna","la-justicia","el-colgado","la-muerte","la-templanza","el-diablo","la-torre","la-estrella","la-luna","el-sol","el-juicio","el-mundo"],
+      path: '/cartas'
+    },
+    rider: {
+      es: ["El Loco","El Mago","La Sacerdotisa","La Emperatriz","El Emperador","El Papa","Los Enamorados","El Carro","La Fuerza","El Ermitaño","La Rueda de la Fortuna","La Justicia","El Colgado","La Muerte","La Templanza","El Diablo","La Torre","La Estrella","La Luna","El Sol","El Juicio","El Mundo"],
+      en: ["The Fool","The Magician","The High Priestess","The Empress","The Emperor","The Hierophant","The Lovers","The Chariot","Strength","The Hermit","The Wheel of Fortune","The Justice","The Hanged Man","Death","The Temperance","The Devil","The Tower","The Star","The Moon","The Sun","The Judgement","The World"],
+      slugs: ["the-fool","the-magician","the-high-priestess","the-empress","the-emperor","the-hierophant","the-lovers","the-chariot","the-strength","the-hermit","the-wheel-of-fortune","the-justice","the-hanged-man","the-death","the-temperance","the-devil","the-tower","the-star","the-moon","the-sun","the-judgement","the-world"],
+      path: '/cartas/rider'
+    }
   };
-  // Slugs ES para los filenames de /cartas/ (misma posición que CARDS.es)
-  const CARD_SLUGS_ES = [
-    "el-loco","el-mago","la-papisa","la-emperatriz","el-emperador","el-papa",
-    "el-enamorado","el-carro","la-fuerza","el-ermitano","la-rueda-de-la-fortuna",
-    "la-justicia","el-colgado","la-muerte","la-templanza","el-diablo","la-torre",
-    "la-estrella","la-luna","el-sol","el-juicio","el-mundo"
-  ];
-  const ROMANS = ["0","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI"];
+
+  const _savedDeck = localStorage.getItem('arkana-deck');
+  let currentDeck = (_savedDeck === 'rider' || _savedDeck === 'marsella') ? _savedDeck : 'marsella';
+
+  // CARDS y CARD_SLUGS_ES son alias dinámicos que apuntan al deck activo
+  let CARDS = { es: DECKS[currentDeck].es, en: DECKS[currentDeck].en };
+  let CARD_SLUGS_ES = DECKS[currentDeck].slugs;
 
   const LANG_CONFIG = {
     es: { lang: 'es-ES', conj: 'con', and: 'y' },
@@ -1175,6 +1186,38 @@
     document.getElementById('langEN').setAttribute('aria-pressed', currentLang==='en');
   })();
 
+  // ── DECK ───────────────────────────────────────────────────────────────────
+  function setDeck(deck) {
+    if (deck === currentDeck) return;
+    currentDeck = deck;
+    localStorage.setItem('arkana-deck', deck);
+    CARDS.es = DECKS[deck].es;
+    CARDS.en = DECKS[deck].en;
+    CARD_SLUGS_ES = DECKS[deck].slugs;
+    document.getElementById('deckMarsella').classList.toggle('active', deck === 'marsella');
+    document.getElementById('deckRider').classList.toggle('active', deck === 'rider');
+    document.getElementById('deckMarsella').setAttribute('aria-pressed', deck === 'marsella');
+    document.getElementById('deckRider').setAttribute('aria-pressed', deck === 'rider');
+    // Refrescar cartas visibles si hay un trio activo
+    if (currentTrio && currentTrio.length === 3) {
+      const oldDeck = deck === 'rider' ? 'marsella' : 'rider';
+      const translatedTrio = currentTrio.map(name => {
+        const idxOld = DECKS[oldDeck][currentLang].indexOf(name);
+        return idxOld >= 0 ? DECKS[deck][currentLang][idxOld] : name;
+      });
+      currentTrio = translatedTrio;
+      renderMicroTrio(currentTrio);
+      renderDeepTrio(currentTrio);
+      if (window._onNewTrio) window._onNewTrio(currentTrio);
+    }
+  }
+  (function initDeckToggle() {
+    document.getElementById('deckMarsella').classList.toggle('active', currentDeck === 'marsella');
+    document.getElementById('deckRider').classList.toggle('active', currentDeck === 'rider');
+    document.getElementById('deckMarsella').setAttribute('aria-pressed', currentDeck === 'marsella');
+    document.getElementById('deckRider').setAttribute('aria-pressed', currentDeck === 'rider');
+  })();
+
   function updateVolume(v) {
     const vol=parseFloat(v);
     if (streamAudio) streamAudio.volume=vol;
@@ -1501,8 +1544,13 @@
   // ── MICRO TRIO — cartas del arcano activo ─────────────────────────────────
   // Assets: /cartas/el-loco.jpg … (slugs en CARD_SLUGS_ES, índice = CARDS.es)
   // ══════════════════════════════════════════════════════════════════════════
-  // DESPUÉS (arreglado):
-  function cardIndexES(name) {let idx = CARDS.es.indexOf(name); if (idx < 0) idx = CARDS.en.indexOf(name); return idx;}
+  function cardIndexES(name) {
+    // Buscar primero en ES, luego en EN (para cuando el idioma es inglés)
+    let idx = CARDS.es.indexOf(name);
+    if (idx < 0) idx = CARDS.en.indexOf(name);
+    return idx;
+  }
+
   function renderMicroTrio(trio) {
     const container = document.getElementById('microTrio');
     if (!container || !trio || trio.length < 3) return;
@@ -1510,14 +1558,10 @@
     trio.forEach(name => {
       const idx  = cardIndexES(name);
       const slug = idx >= 0 ? CARD_SLUGS_ES[idx] : name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-      const roman = idx >= 0 ? ROMANS[idx] : '';
       const el = document.createElement('div');
       el.className = 'micro-card';
       el.innerHTML = `
-        <img src="/cartas/thumb/${slug}.jpg" srcset="/cartas/thumb/${slug}.jpg 2x" alt="${name}" onerror="this.style.display='none'">
-        <div class="mc-roman">${roman}</div>
-        <div class="mc-name">${name}</div>
-      `;
+        <img src="${DECKS[currentDeck].path}/thumb/${slug}.jpg" srcset="${DECKS[currentDeck].path}/thumb/${slug}.jpg 2x" alt="${name}" onerror="this.style.display='none'">`;
       container.appendChild(el);
     });
     if (!container.classList.contains('hidden-by-user')) container.classList.add('visible');
@@ -1572,14 +1616,10 @@
     trio.forEach(name => {
       const idx  = cardIndexES(name);
       const slug = idx >= 0 ? CARD_SLUGS_ES[idx] : name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-      const roman = idx >= 0 ? ROMANS[idx] : '';
       const el = document.createElement('div');
       el.className = 'deep-card';
       el.innerHTML = `
-        <img src="/cartas/${slug}.jpg" alt="${name}" onerror="this.style.display='none'">
-        <div class="dc-roman">${roman}</div>
-        <div class="dc-name">${name}</div>
-      `;
+        <img src="${DECKS[currentDeck].path}/${slug}.jpg" alt="${name}" onerror="this.style.display='none'">`;
       container.appendChild(el);
     });
   }
