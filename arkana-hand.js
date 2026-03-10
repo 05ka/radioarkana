@@ -284,11 +284,35 @@
 
   // ── OPEN / CLOSE ───────────────────────────────────────────────────────────
   async function openHandModal() {
-    document.getElementById('handModal').classList.add('active');
+    const modal = document.getElementById('handModal');
+    modal.classList.add('active');
     setStatus('loading', 'Iniciando…');
+
+    // Wait for the modal to be painted and canvas to have real dimensions
+    // before starting the camera + MediaPipe pipeline.
+    await waitForCanvasSize();
+
     await startHandStream();
     if (!mpReady) await loadMediaPipe();
     updatePips();
+  }
+
+  // Polls until the canvas has non-zero dimensions (max ~600ms)
+  function waitForCanvasSize() {
+    return new Promise(resolve => {
+      let attempts = 0;
+      function check() {
+        const canvas = document.getElementById('handCanvas');
+        const { w, h } = getCanvasSize(canvas);
+        if ((w > 0 && h > 0) || attempts > 20) {
+          resolve();
+        } else {
+          attempts++;
+          requestAnimationFrame(check);
+        }
+      }
+      requestAnimationFrame(check);
+    });
   }
 
   function closeHandModal() {
@@ -401,12 +425,11 @@
     // ── PINCH → materialise card ──
     if (pinching && !isResetting && activeCards.length < MAX_CARDS && (now - lastPinchTime) > PINCH_COOLDOWN) {
       lastPinchTime = now;
-      const canvas  = document.getElementById('handCanvas');
-      // Use index finger tip position (mirrored)
+      // Store NORMALIZED coords (0-1). Convert to pixels in drawFrame
+      // so they work regardless of when the canvas gets real dimensions.
+      // Mirror X because video is scaleX(-1)
       const lm = lastLandmarks[8];
-      const x  = (1 - lm.x) * canvas.width;
-      const y  = lm.y * canvas.height;
-      spawnCard(x, y);
+      spawnCard(1 - lm.x, lm.y);  // nx, ny in [0,1]
     }
 
     // ── OPEN PALM → reset counter ──
@@ -474,7 +497,7 @@
     }
 
     const card = {
-      x, y,
+      nx: x, ny: y,   // normalized [0-1], converted to px in drawFrame
       cardIndex: idx,
       slug, name,
       img,
@@ -522,17 +545,44 @@
     }, CARD_RESET_MS + 80);
   }
 
+  // ── CANVAS SIZE HELPER ─────────────────────────────────────────────────────
+  function getCanvasSize(canvas) {
+    // offsetWidth/Height can be 0 on Android Chrome when modal just opened.
+    // getBoundingClientRect is reliable once the element is in the render tree.
+    let w = canvas.offsetWidth;
+    let h = canvas.offsetHeight;
+    if (!w || !h) {
+      const r = canvas.getBoundingClientRect();
+      w = r.width;
+      h = r.height;
+    }
+    // Last resort: use viewport minus controls bar height (~60px)
+    if (!w) w = window.innerWidth;
+    if (!h) h = window.innerHeight - 60;
+    return { w, h };
+  }
+
+  function ensureCanvasSize(canvas) {
+    const { w, h } = getCanvasSize(canvas);
+    const dpr = devicePixelRatio || 1;
+    const targetW = Math.round(w * dpr);
+    const targetH = Math.round(h * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width  = targetW;
+      canvas.height = targetH;
+    }
+  }
+
   // ── DRAW FRAME ─────────────────────────────────────────────────────────────
   function drawFrame() {
     const canvas  = document.getElementById('handCanvas');
     const video   = document.getElementById('handVideo');
     if (!canvas || !video) return;
 
-    // Resize canvas to match video display size
-    if (canvas.width !== canvas.offsetWidth || canvas.height !== canvas.offsetHeight) {
-      canvas.width  = canvas.offsetWidth  * devicePixelRatio;
-      canvas.height = canvas.offsetHeight * devicePixelRatio;
-    }
+    ensureCanvasSize(canvas);
+
+    // Guard: if canvas still has no size, skip frame
+    if (!canvas.width || !canvas.height) return;
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -557,7 +607,10 @@
         card._disappearStart = now;
       }
 
-      drawCard(ctx, card, cardW, cardH);
+      // Convert normalized [0-1] coords to canvas pixels
+      const px = card.nx * canvas.width;
+      const py = card.ny * canvas.height;
+      drawCard(ctx, { ...card, x: px, y: py }, cardW, cardH);
       return true;
     });
 
