@@ -840,14 +840,23 @@
     return Math.floor(Math.random() * 256);
   }
 
+  // Rejection sampling — `% 22` sobre un byte introduce sesgo (256 mod 22 = 14).
+  // Descartamos bytes ≥ floor(256/n)*n para mantener la uniformidad cuántica.
+  function getQuantumIndex(n) {
+    const max = 256 - (256 % n);
+    let b;
+    do { b = getQuantumByte(); } while (b >= max);
+    return b % n;
+  }
+
   // ── TIRADA ─────────────────────────────────────────────────────────────────
   function drawTrio() {
     const cards = CARDS[currentLang];
     let i0, i1, i2;
     do {
-      i0 = getQuantumByte() % 22;
-      i1 = getQuantumByte() % 22;
-      i2 = getQuantumByte() % 22;
+      i0 = getQuantumIndex(22);
+      i1 = getQuantumIndex(22);
+      i2 = getQuantumIndex(22);
     } while (i0 === i1 || i0 === i2 || i1 === i2);
     return [cards[i0], cards[i1], cards[i2]];
   }
